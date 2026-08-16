@@ -176,44 +176,46 @@ const { FoodItem } = require('./objects/FoodItem.js');
     settingsModalEl.classList.add('hidden');
   });
 
-  // 8. Ghost Mode (클릭 투과 연동 - 이벤트 드라이븐 방식)
-  let isCursorOverPet = false;
-  let isCursorOverUI = false;
+  // 8. Ghost Mode - 위치 기반 마우스 투과 제어
+  // forward:true 상태에서도 mousemove 이벤트는 발생하므로,
+  // 매 마우스 이동마다 펫/UI 위에 있는지 직접 좌표 비교
+  let _isIgnoring = false;
 
-  function updateMouseIgnoreState() {
+  function setIgnore(ignore) {
     if (!window.electronAPI) return;
-
-    if (isCursorOverPet || isCursorOverUI || pet.isDragging) {
-      window.electronAPI.setIgnoreMouseEvents(false);
-    } else {
+    if (_isIgnoring === ignore) return;  // 불필요한 IPC 호출 방지
+    _isIgnoring = ignore;
+    if (ignore) {
       window.electronAPI.setIgnoreMouseEvents(true, { forward: true });
+    } else {
+      window.electronAPI.setIgnoreMouseEvents(false);
     }
   }
 
-  pet.onPointerOver = () => {
-    isCursorOverPet = true;
-    updateMouseIgnoreState();
-  };
+  window.addEventListener('mousemove', (e) => {
+    if (pet.isDragging) {
+      setIgnore(false);
+      return;
+    }
 
-  pet.onPointerOut = () => {
-    isCursorOverPet = false;
-    updateMouseIgnoreState();
-  };
+    const mx = e.clientX;
+    const my = e.clientY;
 
-  const interactiveUIElements = [dialogEl, radialMenuEl, statusModalEl, settingsModalEl];
-  interactiveUIElements.forEach((el) => {
-    if (!el) return;
-    el.addEventListener('mouseenter', () => {
-      isCursorOverUI = true;
-      updateMouseIgnoreState();
-    });
-    el.addEventListener('mouseleave', () => {
-      isCursorOverUI = false;
-      updateMouseIgnoreState();
-    });
+    // 펫 히트박스 체크 (스케일 반영)
+    const halfW = 32 * pet.baseScale;
+    const h     = 64 * pet.baseScale;
+    const overPet = (
+      mx >= pet.x - halfW && mx <= pet.x + halfW &&
+      my >= pet.y - h     && my <= pet.y
+    );
+
+    // UI 요소 위 체크 (HTML elementFromPoint 활용)
+    const el = document.elementFromPoint(mx, my);
+    const uiRoots = [radialMenuEl, statusModalEl, settingsModalEl, dialogEl];
+    const overUI = el && uiRoots.some(root => root && root !== document.body && root.contains(el));
+
+    setIgnore(!(overPet || overUI));
   });
-
-  updateMouseIgnoreState();
 
   // 9. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {
