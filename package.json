@@ -1,0 +1,32 @@
+{
+  "name": "desktop_pet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main/main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TM-TOMATO/Desktop_Pet.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TM-TOMATO/Desktop_Pet/issues"
+  },
+  "homepage": "https://github.com/TM-TOMATO/Desktop_Pet#readme",
+  "devDependencies": {
+    "electron": "^43.4.0"
+  },
+  "dependencies": {
+    "electron-store": "^11.0.2",
+    "pixi.js": "^8.19.0"
+  }
+}
