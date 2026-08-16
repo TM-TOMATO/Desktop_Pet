@@ -10,11 +10,11 @@ class PetContainer extends PIXI.Container {
     this.pivot.set(32, 64);
     
     this.x = window.innerWidth / 2;
-    this.y = window.innerHeight - 80;
+    this.y = window.innerHeight;   // 작업표시줄 바로 위 바닥
 
     this.walkDirection = 1;
-    this.walkSpeed = 2.4; // 공중에 떠 있을 때 신나게 앞으로 튀어나가는 속도
-    this.baseScale = 1.0;
+    this.walkSpeed = 2.4;
+    this.baseScale = 2.0;          // 기본 크기 2배
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     this.bouncePhase = 0;
@@ -297,24 +297,8 @@ class PetContainer extends PIXI.Container {
   setupInteractions() {
     this.hitArea = new PIXI.Rectangle(0, 0, 64, 64);
 
-    this.on('pointerover', () => {
-      if (this.onPointerOver) this.onPointerOver();
-    });
-
-    this.on('pointerout', () => {
-      if (!this.isDragging && this.onPointerOut) this.onPointerOut();
-    });
-
-    // pointerdown에서 좌/우 클릭 분기 처리
+    // 좌클릭 드래그
     this.on('pointerdown', (e) => {
-      // 우클릭(button=2)은 드래그 시작 안 함
-      if (e.button === 2 || e.data?.button === 2 || e.nativeEvent?.button === 2) {
-        e.stopPropagation();
-        if (this.onRightClick) this.onRightClick(e.global.x, e.global.y);
-        return;
-      }
-
-      // 좌클릭 드래그
       this.isDragging = true;
       this.cursor = 'grabbing';
       this.dragOffset = {
@@ -322,12 +306,6 @@ class PetContainer extends PIXI.Container {
         y: this.y - e.global.y
       };
       if (this.onDragStart) this.onDragStart();
-    });
-
-    // rightdown 이벤트도 백업으로 처리
-    this.on('rightdown', (e) => {
-      e.stopPropagation();
-      if (this.onRightClick) this.onRightClick(e.global.x, e.global.y);
     });
 
     window.addEventListener('pointermove', (e) => {
@@ -338,7 +316,7 @@ class PetContainer extends PIXI.Container {
       }
     });
 
-    window.addEventListener('pointerup', (e) => {
+    window.addEventListener('pointerup', () => {
       if (this.isDragging) {
         this.isDragging = false;
         this.cursor = 'grab';
@@ -346,12 +324,20 @@ class PetContainer extends PIXI.Container {
       }
     });
 
-    // 기본 우클릭 컨텍스트 메뉴 차단 (캔버스 레벨)
-    if (this.app && this.app.canvas) {
-      this.app.canvas.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-      });
-    }
+    // 우클릭: native contextmenu 이벤트로 안정적으로 처리
+    // (PIXI rightdown은 setIgnoreMouseEvents 타이밍 문제로 불안정)
+    window.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const mx = e.clientX;
+      const my = e.clientY;
+      // 펫 히트박스 안에서 우클릭했을 때만 메뉴 표시
+      const halfW = 32 * this.baseScale;
+      const h     = 64 * this.baseScale;
+      if (mx >= this.x - halfW && mx <= this.x + halfW &&
+          my >= this.y - h     && my <= this.y) {
+        if (this.onRightClick) this.onRightClick(mx, my);
+      }
+    });
   }
 
   setHitboxVisible(visible) {
@@ -392,8 +378,8 @@ class PetContainer extends PIXI.Container {
       
       this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
 
-      const minX = 64;
-      const maxX = window.innerWidth - 64;
+      const minX = 64 * this.baseScale;
+      const maxX = window.innerWidth - 64 * this.baseScale;
       if (this.x <= minX) {
         this.x = minX;
         this.walkDirection = 1;
@@ -410,19 +396,20 @@ class PetContainer extends PIXI.Container {
     }
 
     if (!this.isDragging) {
-      const groundY = window.innerHeight - 30;
+      const groundY = window.innerHeight;  // 작업표시줄 바로 위
       if (this.y < groundY) {
-        this.y += 4 * delta;
+        this.y += 6 * delta;
         if (this.y > groundY) this.y = groundY;
       }
     }
   }
 
   clampPosition() {
-    const minX = 64;
-    const maxX = window.innerWidth - 64;
-    const minY = 128;
-    const maxY = window.innerHeight - 30;
+    const sz  = 64 * this.baseScale;
+    const minX = sz / 2;
+    const maxX = window.innerWidth - sz / 2;
+    const minY = sz;
+    const maxY = window.innerHeight;
 
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));

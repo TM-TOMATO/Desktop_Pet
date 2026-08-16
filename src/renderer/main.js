@@ -217,6 +217,11 @@ const { FoodItem } = require('./objects/FoodItem.js');
     setIgnore(!(overPet || overUI));
   });
 
+  // contextmenu(우클릭)도 마우스 캡처 해제 후 처리
+  window.addEventListener('contextmenu', (e) => {
+    setIgnore(false);
+  }, true); // capture 단계에서 먼저 처리
+
   // 9. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {
     if (window.electronAPI && window.electronAPI.saveData) {

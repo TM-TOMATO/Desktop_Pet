@@ -4,22 +4,25 @@ const store = require('./store');
 
 let mainWindow = null;
 let tray = null;
+let ignoreHandlerRegistered = false;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
+  const { x: workX, y: workY } = primaryDisplay.workArea;
 
+  // 작업표시줄 바로 위에 붙이기: workArea 기준으로 전체 작업 영역 커버
   mainWindow = new BrowserWindow({
     width: width,
     height: height,
-    x: 0,
-    y: 0,
+    x: workX,
+    y: workY,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
     resizable: false,
     hasShadow: false,
-    skipTaskbar: false,
+    skipTaskbar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
@@ -27,7 +30,7 @@ function createWindow() {
     }
   });
 
-  // Always on top 레벨 설정 (Windows / Mac 공통 극대화)
+  // Always on top 레벨 설정
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -35,33 +38,40 @@ function createWindow() {
   // 기본적으로 마우스 통과(Ghost Mode) 설정
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
-  // 마우스 통과 IPC 이벤트 핸들러
-  ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win) {
-      win.setIgnoreMouseEvents(ignore, options || { forward: true });
-    }
-  });
+  // IPC 핸들러 (중복 등록 방지)
+  if (!ignoreHandlerRegistered) {
+    ignoreHandlerRegistered = true;
 
-  // 윈도우 위치 이동 (드래그 시 사용 가능)
-  ipcMain.on('move-window', (event, { deltaX, deltaY }) => {
-    if (mainWindow) {
-      const [currentX, currentY] = mainWindow.getPosition();
-      mainWindow.setPosition(currentX + deltaX, currentY + deltaY);
-    }
-  });
+    ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (win) {
+        if (ignore) {
+          win.setIgnoreMouseEvents(true, { forward: true });
+        } else {
+          win.setIgnoreMouseEvents(false);
+        }
+      }
+    });
 
-  ipcMain.on('quit-app', () => {
-    app.quit();
-  });
+    ipcMain.on('move-window', (event, { deltaX, deltaY }) => {
+      if (mainWindow) {
+        const [currentX, currentY] = mainWindow.getPosition();
+        mainWindow.setPosition(currentX + deltaX, currentY + deltaY);
+      }
+    });
 
-  ipcMain.handle('save-data', (event, data) => {
-    return store.saveData(data);
-  });
+    ipcMain.on('quit-app', () => {
+      app.quit();
+    });
 
-  ipcMain.handle('load-data', () => {
-    return store.loadData();
-  });
+    ipcMain.handle('save-data', (event, data) => {
+      return store.saveData(data);
+    });
+
+    ipcMain.handle('load-data', () => {
+      return store.loadData();
+    });
+  }
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -69,7 +79,6 @@ function createWindow() {
 }
 
 function createTray() {
-  // 트레이 아이콘 설정 (기본 메뉴)
   tray = new Tray(path.join(__dirname, '../../assets/ui/tray_icon.png').replace('app.asar', 'app.asar.unpacked'));
   
   const contextMenu = Menu.buildFromTemplate([
