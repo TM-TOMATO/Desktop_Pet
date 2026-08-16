@@ -14,6 +14,7 @@ class PetContainer extends PIXI.Container {
 
     this.walkDirection = 1;
     this.walkSpeed = 2.4; // 공중에 떠 있을 때 신나게 앞으로 튀어나가는 속도
+    this.baseScale = 1.0;
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     this.bouncePhase = 0;
@@ -339,16 +340,20 @@ class PetContainer extends PIXI.Container {
     this.updateSpriteDisplay(newState);
   }
 
+  setBaseScale(scaleVal) {
+    this.baseScale = scaleVal;
+    this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
+  }
+
   update(delta, currentState) {
     this.bouncePhase += delta * 0.1;
 
     if (currentState === PetState.WALK && !this.isDragging) {
-      // 1, 2, 10번 프레임이 아닐 때(공중에 떠 있을 때)만 전진 이동!
       if (!this.isGroundedFrame) {
         this.x += this.walkDirection * this.walkSpeed * delta;
       }
       
-      this.scale.x = this.walkDirection;
+      this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
 
       const minX = 64;
       const maxX = window.innerWidth - 64;
@@ -360,7 +365,7 @@ class PetContainer extends PIXI.Container {
         this.walkDirection = -1;
       }
     } else if (currentState === PetState.IDLE) {
-      this.scale.x = 1;
+      this.scale.set(1 * this.baseScale, this.baseScale);
     }
 
     if (this.graphicsFallback && this.graphicsFallback.visible) {

@@ -20,6 +20,7 @@
     <button class="menu-btn" id="btn-feed" title="음식 주기">🍎</button>
     <button class="menu-btn" id="btn-play" title="놀아주기">🎾</button>
     <button class="menu-btn" id="btn-info" title="상태 보기">📊</button>
+    <button class="menu-btn" id="btn-settings" title="설정 창">⚙️</button>
     <button class="menu-btn" id="btn-close" title="닫기">❌</button>
   </div>
 
@@ -40,6 +41,21 @@
         <div class="bar-bg"><div id="bar-exp" class="bar-fill exp" style="width: 45%;"></div></div>
       </div>
       <button id="btn-modal-close" class="close-modal-btn">닫기</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal UI (NEW) -->
+  <div id="settings-modal" class="status-modal hidden">
+    <div class="modal-content">
+      <h3>⚙️ 게임 & 캐릭터 설정</h3>
+      <div class="setting-row">
+        <label for="scale-range">캐릭터 크기: <span id="scale-value">100%</span></label>
+        <input type="range" id="scale-range" min="50" max="250" step="5" value="100" />
+      </div>
+      <div class="setting-hint">
+        💡 슬라이더를 조절하여 다마고치 펫의 크기를 실시간으로 변경해보세요!
+      </div>
+      <button id="btn-settings-close" class="close-modal-btn">설정 완료</button>
     </div>
   </div>
 

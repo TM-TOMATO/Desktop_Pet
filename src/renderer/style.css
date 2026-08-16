@@ -19,12 +19,12 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none; /* 캔버스 빈 영역 마우스 통과 */
+  pointer-events: none;
 }
 
 canvas {
   display: block;
-  pointer-events: auto; /* PixiJS 인터랙티브 객체 이벤트 활성화 */
+  pointer-events: auto;
 }
 
 /* 말풍선 UI */
@@ -54,9 +54,9 @@ canvas {
   position: absolute;
   display: flex;
   gap: 8px;
-  background: rgba(40, 44, 52, 0.85);
+  background: rgba(40, 44, 52, 0.88);
   backdrop-filter: blur(8px);
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 30px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
   pointer-events: auto;
@@ -87,7 +87,7 @@ canvas {
   background: #ffe066;
 }
 
-/* 상태 모달 */
+/* 상태 모달 & 설정 모달 */
 .status-modal {
   position: fixed;
   top: 50%;
@@ -99,7 +99,7 @@ canvas {
   box-shadow: 0 12px 32px rgba(0,0,0,0.3);
   pointer-events: auto;
   z-index: 200;
-  min-width: 260px;
+  min-width: 280px;
 }
 
 .status-modal.hidden {
@@ -116,6 +116,30 @@ canvas {
   margin-bottom: 10px;
   font-size: 12px;
   color: #4a4e69;
+}
+
+.setting-row {
+  margin-top: 12px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: #2b2d42;
+  font-weight: 600;
+}
+
+.setting-row input[type="range"] {
+  width: 100%;
+  accent-color: #ff6b6b;
+  cursor: pointer;
+}
+
+.setting-hint {
+  font-size: 11px;
+  color: #6c757d;
+  line-height: 1.4;
+  margin-bottom: 12px;
 }
 
 .bar-bg {

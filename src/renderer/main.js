@@ -49,10 +49,27 @@ const { FoodItem } = require('./objects/FoodItem.js');
   const dialogTextEl = document.getElementById('dialog-text');
   const radialMenuEl = document.getElementById('radial-menu');
   const statusModalEl = document.getElementById('status-modal');
+  const settingsModalEl = document.getElementById('settings-modal');
 
   const barFullness = document.getElementById('bar-fullness');
   const barHappiness = document.getElementById('bar-happiness');
   const barExp = document.getElementById('bar-exp');
+  const scaleRange = document.getElementById('scale-range');
+  const scaleValueLabel = document.getElementById('scale-value');
+
+  // 저장된 스케일 적용
+  const savedScale = petStats.scaleFactor || 1.0;
+  scaleRange.value = Math.round(savedScale * 100);
+  scaleValueLabel.textContent = `${Math.round(savedScale * 100)}%`;
+  pet.setBaseScale(savedScale);
+
+  scaleRange.addEventListener('input', () => {
+    const pct = parseInt(scaleRange.value, 10);
+    scaleValueLabel.textContent = `${pct}%`;
+    const scaleVal = pct / 100;
+    pet.setBaseScale(scaleVal);
+    petStats.setScaleFactor(scaleVal);
+  });
 
   function showDialog(text, durationMs = 3500) {
     dialogTextEl.innerText = text;
@@ -137,12 +154,21 @@ const { FoodItem } = require('./objects/FoodItem.js');
     statusModalEl.classList.remove('hidden');
   });
 
+  document.getElementById('btn-settings').addEventListener('click', () => {
+    radialMenuEl.classList.add('hidden');
+    settingsModalEl.classList.remove('hidden');
+  });
+
   document.getElementById('btn-close').addEventListener('click', () => {
     radialMenuEl.classList.add('hidden');
   });
 
   document.getElementById('btn-modal-close').addEventListener('click', () => {
     statusModalEl.classList.add('hidden');
+  });
+
+  document.getElementById('btn-settings-close').addEventListener('click', () => {
+    settingsModalEl.classList.add('hidden');
   });
 
   // 8. Ghost Mode (클릭 투과 연동 - 이벤트 드라이븐 방식)
@@ -169,7 +195,7 @@ const { FoodItem } = require('./objects/FoodItem.js');
     updateMouseIgnoreState();
   };
 
-  const interactiveUIElements = [dialogEl, radialMenuEl, statusModalEl];
+  const interactiveUIElements = [dialogEl, radialMenuEl, statusModalEl, settingsModalEl];
   interactiveUIElements.forEach((el) => {
     if (!el) return;
     el.addEventListener('mouseenter', () => {

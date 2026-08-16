@@ -8,6 +8,7 @@ class PetStats {
     this.fullness = initialData.fullness !== undefined ? initialData.fullness : 80;
     this.happiness = initialData.happiness !== undefined ? initialData.happiness : 90;
     this.gold = initialData.gold || 100;
+    this.scaleFactor = initialData.scaleFactor || 1.0;
 
     this.tickTimer = 0;
     this.onStatChange = null;
@@ -70,6 +71,11 @@ class PetStats {
     if (this.onStatChange) this.onStatChange(this.getSnapshot());
   }
 
+  setScaleFactor(val) {
+    this.scaleFactor = Math.max(0.5, Math.min(2.5, val));
+    if (this.onStatChange) this.onStatChange(this.getSnapshot());
+  }
+
   getSnapshot() {
     return {
       name: this.name,
@@ -78,7 +84,8 @@ class PetStats {
       maxExp: this.maxExp,
       fullness: Math.round(this.fullness),
       happiness: Math.round(this.happiness),
-      gold: this.gold
+      gold: this.gold,
+      scaleFactor: this.scaleFactor
     };
   }
 }

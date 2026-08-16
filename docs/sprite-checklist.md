@@ -14,19 +14,27 @@
 
 | 제작 상태 | 상태 (State) | 권장 파일명 (프레임시트) | 단일 대체 파일명 | 추천 규격 / 프레임 수 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
-| [ ] | **대기 (Idle)** | `pet_idle_sheet.png` | `pet_idle.png` | 128x128 px, 4프레임 (가로 512px) | 가만히 서 있거나 조용히 숨쉬는 상태 |
-| [ ] | **이동 (Walk)** | `pet_walk_sheet.png` | `pet_walk.png` | 128x128 px, 4프레임 (가로 512px) | 바탕화면을 좌/우로 걸어다니는 모습 |
-| [ ] | **기쁨 (Happy)** | `pet_happy_sheet.png` | `pet_happy.png` | 128x128 px, 2~4프레임 | 쓰다듬어 주거나 기분 좋을 때 연출 |
-| [ ] | **배고픔 (Hungry)**| `pet_hungry_sheet.png` | `pet_hungry.png` | 128x128 px, 2~4프레임 | 허기 수치가 20 이하일 때 표정/행동 |
-| [ ] | **식사 (Eating)** | `pet_eating_sheet.png` | `pet_eating.png` | 128x128 px, 4프레임 | 음식을 냠냠 먹고 있는 모습 |
-| [ ] | **수면 (Sleep)** | `pet_sleep_sheet.png` | `pet_sleep.png` | 128x128 px, 2프레임 | 잘 때 또는 눈을 감은 쿨쿨 모습 |
-| [ ] | **드래그 (Drag)** | `pet_drag_sheet.png` | `pet_drag.png` | 128x128 px, 1~2프레임 | 마우스로 들고 공중에 띄웠을 때 |
+| [x] | **대기 (Idle)** | `pet_idle_sheet.png` | `pet_idle.png` | 64x64 px, 4프레임 (가로 256px) | 가만히 서 있거나 조용히 숨쉬는 상태 (3fps) |
+| [x] | **이동 (Walk)** | `pet_walk_sheet.png` | `pet_walk.png` | 64x64 px, 10프레임 (가로 640px) | 바탕화면을 점프하며 걸어다니는 모습 |
+| [ ] | **기쁨 (Happy)** | `pet_happy_sheet.png` | `pet_happy.png` | 64x64 px, 2~4프레임 | 쓰다듬어 주거나 기분 좋을 때 연출 |
+| [ ] | **배고픔 (Hungry)**| `pet_hungry_sheet.png` | `pet_hungry.png` | 64x64 px, 2~4프레임 | 허기 수치가 20 이하일 때 표정/행동 |
+| [ ] | **식사 (Eating)** | `pet_eating_sheet.png` | `pet_eating.png` | 64x64 px, 4프레임 | 음식을 냠냠 먹고 있는 모습 |
+| [ ] | **수면 (Sleep)** | `pet_sleep_sheet.png` | `pet_sleep.png` | 64x64 px, 2프레임 | 잘 때 또는 눈을 감은 쿨쿨 모습 |
+| [ ] | **드래그 (Drag)** | `pet_drag_sheet.png` | `pet_drag.png` | 64x64 px, 1~2프레임 | 마우스로 들고 공중에 띄웠을 때 |
 
 ---
 
-## 🍎 2. 아이템 및 방치 보상 에셋 (Item Drops)
+## ⚙️ 2. UI & 설정창 에셋 체크리스트 (NEW)
 
-> 📂 저장 경로: `assets/sprites/` 또는 `assets/ui/`
+| 제작 상태 | 아이콘/요소명 | 권장 파일명 | 추천 규격 | 설명 |
+| :---: | :--- | :--- | :--- | :--- |
+| [ ] | **설정 버튼 아이콘** | `ui_icon_settings.png` | 32x32 px (투명 PNG) | 래디얼 메뉴의 설정(⚙️) 버튼 커스텀 아이콘 |
+| [ ] | **설정 창 창틀/배경** | `ui_settings_bg.png` | 300x240 px | 캐릭터 크기/투화도 설정 모달의 배경 틀 |
+| [ ] | **크기 조절 슬라이더 놉** | `ui_slider_knob.png` | 20x20 px | 크기(Scale: 50%~200%) 조절 슬라이더 핸들 |
+
+---
+
+## 🍎 3. 아이템 및 방치 보상 에셋 (Item Drops)
 
 | 제작 상태 | 아이템명 | 권장 파일명 | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- |
@@ -37,23 +45,9 @@
 
 ---
 
-## 🔮 3. 향후 추가 예정 에셋 (Phase 3~5 계획)
-
-*새로운 기능 구현 시 이 섹션의 체크리스트가 최상단 메인 리스트로 승격 및 확장됩니다.*
+## 🔮 4. 향후 추가 예정 에셋 (Phase 3~5 계획)
 
 - [ ] **펫 진화/스킨 2단계**: `pet_skin2_idle_sheet.png`, `pet_skin2_walk_sheet.png`
 - [ ] **착용 악세서리**: `acc_cat_hat.png` (고양이 모자), `acc_glasses.png` (안경)
 - [ ] **수집품 도감 아이콘**: `collect_gem_blue.png`, `collect_crown.png`
 - [ ] **파티클 이펙트**: `particle_sparkle.png`, `particle_heart.png`
-
----
-
-## 💡 에셋 제작 시 필수 가이드
-
-1. **포맷**: 배경이 투명하게 처리된 **32-bit PNG** 포맷 사용.
-2. **기준점 (Anchor)**: 캐릭터 발바닥(하단 중앙)이 바닥선 접촉 기준입니다.
-3. **프레임시트 형식**:
-   - 정사각형 프레임(예: 128x128)을 가로로 이어 붙인 연속 띠 형식 PNG.
-   - 예시: 128x128 크기 4프레임시트 → 가로 512px, 세로 128px.
-4. **대체 기능**:
-   - 이미지를 넣지 않은 상태에서는 코드가 귀여운 분홍 젤리 슬라임 Fallback 캐릭터를 대신 렌더링하므로, 완벽히 준비되지 않더라도 언제든 테스트 가능합니다!

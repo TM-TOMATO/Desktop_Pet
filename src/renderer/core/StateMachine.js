@@ -18,6 +18,16 @@ class StateMachine {
   changeState(newState) {
     if (this.currentState === newState) return;
 
+    // WALK -> IDLE 전환 시, 공중에 떠 있는 중이면 착지할 때까지 대기
+    if (this.currentState === PetState.WALK && newState === PetState.IDLE) {
+      if (this.pet && !this.pet.isGroundedFrame) {
+        console.log('[FSM] Delaying IDLE transition until landed on ground...');
+        this.pendingState = PetState.IDLE;
+        return;
+      }
+    }
+
+    this.pendingState = null;
     console.log(`[FSM] State change: ${this.currentState} -> ${newState}`);
     this.currentState = newState;
     this.stateTimer = 0;
@@ -30,6 +40,14 @@ class StateMachine {
   update(delta) {
     this.stateTimer += delta;
 
+    // 보정된 IDLE 대기 상태가 있고, 바닥에 착지한 순간 전환
+    if (this.pendingState && this.pet && this.pet.isGroundedFrame) {
+      const next = this.pendingState;
+      this.pendingState = null;
+      this.changeState(next);
+      return;
+    }
+
     if (this.currentState === PetState.DRAGGED) return;
 
     if (this.stateTimer > 300) {
@@ -40,6 +58,7 @@ class StateMachine {
           this.stateTimer = 0;
         }
       } else if (this.currentState === PetState.WALK) {
+        // 착지 시점에만 안전하게 IDLE로 변경
         this.changeState(PetState.IDLE);
       } else if (this.currentState === PetState.HAPPY || this.currentState === PetState.EATING) {
         this.changeState(PetState.IDLE);
