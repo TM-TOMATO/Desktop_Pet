@@ -1,14 +1,28 @@
 {
   "name": "desktop_pet",
   "version": "1.0.0",
-  "description": "",
+  "description": "Desktop Pet Tamagotchi Game",
   "main": "src/main/main.js",
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
     "start": "electron .",
+    "build": "electron-builder --win dir",
+    "pack": "electron-builder --win nsis",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.tmtomato.desktoppet",
+    "productName": "DesktopPet",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "dir"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ]
   },
   "repository": {
     "type": "git",
@@ -23,7 +37,8 @@
   },
   "homepage": "https://github.com/TM-TOMATO/Desktop_Pet#readme",
   "devDependencies": {
-    "electron": "^43.4.0"
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3"
   },
   "dependencies": {
     "electron-store": "^11.0.2",

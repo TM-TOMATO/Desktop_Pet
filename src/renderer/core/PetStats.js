@@ -1,4 +1,4 @@
-export class PetStats {
+class PetStats {
   constructor(initialData = {}) {
     this.name = initialData.name || '모치(Mochi)';
     this.level = initialData.level || 1;
@@ -19,7 +19,6 @@ export class PetStats {
   }
 
   update(delta) {
-    // 약 10초 (60프레임 * 10 = 600 delta) 마다 틱 감소
     this.tickTimer += delta;
     if (this.tickTimer >= 600) {
       this.tickTimer = 0;
@@ -82,4 +81,8 @@ export class PetStats {
       gold: this.gold
     };
   }
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { PetStats };
 }

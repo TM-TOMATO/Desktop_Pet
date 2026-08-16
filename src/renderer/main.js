@@ -1,11 +1,11 @@
-import * as PIXI from 'pixi.js';
-import { StateMachine, PetState } from './core/StateMachine.js';
-import { PetStats } from './core/PetStats.js';
-import { PetContainer } from './objects/PetContainer.js';
-import { FoodItem } from './objects/FoodItem.js';
+const PIXI = require('pixi.js');
+const { StateMachine, PetState } = require('./core/StateMachine.js');
+const { PetStats } = require('./core/PetStats.js');
+const { PetContainer } = require('./objects/PetContainer.js');
+const { FoodItem } = require('./objects/FoodItem.js');
 
 (async () => {
-  // 1. PixiJS App 초기화 (투명 캔버스)
+  // 1. PixiJS App 초기화
   const app = new PIXI.Application();
   await app.init({
     resizeTo: window,
@@ -28,8 +28,8 @@ import { FoodItem } from './objects/FoodItem.js';
   // 3. 오프라인 시간 경과 계산 (방치 보상)
   if (saveData && saveData.lastOnlineTimestamp) {
     const offlineSec = Math.floor((Date.now() - saveData.lastOnlineTimestamp) / 1000);
-    if (offlineSec > 60) { // 1분 이상 집을 비운 경우
-      const minutes = Math.min(480, Math.floor(offlineSec / 60)); // 최대 8시간
+    if (offlineSec > 60) {
+      const minutes = Math.min(480, Math.floor(offlineSec / 60));
       const gainedGold = minutes * 2;
       petStats.addGold(gainedGold);
       petStats.decayStats();
@@ -42,8 +42,6 @@ import { FoodItem } from './objects/FoodItem.js';
   app.stage.addChild(pet);
 
   const stateMachine = new StateMachine(pet);
-
-  // 활성화된 음식 아이템 리스트
   const activeFoods = [];
 
   // 5. UI 요소 참조
@@ -56,7 +54,6 @@ import { FoodItem } from './objects/FoodItem.js';
   const barHappiness = document.getElementById('bar-happiness');
   const barExp = document.getElementById('bar-exp');
 
-  // 말풍선 대사 출력
   function showDialog(text, durationMs = 3500) {
     dialogTextEl.innerText = text;
     dialogEl.style.left = `${pet.x - 50}px`;
@@ -68,7 +65,6 @@ import { FoodItem } from './objects/FoodItem.js';
     }, durationMs);
   }
 
-  // 6. HUD UI 동기화
   function updateHUD(snapshot) {
     if (barFullness) barFullness.style.width = `${snapshot.fullness}%`;
     if (barHappiness) barHappiness.style.width = `${snapshot.happiness}%`;
@@ -81,7 +77,6 @@ import { FoodItem } from './objects/FoodItem.js';
   petStats.onStatChange = (snapshot) => {
     updateHUD(snapshot);
 
-    // 허기 수치가 20 이하인 경우 HUNGRY 상태로 변경 유도
     if (snapshot.fullness <= 20 && stateMachine.currentState === PetState.IDLE) {
       stateMachine.changeState(PetState.HUNGRY);
       showDialog('꼬르륵... 배가 너무 고파요 😢');
@@ -93,10 +88,9 @@ import { FoodItem } from './objects/FoodItem.js';
     showDialog(`🎉 우와! 레벨업! (Lv.${newLevel})`);
   };
 
-  // 초기 HUD 설정
   updateHUD(petStats.getSnapshot());
 
-  // 7. 펫 인터랙션 이벤트 바인딩
+  // 6. 펫 인터랙션 이벤트 바인딩
   pet.onDragStart = () => {
     stateMachine.changeState(PetState.DRAGGED);
     radialMenuEl.classList.add('hidden');
@@ -114,11 +108,10 @@ import { FoodItem } from './objects/FoodItem.js';
     radialMenuEl.classList.remove('hidden');
   };
 
-  // 8. 래디얼 메뉴 동작
+  // 7. 래디얼 메뉴 동작
   document.getElementById('btn-feed').addEventListener('click', () => {
     radialMenuEl.classList.add('hidden');
 
-    // 음식 아이템 떨구기
     const food = new FoodItem(app, pet.x + (pet.walkDirection * 60), pet.y);
     app.stage.addChild(food);
     activeFoods.push(food);
@@ -126,7 +119,6 @@ import { FoodItem } from './objects/FoodItem.js';
     stateMachine.changeState(PetState.EATING);
     showDialog('냠냠! 🍎 맛있는 사과다!');
 
-    // 1.5초 후 음식 소비 및 수치 증가
     setTimeout(() => {
       food.consume();
       petStats.feed(30);
@@ -153,7 +145,7 @@ import { FoodItem } from './objects/FoodItem.js';
     statusModalEl.classList.add('hidden');
   });
 
-  // 9. Ghost Mode (클릭 투과 연동 - 이벤트 드라이븐 방식)
+  // 8. Ghost Mode (클릭 투과 연동 - 이벤트 드라이븐 방식)
   let isCursorOverPet = false;
   let isCursorOverUI = false;
 
@@ -167,7 +159,6 @@ import { FoodItem } from './objects/FoodItem.js';
     }
   }
 
-  // 펫 마우스 호버 이벤트
   pet.onPointerOver = () => {
     isCursorOverPet = true;
     updateMouseIgnoreState();
@@ -178,7 +169,6 @@ import { FoodItem } from './objects/FoodItem.js';
     updateMouseIgnoreState();
   };
 
-  // UI 요소 마우스 호버 감지 (말풍선, 메뉴, 모달)
   const interactiveUIElements = [dialogEl, radialMenuEl, statusModalEl];
   interactiveUIElements.forEach((el) => {
     if (!el) return;
@@ -192,10 +182,9 @@ import { FoodItem } from './objects/FoodItem.js';
     });
   });
 
-  // 초기 상태: 빈 공간 클릭 통과하도록 즉시 실행
   updateMouseIgnoreState();
 
-  // 10. 주기적 게임 자동 저장 (매 30초)
+  // 9. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {
     if (window.electronAPI && window.electronAPI.saveData) {
       window.electronAPI.saveData({
@@ -205,20 +194,14 @@ import { FoodItem } from './objects/FoodItem.js';
     }
   }, 30000);
 
-  // 11. 메인 렌더링 및 틱 루프 (PIXI Ticker)
+  // 10. 메인 렌더링 및 틱 루프 (PIXI Ticker)
   app.ticker.add((ticker) => {
     const delta = ticker.deltaTime;
 
-    // 수치 틱 연산
     petStats.update(delta);
-
-    // FSM 상태 업데이트
     stateMachine.update(delta);
-
-    // 펫 애니메이션 및 물리 업데이트
     pet.update(delta, stateMachine.currentState);
 
-    // activeFoods 물리 업데이트
     for (let i = activeFoods.length - 1; i >= 0; i--) {
       const food = activeFoods[i];
       food.update(delta);
@@ -227,7 +210,6 @@ import { FoodItem } from './objects/FoodItem.js';
       }
     }
 
-    // 말풍선 위치 추적
     if (!dialogEl.classList.contains('hidden')) {
       dialogEl.style.left = `${pet.x - 50}px`;
       dialogEl.style.top = `${pet.y - 140}px`;
