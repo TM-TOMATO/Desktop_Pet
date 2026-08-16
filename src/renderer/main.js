@@ -216,5 +216,12 @@ const { FoodItem } = require('./objects/FoodItem.js');
     }
   });
 
-  showDialog(`돌아온 걸 환영해! ${petStats.name}가 기다리고 있었어 🌟`);
+  // 로드된 사용자 에셋 상태 표시
+  setTimeout(() => {
+    if (pet.debugLog.length > 0) {
+      showDialog(`🎨 적용 성공: ${pet.debugLog.join(', ')}`, 5000);
+    } else {
+      showDialog(`⚠️ 에셋 미감지: assets/sprites/ 폴더를 확인해줘!`, 5000);
+    }
+  }, 1000);
 })();

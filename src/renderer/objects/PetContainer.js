@@ -28,6 +28,8 @@ class PetContainer extends PIXI.Container {
     this.eventMode = 'static';
     this.cursor = 'grab';
 
+    this.debugLog = [];
+
     this.initGraphics();
     this.setupInteractions();
   }
@@ -38,7 +40,7 @@ class PetContainer extends PIXI.Container {
     this.drawFallbackPet(PetState.IDLE);
     this.addChild(this.graphicsFallback);
 
-    // 2. DataURL 에셋 로드
+    // 2. DataURL + HTML Image Decode 기반 에셋 완벽 로드
     await this.loadAllPetAssets();
   }
 
@@ -89,10 +91,10 @@ class PetContainer extends PIXI.Container {
     }
   }
 
-  // 정확한 루트 및 상대경로 검색 후 DataURL로 읽어오기
-  loadTextureViaDataUrl(filename) {
+  // HTML Image + decode() 디코딩 보장 로더
+  async loadTextureViaDataUrl(filename) {
     const candidates = [
-      path.join(__dirname, '../../../assets/sprites', filename), // src/renderer/objects -> 루트 assets/sprites
+      path.join(__dirname, '../../../assets/sprites', filename),
       path.join(__dirname, '../../assets/sprites', filename),
       path.join(process.cwd(), 'assets/sprites', filename),
       path.join(process.cwd(), 'resources/assets/sprites', filename),
@@ -107,20 +109,30 @@ class PetContainer extends PIXI.Container {
       }
     }
 
-    if (!foundPath) {
-      console.log(`[AssetLoader] '${filename}' not found in any candidate path.`);
-      return null;
-    }
+    if (!foundPath) return null;
 
     try {
       const buffer = fs.readFileSync(foundPath);
       const base64 = buffer.toString('base64');
       const dataUrl = `data:image/png;base64,${base64}`;
-      const texture = PIXI.Texture.from(dataUrl);
-      console.log(`✅ [AssetLoader] Found & Loaded '${filename}' (${buffer.length} bytes) from: ${foundPath}`);
-      return texture;
+
+      // HTML Image 엘리먼트로 픽셀 완벽 디코딩 대기
+      const img = new Image();
+      img.src = dataUrl;
+      if (img.decode) {
+        await img.decode();
+      } else {
+        await new Promise((res) => { img.onload = res; img.onerror = res; });
+      }
+
+      const texture = PIXI.Texture.from(img);
+      const logMsg = `Found ${filename} (${img.width}x${img.height})`;
+      console.log(`✅ [AssetLoader] ${logMsg} from: ${foundPath}`);
+      this.debugLog.push(logMsg);
+
+      return { texture, width: img.width, height: img.height, image: img };
     } catch (err) {
-      console.error(`❌ [AssetLoader] Error reading '${filename}':`, err.message);
+      console.error(`❌ [AssetLoader] Failed to decode '${filename}':`, err);
       return null;
     }
   }
@@ -132,63 +144,30 @@ class PetContainer extends PIXI.Container {
     for (const stateKey of states) {
       // 1. 프레임시트 (pet_<state>_sheet.png)
       const sheetFileName = `pet_${stateKey}_sheet.png`;
-      const sheetTexture = this.loadTextureViaDataUrl(sheetFileName);
+      const sheetData = await this.loadTextureViaDataUrl(sheetFileName);
 
-      if (sheetTexture) {
-        // BaseTexture 렌더링 준비 대기
-        await new Promise((resolve) => {
-          if (sheetTexture.source && sheetTexture.source.width > 0) {
-            resolve();
-          } else {
-            const checkTimer = setInterval(() => {
-              if (sheetTexture.width > 0 || (sheetTexture.source && sheetTexture.source.width > 0)) {
-                clearInterval(checkTimer);
-                resolve();
-              }
-            }, 20);
-            setTimeout(() => {
-              clearInterval(checkTimer);
-              resolve();
-            }, 500);
-          }
-        });
-
-        const width = sheetTexture.width || sheetTexture.source?.width || 0;
-        const height = sheetTexture.height || sheetTexture.source?.height || 0;
-
-        if (width > 0 && height > 0) {
-          const frames = this.sliceTextureToFrames(sheetTexture, width, height);
-          if (frames.length > 0) {
-            this.loadedAnimations[stateKey] = frames;
-            console.log(`🎉 [AssetLoader] Prepared animation '${stateKey}': ${frames.length} frames (${width}x${height})`);
-            loadedCount++;
-            continue;
-          }
+      if (sheetData && sheetData.width > 0 && sheetData.height > 0) {
+        const frames = this.sliceTextureToFrames(sheetData.texture, sheetData.width, sheetData.height);
+        if (frames.length > 0) {
+          this.loadedAnimations[stateKey] = frames;
+          console.log(`🎉 [AssetLoader] Animation '${stateKey}' ready with ${frames.length} frames.`);
+          loadedCount++;
+          continue;
         }
       }
 
       // 2. 단일 PNG (pet_<state>.png)
       const singleFileName = `pet_${stateKey}.png`;
-      const singleTexture = this.loadTextureViaDataUrl(singleFileName);
+      const singleData = await this.loadTextureViaDataUrl(singleFileName);
 
-      if (singleTexture) {
-        await new Promise((resolve) => {
-          if (singleTexture.width > 0) resolve();
-          else setTimeout(resolve, 200);
-        });
-
-        const width = singleTexture.width || singleTexture.source?.width || 0;
-        if (width > 0) {
-          this.loadedSingleTextures[stateKey] = singleTexture;
-          console.log(`🎉 [AssetLoader] Prepared single sprite '${stateKey}' (${width}px)`);
-          loadedCount++;
-        }
+      if (singleData && singleData.width > 0) {
+        this.loadedSingleTextures[stateKey] = singleData.texture;
+        console.log(`🎉 [AssetLoader] Single sprite '${stateKey}' ready (${singleData.width}px).`);
+        loadedCount++;
       }
     }
 
-    console.log(`[AssetLoader] TOTAL USER ASSETS PREPARED: ${loadedCount}`);
-
-    // 디스플레이 바로 갱신
+    console.log(`[AssetLoader] Total ${loadedCount} state assets prepared.`);
     this.updateSpriteDisplay(PetState.IDLE);
   }
 
