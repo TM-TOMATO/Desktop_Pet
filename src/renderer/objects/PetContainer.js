@@ -25,6 +25,8 @@ class PetContainer extends PIXI.Container {
     this.animatedSprite = null;
     this.singleSprite = null;
     this.graphicsFallback = null;
+    this.hitboxGraphics = null;
+    this.showHitbox = false;
 
     this.loadedAnimations = {};
     this.loadedSingleTextures = {};
@@ -303,15 +305,29 @@ class PetContainer extends PIXI.Container {
       if (!this.isDragging && this.onPointerOut) this.onPointerOut();
     });
 
+    // pointerdown에서 좌/우 클릭 분기 처리
     this.on('pointerdown', (e) => {
+      // 우클릭(button=2)은 드래그 시작 안 함
+      if (e.button === 2 || e.data?.button === 2 || e.nativeEvent?.button === 2) {
+        e.stopPropagation();
+        if (this.onRightClick) this.onRightClick(e.global.x, e.global.y);
+        return;
+      }
+
+      // 좌클릭 드래그
       this.isDragging = true;
       this.cursor = 'grabbing';
       this.dragOffset = {
         x: this.x - e.global.x,
         y: this.y - e.global.y
       };
-
       if (this.onDragStart) this.onDragStart();
+    });
+
+    // rightdown 이벤트도 백업으로 처리
+    this.on('rightdown', (e) => {
+      e.stopPropagation();
+      if (this.onRightClick) this.onRightClick(e.global.x, e.global.y);
     });
 
     window.addEventListener('pointermove', (e) => {
@@ -322,7 +338,7 @@ class PetContainer extends PIXI.Container {
       }
     });
 
-    window.addEventListener('pointerup', () => {
+    window.addEventListener('pointerup', (e) => {
       if (this.isDragging) {
         this.isDragging = false;
         this.cursor = 'grab';
@@ -330,10 +346,31 @@ class PetContainer extends PIXI.Container {
       }
     });
 
-    this.on('rightdown', (e) => {
-      e.stopPropagation();
-      if (this.onRightClick) this.onRightClick(e.global.x, e.global.y);
-    });
+    // 기본 우클릭 컨텍스트 메뉴 차단 (캔버스 레벨)
+    if (this.app && this.app.canvas) {
+      this.app.canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+      });
+    }
+  }
+
+  setHitboxVisible(visible) {
+    this.showHitbox = visible;
+    if (!visible) {
+      if (this.hitboxGraphics) {
+        this.hitboxGraphics.visible = false;
+      }
+      return;
+    }
+    if (!this.hitboxGraphics) {
+      this.hitboxGraphics = new PIXI.Graphics();
+      this.addChild(this.hitboxGraphics);
+    }
+    this.hitboxGraphics.clear();
+    this.hitboxGraphics.rect(0, 0, 64, 64);
+    this.hitboxGraphics.fill({ color: 0x00ff88, alpha: 0.18 });
+    this.hitboxGraphics.stroke({ width: 2, color: 0x00ff88, alpha: 0.8 });
+    this.hitboxGraphics.visible = true;
   }
 
   onStateChange(newState) {

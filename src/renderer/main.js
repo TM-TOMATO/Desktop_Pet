@@ -56,6 +56,7 @@ const { FoodItem } = require('./objects/FoodItem.js');
   const barExp = document.getElementById('bar-exp');
   const scaleRange = document.getElementById('scale-range');
   const scaleValueLabel = document.getElementById('scale-value');
+  const hitboxToggle = document.getElementById('hitbox-toggle');
 
   // 저장된 스케일 적용
   const savedScale = petStats.scaleFactor || 1.0;
@@ -69,6 +70,10 @@ const { FoodItem } = require('./objects/FoodItem.js');
     const scaleVal = pct / 100;
     pet.setBaseScale(scaleVal);
     petStats.setScaleFactor(scaleVal);
+  });
+
+  hitboxToggle.addEventListener('change', () => {
+    pet.setHitboxVisible(hitboxToggle.checked);
   });
 
   function showDialog(text, durationMs = 3500) {
