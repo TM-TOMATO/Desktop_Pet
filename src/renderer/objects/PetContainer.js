@@ -1,26 +1,23 @@
 const PIXI = require('pixi.js');
 const path = require('path');
-const { url } = require('url');
+const fs = require('fs');
 const { PetState } = require('../core/StateMachine.js');
 
 class PetContainer extends PIXI.Container {
   constructor(app) {
     super();
     this.app = app;
-    this.pivot.set(32, 64); // 64x64 기본 피벗 (하단 중앙)
+    this.pivot.set(32, 64);
     
-    // 위치 기본값 (화면 하단중앙 근처)
     this.x = window.innerWidth / 2;
     this.y = window.innerHeight - 80;
 
-    // 이동 속도 및 물리 변수
     this.walkDirection = 1;
     this.walkSpeed = 1.2;
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     this.bouncePhase = 0;
 
-    // 에셋 및 애니메이션 객체
     this.animatedSprite = null;
     this.singleSprite = null;
     this.graphicsFallback = null;
@@ -41,7 +38,7 @@ class PetContainer extends PIXI.Container {
     this.drawFallbackPet(PetState.IDLE);
     this.addChild(this.graphicsFallback);
 
-    // 2. 사용자가 넣어둔 에셋 로드 실행
+    // 2. DataURL 방식으로 에셋 무조건 로드
     await this.loadAllPetAssets();
   }
 
@@ -51,7 +48,6 @@ class PetContainer extends PIXI.Container {
 
     const g = this.graphicsFallback;
 
-    // 64x64 크기 슬라임 렌더링
     g.ellipse(32, 60, 20, 6);
     g.fill({ color: 0x000000, alpha: 0.18 });
 
@@ -72,7 +68,7 @@ class PetContainer extends PIXI.Container {
     g.circle(42, 38, 3);
     g.fill({ color: 0xffb3c1, alpha: 0.8 });
 
-    // 눈 (Eyes)
+    // 눈
     if (state === PetState.SLEEP) {
       g.moveTo(24, 33); g.lineTo(28, 33);
       g.moveTo(36, 33); g.lineTo(40, 33);
@@ -93,82 +89,105 @@ class PetContainer extends PIXI.Container {
     }
   }
 
-  // Windows 및 Electron 호환 file:/// URI로 안전 로드
-  async loadTextureFromFile(filePath) {
+  // Node.js fs로 읽어 Data URL로 변환 후 PIXI.Texture.from 로드 (100% 호환)
+  loadTextureViaDataUrl(filename) {
+    const candidates = [
+      path.join(__dirname, '../../assets/sprites', filename),
+      path.join(process.cwd(), 'assets/sprites', filename),
+      path.join(process.cwd(), 'resources/assets/sprites', filename)
+    ];
+
+    let foundPath = null;
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        foundPath = p;
+        break;
+      }
+    }
+
+    if (!foundPath) return null;
+
     try {
-      const normalizedPath = filePath.replace(/\\/g, '/');
-      const fileUrl = normalizedPath.startsWith('file://') ? normalizedPath : `file:///${normalizedPath}`;
-      const texture = await PIXI.Assets.load(fileUrl);
+      const buffer = fs.readFileSync(foundPath);
+      const base64 = buffer.toString('base64');
+      const dataUrl = `data:image/png;base64,${base64}`;
+      const texture = PIXI.Texture.from(dataUrl);
+      console.log(`✅ [AssetLoader] Successfully loaded '${filename}' via DataURL from: ${foundPath}`);
       return texture;
     } catch (err) {
-      console.warn(`[AssetLoader] Assets.load failed for ${filePath}, trying Texture.from:`, err.message);
-      try {
-        const normalizedPath = filePath.replace(/\\/g, '/');
-        const fileUrl = normalizedPath.startsWith('file://') ? normalizedPath : `file:///${normalizedPath}`;
-        const texture = PIXI.Texture.from(fileUrl);
-        return texture;
-      } catch (err2) {
-        return null;
-      }
+      console.error(`❌ [AssetLoader] Failed to read '${filename}':`, err.message);
+      return null;
     }
   }
 
   async loadAllPetAssets() {
     const states = ['idle', 'walk', 'happy', 'hungry', 'eating', 'sleep', 'drag'];
-    const assetsDir = path.join(__dirname, '../../assets/sprites');
-
     let loadedCount = 0;
 
     for (const stateKey of states) {
-      // 1. 프레임시트 (pet_<state>_sheet.png) 시도
-      const sheetPath = path.join(assetsDir, `pet_${stateKey}_sheet.png`);
-      const sheetTexture = await this.loadTextureFromFile(sheetPath);
+      // 1. 프레임시트 (pet_<state>_sheet.png)
+      const sheetFileName = `pet_${stateKey}_sheet.png`;
+      const sheetTexture = this.loadTextureViaDataUrl(sheetFileName);
 
-      if (sheetTexture && sheetTexture.width > 0) {
-        const frames = this.sliceTextureToFrames(sheetTexture);
-        if (frames.length > 0) {
-          this.loadedAnimations[stateKey] = frames;
-          console.log(`✅ [AssetLoader] Loaded animation for '${stateKey}': ${frames.length} frames (${sheetTexture.width}x${sheetTexture.height})`);
-          loadedCount++;
-          continue;
+      if (sheetTexture) {
+        // DataURL 텍스처의 비동기 이미지 로딩 완료 대기
+        if (sheetTexture.baseTexture && !sheetTexture.baseTexture.valid) {
+          await new Promise((resolve) => {
+            sheetTexture.baseTexture.once('loaded', resolve);
+            sheetTexture.baseTexture.once('error', resolve);
+            // 만약 이미 오버헤드 없이 로드되었다면 즉시 resolve
+            setTimeout(resolve, 100);
+          });
+        }
+
+        const width = sheetTexture.width || sheetTexture.source?.width || 0;
+        const height = sheetTexture.height || sheetTexture.source?.height || 0;
+
+        if (width > 0 && height > 0) {
+          const frames = this.sliceTextureToFrames(sheetTexture, width, height);
+          if (frames.length > 0) {
+            this.loadedAnimations[stateKey] = frames;
+            console.log(`🎉 [AssetLoader] Animation '${stateKey}' ready: ${frames.length} frames (${width}x${height})`);
+            loadedCount++;
+            continue;
+          }
         }
       }
 
-      // 2. 단일 PNG (pet_<state>.png) 시도
-      const singlePath = path.join(assetsDir, `pet_${stateKey}.png`);
-      const singleTexture = await this.loadTextureFromFile(singlePath);
+      // 2. 단일 PNG (pet_<state>.png)
+      const singleFileName = `pet_${stateKey}.png`;
+      const singleTexture = this.loadTextureViaDataUrl(singleFileName);
 
-      if (singleTexture && singleTexture.width > 0) {
-        this.loadedSingleTextures[stateKey] = singleTexture;
-        console.log(`✅ [AssetLoader] Loaded single sprite for '${stateKey}' (${singleTexture.width}x${singleTexture.height})`);
-        loadedCount++;
+      if (singleTexture) {
+        if (singleTexture.baseTexture && !singleTexture.baseTexture.valid) {
+          await new Promise((resolve) => {
+            singleTexture.baseTexture.once('loaded', resolve);
+            setTimeout(resolve, 100);
+          });
+        }
+        if (singleTexture.width > 0) {
+          this.loadedSingleTextures[stateKey] = singleTexture;
+          console.log(`🎉 [AssetLoader] Single sprite '${stateKey}' ready (${singleTexture.width}x${singleTexture.height})`);
+          loadedCount++;
+        }
       }
     }
 
-    if (loadedCount > 0) {
-      console.log(`🎉 [AssetLoader] Total ${loadedCount} user pet assets successfully applied!`);
-    } else {
-      console.log(`⚠️ [AssetLoader] No user assets found or failed to load. Using fallback slime.`);
-    }
+    console.log(`[AssetLoader] Total ${loadedCount} state assets prepared.`);
 
     // 펫 디스플레이 갱신
     this.updateSpriteDisplay(PetState.IDLE);
   }
 
-  // 가로 연속 프레임 분할 (세로 높이를 기준으로 정사각형 프레임 분할)
-  sliceTextureToFrames(baseTexture) {
+  sliceTextureToFrames(baseTexture, width, height) {
     const frames = [];
-    const width = baseTexture.width;
-    const height = baseTexture.height;
-    
-    // 프레임 크기 (높이 기준 정사각형 프레임)
     const frameSize = height > 0 ? height : 64;
     const count = Math.max(1, Math.floor(width / frameSize));
 
     for (let i = 0; i < count; i++) {
       const rect = new PIXI.Rectangle(i * frameSize, 0, frameSize, frameSize);
       const frameTexture = new PIXI.Texture({
-        source: baseTexture.source,
+        source: baseTexture.source || baseTexture,
         frame: rect
       });
       frames.push(frameTexture);
@@ -197,7 +216,6 @@ class PetContainer extends PIXI.Container {
       if (this.singleSprite) this.singleSprite.visible = false;
       if (this.graphicsFallback) this.graphicsFallback.visible = false;
 
-      // 텍스처 크기에 맞춰 Pivot 설정
       const firstFrame = frames[0];
       const frameW = firstFrame.width || 64;
       const frameH = firstFrame.height || 64;
@@ -207,7 +225,7 @@ class PetContainer extends PIXI.Container {
         this.animatedSprite = new PIXI.AnimatedSprite(frames);
         this.animatedSprite.anchor.set(0.5, 1.0);
         this.animatedSprite.position.set(frameW / 2, frameH);
-        this.animatedSprite.animationSpeed = 0.12; // 부드러운 애니메이션 속도
+        this.animatedSprite.animationSpeed = 0.12;
         this.addChild(this.animatedSprite);
       } else {
         this.animatedSprite.textures = frames;
