@@ -11,5 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   quitApp: () => {
     ipcRenderer.send('quit-app');
-  }
+  },
+  saveData: (data) => ipcRenderer.invoke('save-data', data),
+  loadData: () => ipcRenderer.invoke('load-data')
 });

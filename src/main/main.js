@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, screen, Tray, Menu } = require('electron');
 const path = require('path');
+const store = require('./store');
 
 let mainWindow = null;
 let tray = null;
@@ -49,6 +50,14 @@ function createWindow() {
 
   ipcMain.on('quit-app', () => {
     app.quit();
+  });
+
+  ipcMain.handle('save-data', (event, data) => {
+    return store.saveData(data);
+  });
+
+  ipcMain.handle('load-data', () => {
+    return store.loadData();
   });
 
   mainWindow.on('closed', () => {
