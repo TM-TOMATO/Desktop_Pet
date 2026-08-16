@@ -229,6 +229,17 @@ export class PetContainer extends PIXI.Container {
   }
 
   setupInteractions() {
+    // 히트 영역 (펫 충돌 영역 설정)
+    this.hitArea = new PIXI.Rectangle(16, 16, 96, 112);
+
+    this.on('pointerover', () => {
+      if (this.onPointerOver) this.onPointerOver();
+    });
+
+    this.on('pointerout', () => {
+      if (!this.isDragging && this.onPointerOut) this.onPointerOut();
+    });
+
     this.on('pointerdown', (e) => {
       this.isDragging = true;
       this.cursor = 'grabbing';

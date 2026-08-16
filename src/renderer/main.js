@@ -153,24 +153,47 @@ import { FoodItem } from './objects/FoodItem.js';
     statusModalEl.classList.add('hidden');
   });
 
-  // 9. Ghost Mode (클릭 투과 연동)
-  window.addEventListener('mousemove', (e) => {
-    const isHoveringUI = e.target.closest('.pet-dialog, .radial-menu, .status-modal, button');
-    
-    const dx = e.clientX - pet.x;
-    const dy = e.clientY - (pet.y - 64);
-    const isHoveringPet = (dx * dx + dy * dy) < 4000;
+  // 9. Ghost Mode (클릭 투과 연동 - 이벤트 드라이븐 방식)
+  let isCursorOverPet = false;
+  let isCursorOverUI = false;
 
-    if (isHoveringPet || isHoveringUI || pet.isDragging) {
-      if (window.electronAPI) {
-        window.electronAPI.setIgnoreMouseEvents(false);
-      }
+  function updateMouseIgnoreState() {
+    if (!window.electronAPI) return;
+
+    if (isCursorOverPet || isCursorOverUI || pet.isDragging) {
+      window.electronAPI.setIgnoreMouseEvents(false);
     } else {
-      if (window.electronAPI) {
-        window.electronAPI.setIgnoreMouseEvents(true, { forward: true });
-      }
+      window.electronAPI.setIgnoreMouseEvents(true, { forward: true });
     }
+  }
+
+  // 펫 마우스 호버 이벤트
+  pet.onPointerOver = () => {
+    isCursorOverPet = true;
+    updateMouseIgnoreState();
+  };
+
+  pet.onPointerOut = () => {
+    isCursorOverPet = false;
+    updateMouseIgnoreState();
+  };
+
+  // UI 요소 마우스 호버 감지 (말풍선, 메뉴, 모달)
+  const interactiveUIElements = [dialogEl, radialMenuEl, statusModalEl];
+  interactiveUIElements.forEach((el) => {
+    if (!el) return;
+    el.addEventListener('mouseenter', () => {
+      isCursorOverUI = true;
+      updateMouseIgnoreState();
+    });
+    el.addEventListener('mouseleave', () => {
+      isCursorOverUI = false;
+      updateMouseIgnoreState();
+    });
   });
+
+  // 초기 상태: 빈 공간 클릭 통과하도록 즉시 실행
+  updateMouseIgnoreState();
 
   // 10. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {

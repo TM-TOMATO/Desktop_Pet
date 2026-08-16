@@ -32,7 +32,10 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  // 마우스 투과 IPC 이벤트 핸들러
+  // 기본적으로 마우스 통과(Ghost Mode) 설정
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  // 마우스 통과 IPC 이벤트 핸들러
   ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (win) {
