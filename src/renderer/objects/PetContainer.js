@@ -213,15 +213,24 @@ class PetContainer extends PIXI.Container {
       const frameH = firstFrame.height || 64;
       this.pivot.set(frameW / 2, frameH);
 
+      const animSpeedMap = {
+        idle: 0.22,
+        walk: 0.32,
+        happy: 0.3,
+        eating: 0.25
+      };
+      const speed = animSpeedMap[key] || 0.25;
+
       if (!this.animatedSprite) {
         this.animatedSprite = new PIXI.AnimatedSprite(frames);
         this.animatedSprite.anchor.set(0.5, 1.0);
         this.animatedSprite.position.set(frameW / 2, frameH);
-        this.animatedSprite.animationSpeed = 0.12;
+        this.animatedSprite.animationSpeed = speed;
         this.addChild(this.animatedSprite);
       } else {
         this.animatedSprite.textures = frames;
         this.animatedSprite.position.set(frameW / 2, frameH);
+        this.animatedSprite.animationSpeed = speed;
       }
 
       this.animatedSprite.visible = true;
