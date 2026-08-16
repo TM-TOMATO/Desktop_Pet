@@ -1,12 +1,13 @@
 const PIXI = require('pixi.js');
 const path = require('path');
+const { url } = require('url');
 const { PetState } = require('../core/StateMachine.js');
 
 class PetContainer extends PIXI.Container {
   constructor(app) {
     super();
     this.app = app;
-    this.pivot.set(64, 128); // 하단 중앙 Pivot (128x128 기준)
+    this.pivot.set(32, 64); // 64x64 기본 피벗 (하단 중앙)
     
     // 위치 기본값 (화면 하단중앙 근처)
     this.x = window.innerWidth / 2;
@@ -35,10 +36,12 @@ class PetContainer extends PIXI.Container {
   }
 
   async initGraphics() {
+    // 1. Fallback 젤리 그래픽 생성
     this.graphicsFallback = new PIXI.Graphics();
     this.drawFallbackPet(PetState.IDLE);
     this.addChild(this.graphicsFallback);
 
+    // 2. 사용자가 넣어둔 에셋 로드 실행
     await this.loadAllPetAssets();
   }
 
@@ -48,46 +51,65 @@ class PetContainer extends PIXI.Container {
 
     const g = this.graphicsFallback;
 
-    // 그림자 (Shadow)
-    g.ellipse(64, 124, 36, 10);
+    // 64x64 크기 슬라임 렌더링
+    g.ellipse(32, 60, 20, 6);
     g.fill({ color: 0x000000, alpha: 0.18 });
 
-    // 몸통 색상
     let bodyColor = 0xff758f;
     if (state === PetState.HAPPY) bodyColor = 0xffb703;
     if (state === PetState.HUNGRY) bodyColor = 0xa2d2ff;
     if (state === PetState.SLEEP) bodyColor = 0xb8c0ff;
     if (state === PetState.EATING) bodyColor = 0x80ed99;
 
-    const squish = Math.sin(this.bouncePhase) * 4;
-    g.ellipse(64, 75 + squish / 2, 42 + squish, 38 - squish);
+    const squish = Math.sin(this.bouncePhase) * 2;
+    g.ellipse(32, 36 + squish / 2, 22 + squish, 20 - squish);
     g.fill({ color: bodyColor });
-    g.stroke({ width: 3, color: 0xff4d6d });
+    g.stroke({ width: 2, color: 0xff4d6d });
 
     // 볼터치
-    g.circle(44, 78, 6);
+    g.circle(22, 38, 3);
     g.fill({ color: 0xffb3c1, alpha: 0.8 });
-    g.circle(84, 78, 6);
+    g.circle(42, 38, 3);
     g.fill({ color: 0xffb3c1, alpha: 0.8 });
 
     // 눈 (Eyes)
     if (state === PetState.SLEEP) {
-      g.moveTo(48, 70); g.lineTo(56, 70);
-      g.moveTo(72, 70); g.lineTo(80, 70);
-      g.stroke({ width: 3, color: 0x2b2d42 });
+      g.moveTo(24, 33); g.lineTo(28, 33);
+      g.moveTo(36, 33); g.lineTo(40, 33);
+      g.stroke({ width: 2, color: 0x2b2d42 });
     } else if (state === PetState.HAPPY || state === PetState.EATING) {
-      g.arc(52, 70, 5, Math.PI, 0);
-      g.arc(76, 70, 5, Math.PI, 0);
-      g.stroke({ width: 3, color: 0x2b2d42 });
+      g.arc(26, 33, 3, Math.PI, 0);
+      g.arc(38, 33, 3, Math.PI, 0);
+      g.stroke({ width: 2, color: 0x2b2d42 });
     } else {
-      g.circle(52, 68, 5);
+      g.circle(26, 32, 3);
       g.fill({ color: 0x2b2d42 });
-      g.circle(76, 68, 5);
+      g.circle(38, 32, 3);
       g.fill({ color: 0x2b2d42 });
-      g.circle(50, 66, 2);
+      g.circle(25, 31, 1);
       g.fill({ color: 0xffffff });
-      g.circle(74, 66, 2);
+      g.circle(37, 31, 1);
       g.fill({ color: 0xffffff });
+    }
+  }
+
+  // Windows 및 Electron 호환 file:/// URI로 안전 로드
+  async loadTextureFromFile(filePath) {
+    try {
+      const normalizedPath = filePath.replace(/\\/g, '/');
+      const fileUrl = normalizedPath.startsWith('file://') ? normalizedPath : `file:///${normalizedPath}`;
+      const texture = await PIXI.Assets.load(fileUrl);
+      return texture;
+    } catch (err) {
+      console.warn(`[AssetLoader] Assets.load failed for ${filePath}, trying Texture.from:`, err.message);
+      try {
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        const fileUrl = normalizedPath.startsWith('file://') ? normalizedPath : `file:///${normalizedPath}`;
+        const texture = PIXI.Texture.from(fileUrl);
+        return texture;
+      } catch (err2) {
+        return null;
+      }
     }
   }
 
@@ -95,40 +117,56 @@ class PetContainer extends PIXI.Container {
     const states = ['idle', 'walk', 'happy', 'hungry', 'eating', 'sleep', 'drag'];
     const assetsDir = path.join(__dirname, '../../assets/sprites');
 
+    let loadedCount = 0;
+
     for (const stateKey of states) {
+      // 1. 프레임시트 (pet_<state>_sheet.png) 시도
       const sheetPath = path.join(assetsDir, `pet_${stateKey}_sheet.png`);
-      try {
-        const texture = await PIXI.Assets.load(sheetPath);
-        if (texture) {
-          const frames = this.sliceTextureToFrames(texture, 4);
+      const sheetTexture = await this.loadTextureFromFile(sheetPath);
+
+      if (sheetTexture && sheetTexture.width > 0) {
+        const frames = this.sliceTextureToFrames(sheetTexture);
+        if (frames.length > 0) {
           this.loadedAnimations[stateKey] = frames;
-          console.log(`[AssetLoader] Spritesheet loaded: pet_${stateKey}_sheet.png`);
+          console.log(`✅ [AssetLoader] Loaded animation for '${stateKey}': ${frames.length} frames (${sheetTexture.width}x${sheetTexture.height})`);
+          loadedCount++;
           continue;
         }
-      } catch (e) {}
+      }
 
+      // 2. 단일 PNG (pet_<state>.png) 시도
       const singlePath = path.join(assetsDir, `pet_${stateKey}.png`);
-      try {
-        const texture = await PIXI.Assets.load(singlePath);
-        if (texture) {
-          this.loadedSingleTextures[stateKey] = texture;
-          console.log(`[AssetLoader] Single sprite loaded: pet_${stateKey}.png`);
-        }
-      } catch (e) {}
+      const singleTexture = await this.loadTextureFromFile(singlePath);
+
+      if (singleTexture && singleTexture.width > 0) {
+        this.loadedSingleTextures[stateKey] = singleTexture;
+        console.log(`✅ [AssetLoader] Loaded single sprite for '${stateKey}' (${singleTexture.width}x${singleTexture.height})`);
+        loadedCount++;
+      }
     }
 
+    if (loadedCount > 0) {
+      console.log(`🎉 [AssetLoader] Total ${loadedCount} user pet assets successfully applied!`);
+    } else {
+      console.log(`⚠️ [AssetLoader] No user assets found or failed to load. Using fallback slime.`);
+    }
+
+    // 펫 디스플레이 갱신
     this.updateSpriteDisplay(PetState.IDLE);
   }
 
-  sliceTextureToFrames(baseTexture, defaultFrameCount = 4) {
+  // 가로 연속 프레임 분할 (세로 높이를 기준으로 정사각형 프레임 분할)
+  sliceTextureToFrames(baseTexture) {
     const frames = [];
     const width = baseTexture.width;
     const height = baseTexture.height;
-    const frameWidth = height;
-    const count = Math.max(1, Math.floor(width / frameWidth));
+    
+    // 프레임 크기 (높이 기준 정사각형 프레임)
+    const frameSize = height > 0 ? height : 64;
+    const count = Math.max(1, Math.floor(width / frameSize));
 
     for (let i = 0; i < count; i++) {
-      const rect = new PIXI.Rectangle(i * frameWidth, 0, frameWidth, height);
+      const rect = new PIXI.Rectangle(i * frameSize, 0, frameSize, frameSize);
       const frameTexture = new PIXI.Texture({
         source: baseTexture.source,
         frame: rect
@@ -152,20 +190,28 @@ class PetContainer extends PIXI.Container {
 
     const key = keyMap[state] || 'idle';
 
+    // 1. 프레임시트 애니메이션 적용
     if (this.loadedAnimations[key] && this.loadedAnimations[key].length > 0) {
       const frames = this.loadedAnimations[key];
 
       if (this.singleSprite) this.singleSprite.visible = false;
       if (this.graphicsFallback) this.graphicsFallback.visible = false;
 
+      // 텍스처 크기에 맞춰 Pivot 설정
+      const firstFrame = frames[0];
+      const frameW = firstFrame.width || 64;
+      const frameH = firstFrame.height || 64;
+      this.pivot.set(frameW / 2, frameH);
+
       if (!this.animatedSprite) {
         this.animatedSprite = new PIXI.AnimatedSprite(frames);
         this.animatedSprite.anchor.set(0.5, 1.0);
-        this.animatedSprite.position.set(64, 128);
-        this.animatedSprite.animationSpeed = 0.12;
+        this.animatedSprite.position.set(frameW / 2, frameH);
+        this.animatedSprite.animationSpeed = 0.12; // 부드러운 애니메이션 속도
         this.addChild(this.animatedSprite);
       } else {
         this.animatedSprite.textures = frames;
+        this.animatedSprite.position.set(frameW / 2, frameH);
       }
 
       this.animatedSprite.visible = true;
@@ -173,6 +219,7 @@ class PetContainer extends PIXI.Container {
       return;
     }
 
+    // 2. 단일 이미지 적용
     if (this.loadedSingleTextures[key]) {
       const texture = this.loadedSingleTextures[key];
 
@@ -182,29 +229,36 @@ class PetContainer extends PIXI.Container {
       }
       if (this.graphicsFallback) this.graphicsFallback.visible = false;
 
+      const texW = texture.width || 64;
+      const texH = texture.height || 64;
+      this.pivot.set(texW / 2, texH);
+
       if (!this.singleSprite) {
         this.singleSprite = new PIXI.Sprite(texture);
         this.singleSprite.anchor.set(0.5, 1.0);
-        this.singleSprite.position.set(64, 128);
+        this.singleSprite.position.set(texW / 2, texH);
         this.addChild(this.singleSprite);
       } else {
         this.singleSprite.texture = texture;
+        this.singleSprite.position.set(texW / 2, texH);
       }
 
       this.singleSprite.visible = true;
       return;
     }
 
+    // 3. 대체 젤리 슬라임 렌더링
     if (this.animatedSprite) this.animatedSprite.visible = false;
     if (this.singleSprite) this.singleSprite.visible = false;
     if (this.graphicsFallback) {
+      this.pivot.set(32, 64);
       this.graphicsFallback.visible = true;
       this.drawFallbackPet(state);
     }
   }
 
   setupInteractions() {
-    this.hitArea = new PIXI.Rectangle(16, 16, 96, 112);
+    this.hitArea = new PIXI.Rectangle(0, 0, 64, 64);
 
     this.on('pointerover', () => {
       if (this.onPointerOver) this.onPointerOver();
