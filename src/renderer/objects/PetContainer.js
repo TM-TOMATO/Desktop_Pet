@@ -13,10 +13,13 @@ class PetContainer extends PIXI.Container {
     this.y = window.innerHeight - 80;
 
     this.walkDirection = 1;
-    this.walkSpeed = 1.2;
+    this.walkSpeed = 2.4; // 공중에 떠 있을 때 신나게 앞으로 튀어나가는 속도
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     this.bouncePhase = 0;
+
+    // 점프 이동 제어 변수 (1, 2, 10 프레임 착지 상태 여부)
+    this.isGroundedFrame = true;
 
     this.animatedSprite = null;
     this.singleSprite = null;
@@ -35,12 +38,10 @@ class PetContainer extends PIXI.Container {
   }
 
   async initGraphics() {
-    // 1. Fallback 젤리 그래픽 생성
     this.graphicsFallback = new PIXI.Graphics();
     this.drawFallbackPet(PetState.IDLE);
     this.addChild(this.graphicsFallback);
 
-    // 2. DataURL + HTML Image Decode 기반 에셋 완벽 로드
     await this.loadAllPetAssets();
   }
 
@@ -91,7 +92,6 @@ class PetContainer extends PIXI.Container {
     }
   }
 
-  // HTML Image + decode() 디코딩 보장 로더
   async loadTextureViaDataUrl(filename) {
     const candidates = [
       path.join(__dirname, '../../../assets/sprites', filename),
@@ -116,7 +116,6 @@ class PetContainer extends PIXI.Container {
       const base64 = buffer.toString('base64');
       const dataUrl = `data:image/png;base64,${base64}`;
 
-      // HTML Image 엘리먼트로 픽셀 완벽 디코딩 대기
       const img = new Image();
       img.src = dataUrl;
       if (img.decode) {
@@ -142,7 +141,6 @@ class PetContainer extends PIXI.Container {
     let loadedCount = 0;
 
     for (const stateKey of states) {
-      // 1. 프레임시트 (pet_<state>_sheet.png)
       const sheetFileName = `pet_${stateKey}_sheet.png`;
       const sheetData = await this.loadTextureViaDataUrl(sheetFileName);
 
@@ -156,7 +154,6 @@ class PetContainer extends PIXI.Container {
         }
       }
 
-      // 2. 단일 PNG (pet_<state>.png)
       const singleFileName = `pet_${stateKey}.png`;
       const singleData = await this.loadTextureViaDataUrl(singleFileName);
 
@@ -213,13 +210,14 @@ class PetContainer extends PIXI.Container {
       const frameH = firstFrame.height || 64;
       this.pivot.set(frameW / 2, frameH);
 
+      // 애니메이션 프레임 속도 설정 (idle: 3fps, walk: 0.25)
       const animSpeedMap = {
-        idle: 0.22,
-        walk: 0.32,
-        happy: 0.3,
-        eating: 0.25
+        idle: 3 / 60, // 약 0.05 (3fps)
+        walk: 0.25,   // 부드러운 점프 모션 재생
+        happy: 0.25,
+        eating: 0.2
       };
-      const speed = animSpeedMap[key] || 0.25;
+      const speed = animSpeedMap[key] || 0.2;
 
       if (!this.animatedSprite) {
         this.animatedSprite = new PIXI.AnimatedSprite(frames);
@@ -231,6 +229,23 @@ class PetContainer extends PIXI.Container {
         this.animatedSprite.textures = frames;
         this.animatedSprite.position.set(frameW / 2, frameH);
         this.animatedSprite.animationSpeed = speed;
+      }
+
+      // walk 애니메이션 프레임별 점프/착지 감지
+      if (key === 'walk') {
+        this.animatedSprite.onFrameChange = (currentFrame) => {
+          // 10개 프레임 기준 (0-indexed: 0, 1, 9번은 지면 착지 상태 -> 이동 멈춤)
+          // 2 ~ 8번 프레임(3, 4, 5, 6, 7, 8, 9번 프레임)은 공중 점프 상태 -> 이동!
+          const frameIdx = currentFrame % frames.length;
+          if (frameIdx === 0 || frameIdx === 1 || frameIdx === frames.length - 1) {
+            this.isGroundedFrame = true;
+          } else {
+            this.isGroundedFrame = false;
+          }
+        };
+      } else {
+        this.animatedSprite.onFrameChange = null;
+        this.isGroundedFrame = true;
       }
 
       this.animatedSprite.visible = true;
@@ -328,7 +343,11 @@ class PetContainer extends PIXI.Container {
     this.bouncePhase += delta * 0.1;
 
     if (currentState === PetState.WALK && !this.isDragging) {
-      this.x += this.walkDirection * this.walkSpeed * delta;
+      // 1, 2, 10번 프레임이 아닐 때(공중에 떠 있을 때)만 전진 이동!
+      if (!this.isGroundedFrame) {
+        this.x += this.walkDirection * this.walkSpeed * delta;
+      }
+      
       this.scale.x = this.walkDirection;
 
       const minX = 64;
