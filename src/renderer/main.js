@@ -692,6 +692,36 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     return null;
   }
 
+  // 십자키 통합 1장 (btn_dpad.png) 지원
+  const dpadContainerEl = document.querySelector('.dpad');
+  if (dpadContainerEl) {
+    const integratedDpadPath = findSpriteFile('btn_dpad.png');
+    if (integratedDpadPath) {
+      try {
+        const buf = fs.readFileSync(integratedDpadPath);
+        const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+        dpadContainerEl.style.backgroundImage = `url("${dataUrl}")`;
+        dpadContainerEl.style.backgroundSize = 'contain';
+        dpadContainerEl.style.backgroundRepeat = 'no-repeat';
+        dpadContainerEl.style.backgroundPosition = 'center';
+        
+        // 통합 이미지가 있으면 개별 버튼은 투명 클릭 영역으로 변경
+        ['btn-dpad-up', 'btn-dpad-down', 'btn-dpad-left', 'btn-dpad-right'].forEach((id) => {
+          const btn = document.getElementById(id);
+          if (btn) {
+            btn.style.backgroundColor = 'transparent';
+            btn.style.borderColor = 'transparent';
+            btn.style.boxShadow = 'none';
+            btn.innerText = '';
+          }
+        });
+        const center = document.querySelector('.dpad-center');
+        if (center) center.style.backgroundColor = 'transparent';
+        console.log('🔘 [ButtonLoader] Integrated btn_dpad.png applied.');
+      } catch (e) {}
+    }
+  }
+
   for (const [btnId, spriteFiles] of Object.entries(buttonSpriteMap)) {
     const el = document.getElementById(btnId);
     if (!el) continue;
