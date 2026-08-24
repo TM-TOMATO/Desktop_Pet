@@ -13,16 +13,359 @@ html, body {
   font-family: 'Consolas', 'Courier New', 'Segoe UI', monospace;
 }
 
+/* ========================================================
+   0. App Scaler (기본 1.5배 384x384 px)
+   ======================================================== */
 #app-scaler {
-  width: 440px;
-  height: 490px;
+  width: 256px;
+  height: 256px;
   transform-origin: top left;
   display: flex;
   position: relative;
 }
 
 /* ========================================================
-   MINI MODE - 작은 화면 모드 패널 (150x170 px)
+   1. 통합 256x256 레트로 게임기 본체 (Multi-Layer Console)
+   ======================================================== */
+.console-casing {
+  width: 256px;
+  height: 256px;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  /* 기본 폴백 케이스 스타일 */
+  background: transparent;
+}
+
+.console-casing:active {
+  cursor: grabbing;
+}
+
+/* 256x256 전체 오버레이 스프라이트 공통 레이어 */
+.layer-sprite {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 256px;
+  height: 256px;
+  background-size: 256px 256px;
+  background-repeat: no-repeat;
+  background-position: top left;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+}
+
+.layer-case-bg { z-index: 1; }
+.layer-screen-bg { z-index: 2; }
+.layer-dpad { z-index: 10; }
+.layer-power { z-index: 11; }
+.layer-action-a { z-index: 12; }
+.layer-action-b { z-index: 13; }
+
+/* ========================================================
+   2. LCD 스크린 뷰포트 (Screen Viewport & Canvas)
+   - 256x256 기준 스크린 내부 영역: left 63px, top 23px, width 104px, height 140px
+   ======================================================== */
+.screen-viewport {
+  position: absolute;
+  left: 63px;
+  top: 23px;
+  width: 104px;
+  height: 140px;
+  z-index: 5;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: default;
+}
+
+.screen-glass {
+  width: 100%;
+  height: 100%;
+  background: #9bbc0f;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: inset 0 0 10px rgba(15, 56, 15, 0.4);
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* 플로팅 코인 이펙트 */
+.coin-popup-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.coin-popup {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 900;
+  color: #0f380f;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  animation: float-coin 0.6s forwards ease-out;
+}
+
+@keyframes float-coin {
+  0% { opacity: 1; transform: translateY(0) scale(0.9); }
+  50% { transform: translateY(-14px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-26px) scale(1); }
+}
+
+/* ========================================================
+   3. OSD 메뉴 & 모달 창
+   ======================================================== */
+.osd-menu, .osd-modal {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 56, 15, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  z-index: 100;
+  cursor: default;
+}
+
+.osd-menu.hidden, .osd-modal.hidden {
+  display: none !important;
+}
+
+.osd-menu-box, .osd-modal-box {
+  width: 100%;
+  height: 100%;
+  background: #8bac0f;
+  border: 2px solid #0f380f;
+  border-radius: 3px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #0f380f;
+}
+
+.osd-title {
+  font-size: 9px;
+  font-weight: 900;
+  text-align: center;
+  border-bottom: 1.5px solid #0f380f;
+  padding-bottom: 2px;
+  letter-spacing: 0.5px;
+}
+
+.osd-items, .osd-shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0;
+  overflow-y: auto;
+}
+
+.osd-item, .osd-shop-row {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 4px;
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.osd-item.active, .osd-shop-row.active {
+  background: #0f380f;
+  color: #9bbc0f;
+}
+
+.osd-hint {
+  font-size: 8px;
+  font-weight: 900;
+  text-align: center;
+  border-top: 1px solid #0f380f;
+  padding-top: 2px;
+}
+
+.osd-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.osd-stat-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.osd-bar-bg {
+  width: 55px;
+  height: 6px;
+  background: #9bbc0f;
+  border: 1px solid #0f380f;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.osd-bar-fill {
+  height: 100%;
+  background: #0f380f;
+}
+
+.osd-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 800;
+  margin: 2px 0;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.osd-setting-row.config-active {
+  background: #0f380f;
+  color: #9bbc0f;
+}
+
+.osd-setting-row input[type="range"] {
+  width: 48px;
+  accent-color: #0f380f;
+}
+
+/* ========================================================
+   4. 상단 LCD 카운터 스트립 (HUD)
+   ======================================================== */
+.console-top-strip {
+  position: absolute;
+  top: 8px;
+  left: 64px;
+  width: 102px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.lcd-counter-display {
+  background: rgba(135, 155, 105, 0.85);
+  border: 1.5px solid #546838;
+  border-radius: 3px;
+  padding: 1px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 7px;
+  font-weight: 900;
+  color: #1a290a;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.counter-divider {
+  opacity: 0.4;
+}
+
+/* ========================================================
+   5. 위치 맞춤형 인터랙티브 클릭 영역 (Hitbox Layer)
+   - 256x256 캔버스 기준 정확한 버튼 히트존 매핑
+   ======================================================== */
+.hitbox-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 256px;
+  height: 256px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.hit-btn {
+  position: absolute;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  outline: none;
+}
+
+/* 전원 버튼 (X: 180~197, Y: 15~34) */
+.hit-power {
+  left: 178px;
+  top: 14px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+
+/* 십자키 4방향 (X: 57~108, Y: 178~228) */
+.hit-dpad-up {
+  left: 71px;
+  top: 178px;
+  width: 24px;
+  height: 18px;
+}
+
+.hit-dpad-down {
+  left: 71px;
+  top: 210px;
+  width: 24px;
+  height: 18px;
+}
+
+.hit-dpad-left {
+  left: 57px;
+  top: 193px;
+  width: 18px;
+  height: 24px;
+}
+
+.hit-dpad-right {
+  left: 90px;
+  top: 193px;
+  width: 18px;
+  height: 24px;
+}
+
+/* A / B 액션 버튼 */
+.hit-action-a {
+  left: 140px;
+  top: 186px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.hit-action-b {
+  left: 118px;
+  top: 204px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+/* ========================================================
+   6. 미니 모드 패널 (140x160 px)
    ======================================================== */
 .mini-panel {
   width: 140px;
@@ -48,7 +391,6 @@ html, body {
   display: none !important;
 }
 
-/* 미니 모드에서는 .console-casing 숨김 */
 body.mini-mode .console-casing {
   display: none !important;
 }
@@ -67,7 +409,6 @@ body.mini-mode #app-scaler {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: inset 0 0 8px rgba(15, 56, 15, 0.4);
 }
 
 .mini-controls {
@@ -93,490 +434,17 @@ body.mini-mode #app-scaler {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.08s, background 0.1s;
 }
 
-.mini-btn:active {
-  transform: scale(0.88);
-}
-
-.mini-quit-btn {
-  background: #e63946;
-  border-color: #9d0208;
-}
-
-.mini-quit-btn:hover { background: #ff4d6d; }
-
-.mini-expand-btn {
-  background: #3a86ff;
-  border-color: #1a56cc;
-  font-size: 14px;
-}
-
-.mini-expand-btn:hover { background: #5e9eff; }
-
-/* ========================================================
-   1. 레트로 게임기 본체 케이스 (Console Outer Chassis)
-   ======================================================== */
-.console-casing {
-  width: 420px;
-  height: 470px;
-  margin: 10px;
-  background: linear-gradient(180deg, #d8d6cf 0%, #b8b4a8 100%);
-  border: 4px solid #8e8a7d;
-  border-radius: 24px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), inset 0 2px 0 rgba(255, 255, 255, 0.7);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  cursor: grab;
-}
-
-.console-casing:active {
-  cursor: grabbing;
-}
-
-/* 상단 시스템 바 & 디지털 LCD 카운터 스트립 */
-.console-top-strip {
-  height: 38px;
-  padding: 6px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 2px solid #a29e92;
-  background: #c8c5ba;
-}
-
-.power-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.power-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #e63946;
-  border: 2px solid #9d0208;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  transition: transform 0.1s, background 0.15s;
-  pointer-events: auto;
-}
-
-.power-btn:hover {
-  background: #ff4d6d;
-}
-
-.power-btn:active {
-  transform: scale(0.9);
-}
-
-.power-led {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ff0055;
-  box-shadow: 0 0 8px #ff0055;
-}
-
-.power-led.on {
-  background: #00ff88;
-  box-shadow: 0 0 8px #00ff88;
-}
-
-.brand-text {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #555146;
-}
-
-/* 상단 디지털 LCD 카운터 디스플레이 (클릭수 & 골드 표시) */
-.lcd-counter-display {
-  background: #879b69;
-  border: 2px solid #546838;
-  border-radius: 4px;
-  padding: 3px 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 800;
-  color: #1a290a;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
-  letter-spacing: 0.5px;
-}
-
-.counter-divider {
-  opacity: 0.4;
-}
-
-/* ========================================================
-   2. LCD 스크린 베젤 & 챔버 (Screen Bezel & Viewport)
-   ======================================================== */
-.screen-bezel {
-  height: 240px;
-  margin: 10px 14px 6px 14px;
-  background: #505663;
-  border: 3px solid #363b46;
-  border-radius: 12px;
-  padding: 8px;
-  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
-  display: flex;
-  cursor: default;
-}
-
-.screen-glass {
-  flex: 1;
-  background: #9bbc0f;
-  border: 2px solid #8bac0f;
-  border-radius: 6px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: inset 0 0 16px rgba(15, 56, 15, 0.4);
-  cursor: pointer;
-}
-
-#canvas-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-
-/* 클릭 시 코인 획득 플로팅 텍스트 (+1 G) */
-.coin-popup-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.coin-popup {
-  position: absolute;
-  font-size: 13px;
-  font-weight: 900;
-  color: #0f380f;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-  animation: float-coin 0.7s forwards ease-out;
-}
-
-@keyframes float-coin {
-  0% { opacity: 1; transform: translateY(0) scale(0.9); }
-  50% { transform: translateY(-20px) scale(1.15); }
-  100% { opacity: 0; transform: translateY(-38px) scale(1); }
-}
-
-/* ========================================================
-   3. 레트로 OSD 메뉴 & 모달 (A버튼 선택 / B버튼 취소)
-   ======================================================== */
-.osd-menu, .osd-modal {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(15, 56, 15, 0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  z-index: 100;
-  cursor: default;
-}
-
-.osd-menu.hidden, .osd-modal.hidden {
-  display: none;
-}
-
-.osd-menu-box, .osd-modal-box {
-  width: 100%;
-  height: 100%;
-  background: #8bac0f;
-  border: 3px solid #0f380f;
-  border-radius: 4px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  color: #0f380f;
-}
-
-.osd-title {
-  font-size: 12px;
-  font-weight: 900;
-  text-align: center;
-  border-bottom: 2px solid #0f380f;
-  padding-bottom: 4px;
-  letter-spacing: 1px;
-}
-
-.osd-items, .osd-shop-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 4px 0;
-  overflow-y: auto;
-}
-
-.osd-item, .osd-shop-row {
-  font-size: 11px;
-  font-weight: 800;
-  padding: 3px 6px;
-  border-radius: 3px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.osd-item.active, .osd-shop-row.active {
-  background: #0f380f;
-  color: #9bbc0f;
-}
-
-.osd-hint {
-  font-size: 10px;
-  font-weight: 900;
-  text-align: center;
-  border-top: 1px solid #0f380f;
-  padding-top: 4px;
-}
-
-/* OSD 상태창 */
-.osd-stat-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 800;
-  margin-bottom: 3px;
-}
-
-.osd-stat-bar-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.osd-bar-bg {
-  width: 160px;
-  height: 8px;
-  background: #9bbc0f;
-  border: 1.5px solid #0f380f;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.osd-bar-fill {
-  height: 100%;
-  background: #0f380f;
-}
-
-/* OSD 설정창 (CONFIG) */
-.osd-setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 800;
-  margin: 3px 0;
-  padding: 3px 6px;
-  border-radius: 4px;
-  transition: background 0.1s, color 0.1s;
-}
-
-.osd-setting-row.config-active {
-  background: #0f380f;
-  color: #9bbc0f;
-}
-
-.osd-setting-row input[type="range"] {
-  width: 130px;
-  accent-color: #0f380f;
-}
-
-.osd-setting-row.config-active input[type="range"] {
-  accent-color: #9bbc0f;
-}
-
-/* ========================================================
-   4. 물리 조작 패드 (D-Pad & A/B Action Buttons)
-   ======================================================== */
-.console-gamepad {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 24px 14px 24px;
-  cursor: default;
-}
-
-/* 십자 방향키 (D-Pad) */
-.dpad-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dpad {
-  width: 90px;
-  height: 90px;
-  position: relative;
-}
-
-.dpad-btn {
-  position: absolute;
-  background: #2b2b2b;
-  border: 2px solid #141414;
-  color: #888;
-  font-size: 12px;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 5px rgba(0,0,0,0.4);
-  transition: all 0.08s ease;
-}
-
-.dpad-btn:active, .dpad-btn.pressed {
-  background: #000;
-  transform: scale(0.92);
-}
-
-.dpad-up {
-  top: 0; left: 30px;
-  width: 30px; height: 32px;
-  border-radius: 6px 6px 0 0;
-}
-
-.dpad-down {
-  bottom: 0; left: 30px;
-  width: 30px; height: 32px;
-  border-radius: 0 0 6px 6px;
-}
-
-.dpad-left {
-  top: 30px; left: 0;
-  width: 32px; height: 30px;
-  border-radius: 6px 0 0 6px;
-}
-
-.dpad-right {
-  top: 30px; right: 0;
-  width: 32px; height: 30px;
-  border-radius: 0 6px 6px 0;
-}
-
-.dpad-center {
-  position: absolute;
-  top: 30px; left: 30px;
-  width: 30px; height: 30px;
-  background: #2b2b2b;
-}
-
-/* 중앙 스피커 그릴 */
-.speaker-grille {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transform: rotate(-30deg);
-  opacity: 0.35;
-}
-
-.speaker-grille span {
-  width: 32px;
-  height: 3px;
-  background: #555;
-  border-radius: 2px;
-}
-
-/* 우측 액션 버튼 (A / B 버튼) */
-.action-buttons-container {
-  display: flex;
-  gap: 16px;
-  transform: rotate(-25deg);
-  align-items: center;
-}
-
-.action-btn-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.action-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 3px solid #5a0b2d;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.08s ease, background 0.1s;
-}
-
-.action-btn:active, .action-btn.pressed {
-  transform: scale(0.9);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-
-.btn-b {
-  background: #9d0208;
-}
-
-.btn-b:hover {
-  background: #ba181b;
-}
-
-.btn-a {
-  background: #c1121f;
-}
-
-.btn-a:hover {
-  background: #e63946;
-}
-
-.btn-subtext {
-  font-size: 9px;
-  font-weight: 800;
-  color: #555146;
-  margin-top: 4px;
-  letter-spacing: 0.5px;
-}
+.mini-quit-btn { background: #e63946; border-color: #9d0208; }
+.mini-expand-btn { background: #3a86ff; border-color: #1a56cc; font-size: 14px; }
 
 /* 토글 스위치 */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 36px;
-  height: 18px;
+  width: 28px;
+  height: 14px;
 }
 
 .toggle-switch input {
@@ -590,18 +458,18 @@ canvas {
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
   background: #9bbc0f;
-  border: 1.5px solid #0f380f;
-  border-radius: 18px;
+  border: 1px solid #0f380f;
+  border-radius: 14px;
   transition: 0.2s;
 }
 
 .toggle-slider:before {
   content: '';
   position: absolute;
-  width: 12px;
-  height: 12px;
-  left: 2px;
-  bottom: 1.5px;
+  width: 10px;
+  height: 10px;
+  left: 1.5px;
+  bottom: 1px;
   background: #0f380f;
   border-radius: 50%;
   transition: transform 0.2s;
@@ -613,5 +481,5 @@ canvas {
 
 .toggle-switch input:checked + .toggle-slider:before {
   background: #9bbc0f;
-  transform: translateX(17px);
+  transform: translateX(13px);
 }

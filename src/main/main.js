@@ -7,8 +7,8 @@ let tray = null;
 let uIOhookInstance = null;
 let isAlwaysOnTop = true;
 
-const DEFAULT_WIN_W = 440;
-const DEFAULT_WIN_H = 490;
+const DEFAULT_WIN_W = 384;
+const DEFAULT_WIN_H = 384;
 const MINI_WIN_W = 150;
 const MINI_WIN_H = 170;
 
@@ -30,7 +30,7 @@ function createWindow() {
     alwaysOnTop: isAlwaysOnTop,
     resizable: false,
     hasShadow: false,
-    skipTaskbar: false,      // ✅ 작업표시줄에 앱 표시 (최소화/복원 가능)
+    skipTaskbar: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
@@ -82,7 +82,6 @@ function createTray() {
   try {
     tray = new Tray(resolvedIcon);
   } catch (e) {
-    // 트레이 아이콘 없으면 스킵
     console.log('Tray icon not found, skipping tray creation.');
     return;
   }
@@ -125,7 +124,6 @@ function createTray() {
   tray.setToolTip('Desktop Pet - 레트로 게임기');
   tray.setContextMenu(buildMenu());
 
-  // 트레이 더블클릭으로 창 복원
   tray.on('double-click', () => {
     if (mainWindow) {
       mainWindow.show();
@@ -134,8 +132,7 @@ function createTray() {
   });
 }
 
-// ─── IPC Handlers ──────────────────────────────────────────────────────────
-
+// IPC Handlers
 ipcMain.on('set-window-pos', (event, { x, y }) => {
   if (mainWindow) mainWindow.setPosition(Math.round(x), Math.round(y));
 });
@@ -157,7 +154,6 @@ ipcMain.handle('get-work-area', () => {
   return { width: d.workAreaSize.width, height: d.workAreaSize.height, x: d.workArea.x, y: d.workArea.y };
 });
 
-// 미니 모드 전환 (창 크기 리사이즈)
 ipcMain.on('set-mini-mode', (event, isMini) => {
   if (!mainWindow) return;
   const [curX, curY] = mainWindow.getPosition();
@@ -165,13 +161,11 @@ ipcMain.on('set-mini-mode', (event, isMini) => {
   const { width: workW, height: workH, x: workX, y: workY } = d.workArea;
 
   if (isMini) {
-    // 미니 모드: 우하단 구석 배치
     const nx = Math.min(curX, workX + workW - MINI_WIN_W - 10);
     const ny = Math.min(curY, workY + workH - MINI_WIN_H - 10);
     mainWindow.setSize(MINI_WIN_W, MINI_WIN_H);
     mainWindow.setPosition(nx, ny);
   } else {
-    // 일반 모드 복원
     const nx = Math.max(workX, Math.min(curX, workX + workW - DEFAULT_WIN_W - 10));
     const ny = Math.max(workY, Math.min(curY, workY + workH - DEFAULT_WIN_H - 10));
     mainWindow.setSize(DEFAULT_WIN_W, DEFAULT_WIN_H);
@@ -179,7 +173,6 @@ ipcMain.on('set-mini-mode', (event, isMini) => {
   }
 });
 
-// 항상 위 토글
 ipcMain.on('set-always-on-top', (event, val) => {
   isAlwaysOnTop = val;
   if (mainWindow) {
@@ -194,8 +187,6 @@ ipcMain.on('quit-app', () => {
 
 ipcMain.handle('save-data', (event, data) => store.saveData(data));
 ipcMain.handle('load-data', () => store.loadData());
-
-// ─── App Lifecycle ──────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
   createWindow();

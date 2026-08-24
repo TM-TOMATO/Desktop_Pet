@@ -12,11 +12,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 }
 
 (async () => {
-  // 1. PixiJS App 초기화 (레트로 LCD 스크린 360x220)
+  // 1. PixiJS App 초기화 (LCD 화면 104x140 px)
   const app = new PIXI.Application();
   await app.init({
-    width: 360,
-    height: 220,
+    width: 104,
+    height: 140,
     backgroundAlpha: 0,
     antialias: false,
     roundPixels: true
@@ -29,24 +29,34 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   let saveData = null;
   if (window.electronAPI && window.electronAPI.loadData) {
     saveData = await window.electronAPI.loadData();
-    console.log('[Renderer] Loaded save data:', saveData);
   }
 
   const petStats = new PetStats(saveData ? saveData.petInfo : {});
 
   // 3. 펫 객체 및 상태 머신 생성
   const pet = new PetContainer(app);
+  pet.setBounds(16, 88, 30, 134);
+  pet.x = 52;
+  pet.y = 134;
+  pet.setBaseScale(1.0);
   app.stage.addChild(pet);
 
   const stateMachine = new StateMachine(pet);
   const activeFoods = [];
 
-  // 4. UI 및 OSD 메뉴 요소 참조
+  // 4. UI 및 레이어 참조
   const appScalerEl = document.getElementById('app-scaler');
   const screenGlassEl = document.getElementById('screen-glass');
   const displayClicksEl = document.getElementById('display-clicks');
   const displayGoldEl = document.getElementById('display-gold');
   const coinPopupLayer = document.getElementById('coin-popup-layer');
+
+  const layerCaseBg = document.getElementById('layer-case-bg');
+  const layerScreenBg = document.getElementById('layer-screen-bg');
+  const layerDpad = document.getElementById('layer-dpad');
+  const layerPower = document.getElementById('layer-power');
+  const layerActionA = document.getElementById('layer-action-a');
+  const layerActionB = document.getElementById('layer-action-b');
 
   const osdMenuEl = document.getElementById('osd-menu');
   const osdFeedMenuEl = document.getElementById('osd-feed-menu');
@@ -70,12 +80,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const miniPanel = document.getElementById('mini-panel');
   const miniCanvasContainer = document.getElementById('mini-canvas-container');
 
-  // 🎮 게임기 전체 크기 조작 함수 (Scale Console Unit)
-  const BASE_CONSOLE_W = 440;
-  const BASE_CONSOLE_H = 490;
+  // 🎮 게임기 전체 크기 조작 함수 (256x256 기준 스케일)
+  const BASE_CONSOLE_W = 256;
+  const BASE_CONSOLE_H = 256;
 
   function setConsoleScale(scaleVal) {
-    scaleVal = Math.max(0.7, Math.min(1.6, scaleVal));
+    scaleVal = Math.max(0.7, Math.min(2.0, scaleVal));
     if (appScalerEl) {
       appScalerEl.style.transform = `scale(${scaleVal})`;
     }
@@ -87,8 +97,8 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     petStats.consoleScale = scaleVal;
   }
 
-  // 저장된 게임기 전체 크기 적용
-  const savedConsoleScale = (saveData && saveData.petInfo && saveData.petInfo.consoleScale) || 1.0;
+  // 기본 1.5배 (384x384 px)
+  const savedConsoleScale = (saveData && saveData.petInfo && saveData.petInfo.consoleScale) || 1.5;
   scaleRange.value = Math.round(savedConsoleScale * 100);
   scaleValueLabel.textContent = `${Math.round(savedConsoleScale * 100)}%`;
   setConsoleScale(savedConsoleScale);
@@ -120,7 +130,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     });
   }
 
-  // ── 📦 미니 모드 (작은 화면 모드) ───────────────────────────
+  // ── 📦 미니 모드 ──────────────────────────────────────────
   let isMiniMode = false;
 
   function activateMiniMode() {
@@ -129,13 +139,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     miniPanel.classList.remove('hidden');
     miniModeToggle.checked = true;
 
-    // PixiJS 캔버스를 미니 스크린으로 이동 및 리사이즈
     if (app.canvas && miniCanvasContainer) {
       miniCanvasContainer.appendChild(app.canvas);
       app.renderer.resize(128, 110);
     }
 
-    // 펫 위치 및 이동 범위를 미니 모드에 맞게 재설정
     pet.setBounds(15, 113, 30, 105);
     pet.x = 64;
     pet.y = 105;
@@ -150,17 +158,15 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     miniPanel.classList.add('hidden');
     miniModeToggle.checked = false;
 
-    // PixiJS 캔버스를 원래 컨테이너로 복원
     if (app.canvas && containerEl) {
       containerEl.appendChild(app.canvas);
-      app.renderer.resize(360, 220);
+      app.renderer.resize(104, 140);
     }
 
-    // 펫 위치 및 이동 범위를 기본 모드에 맞게 복원
-    pet.setBounds(40, 340, 80, 220);
-    pet.x = 180;
-    pet.y = 220;
-    pet.setBaseScale(1.5);
+    pet.setBounds(16, 88, 30, 134);
+    pet.x = 52;
+    pet.y = 134;
+    pet.setBaseScale(1.0);
 
     if (window.electronAPI) window.electronAPI.setMiniMode(false);
   }
@@ -213,12 +219,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const paddedGold = String(snapshot.gold || 0).padStart(5, '0');
 
     if (displayClicksEl) displayClicksEl.innerText = paddedClicks;
-    if (displayGoldEl) displayGoldEl.innerText = `${paddedGold} G`;
+    if (displayGoldEl) displayGoldEl.innerText = `${paddedGold}G`;
 
     if (statLevelEl) statLevelEl.innerText = `Lv.${snapshot.level}`;
-    if (statClicksEl) statClicksEl.innerText = `${snapshot.clicks} 회`;
-    if (statGoldEl) statGoldEl.innerText = `${snapshot.gold} G`;
-    if (shopGoldDisplayEl) shopGoldDisplayEl.innerText = `${snapshot.gold} G`;
+    if (statClicksEl) statClicksEl.innerText = `${snapshot.clicks}회`;
+    if (statGoldEl) statGoldEl.innerText = `${snapshot.gold}G`;
+    if (shopGoldDisplayEl) shopGoldDisplayEl.innerText = `${snapshot.gold}G`;
 
     if (barFullness) barFullness.style.width = `${snapshot.fullness}%`;
     if (barHappiness) barHappiness.style.width = `${snapshot.happiness}%`;
@@ -247,29 +253,29 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function createCoinPopup(clientX, clientY, text) {
-    let x = 180;
-    let y = 90;
+    let x = 52;
+    let y = 60;
 
     if (clientX !== undefined && clientY !== undefined) {
       const rect = containerEl.getBoundingClientRect();
-      const currentScale = isMiniMode ? 1.0 : (petStats.consoleScale || 1.0);
+      const currentScale = isMiniMode ? 1.0 : (petStats.consoleScale || 1.5);
       x = (clientX - rect.left) / currentScale;
       y = (clientY - rect.top) / currentScale;
     } else {
-      x = pet.x - 15;
-      y = pet.y - 45;
+      x = pet.x - 10;
+      y = pet.y - 30;
     }
 
     const popup = document.createElement('div');
     popup.className = 'coin-popup';
     popup.innerText = text;
-    popup.style.left = `${Math.max(10, Math.min(310, x - 15))}px`;
-    popup.style.top = `${Math.max(10, Math.min(170, y - 20))}px`;
+    popup.style.left = `${Math.max(4, Math.min(80, x - 10))}px`;
+    popup.style.top = `${Math.max(4, Math.min(110, y - 10))}px`;
 
     coinPopupLayer.appendChild(popup);
     setTimeout(() => {
       popup.remove();
-    }, 700);
+    }, 600);
   }
 
   // 1) 펫 직접 클릭 감지
@@ -279,7 +285,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   };
 
-  // 2) 게임기 LCD 화면 영역 클릭 감지
+  // 2) LCD 화면 영역 클릭 감지
   screenGlassEl.addEventListener('pointerdown', (e) => {
     if (e.target.closest('.osd-menu, .osd-modal')) return;
     if (currentMenuMode === 'NONE') {
@@ -296,24 +302,24 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     });
   }
 
-  // 6. 🎮 레트로 OSD 메뉴 컨트롤러 (D-Pad & A/B 버튼 제어)
-  let currentMenuMode = 'NONE'; // 'NONE' | 'MAIN' | 'FEED' | 'SHOP' | 'STATUS' | 'CONFIG'
+  // 6. 🎮 레트로 OSD 메뉴 컨트롤러
+  let currentMenuMode = 'NONE';
   let menuCursorIndex = 0;
-  let configCursorIndex = 0; // 0: Scale Slider, 1: AlwaysOnTop Toggle, 2: Hitbox Toggle, 3: MiniMode Toggle
+  let configCursorIndex = 0;
 
   const mainMenuItems = [
     { label: '🍎 FEED (음식주기)', action: () => openFeedMenu() },
     { label: '🎾 PLAY (놀아주기)', action: () => doPlayAction() },
     { label: '🛒 SHOP (상점)', action: () => openShopMenu() },
-    { label: '📊 STATUS (상태보기)', action: () => openStatusMenu() },
+    { label: '📊 STATUS (상태)', action: () => openStatusMenu() },
     { label: '⚙️ CONFIG (설정)', action: () => openConfigMenu() }
   ];
 
   const shopItemsData = [
-    { key: 'apple', name: '사과 (+20허기)', price: 10 },
-    { key: 'meat', name: '고기 (+50허기)', price: 25 },
-    { key: 'fish', name: '생선 (+35허기)', price: 20 },
-    { key: 'candy', name: '캔디 (+40행복)', price: 40 }
+    { key: 'apple', name: '사과 (+20)', price: 10 },
+    { key: 'meat', name: '고기 (+50)', price: 25 },
+    { key: 'fish', name: '생선 (+35)', price: 20 },
+    { key: 'candy', name: '캔디 (+40)', price: 40 }
   ];
 
   function closeAllMenus() {
@@ -359,10 +365,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   function renderFeedMenuItems() {
     const inv = petStats.inventory || {};
     const availableFoods = [
-      { key: 'apple', label: '🍎 사과', count: inv.apple || 0, fullness: 20 },
-      { key: 'meat', label: '🍗 고기', count: inv.meat || 0, fullness: 50 },
-      { key: 'fish', label: '🐟 생선', count: inv.fish || 0, fullness: 35 },
-      { key: 'candy', label: '🍬 캔디', count: inv.candy || 0, fullness: 10 }
+      { key: 'apple', label: '🍎 사과', count: inv.apple || 0 },
+      { key: 'meat', label: '🍗 고기', count: inv.meat || 0 },
+      { key: 'fish', label: '🐟 생선', count: inv.fish || 0 },
+      { key: 'candy', label: '🍬 캔디', count: inv.candy || 0 }
     ];
 
     feedItemListEl.innerHTML = '';
@@ -379,7 +385,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const selectedKey = availableFoods[menuCursorIndex];
 
     if (petStats.useItem(selectedKey)) {
-      const food = new FoodItem(app, pet.x + (pet.walkDirection * 35), 210);
+      const food = new FoodItem(app, pet.x + (pet.walkDirection * 20), 130);
       app.stage.addChild(food);
       activeFoods.push(food);
 
@@ -426,9 +432,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const item = shopItemsData[menuCursorIndex];
     if (item && petStats.spendGold(item.price)) {
       petStats.addItem(item.key, 1);
-      createCoinPopup(undefined, undefined, `구매완료!`);
+      createCoinPopup(undefined, undefined, `구매!`);
     } else {
-      createCoinPopup(undefined, undefined, `골드부족!`);
+      createCoinPopup(undefined, undefined, `골드부족`);
     }
   }
 
@@ -438,7 +444,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     statusModalEl.classList.remove('hidden');
   }
 
-  // ⚙️ CONFIG 설정 메뉴 열기 및 커서 렌더링
   function openConfigMenu() {
     closeAllMenus();
     currentMenuMode = 'CONFIG';
@@ -458,7 +463,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     });
   }
 
-  // 7. 🔘 D-Pad & A/B 버튼 이벤트 처리 함수
+  // 7. 🔘 D-Pad & A/B 버튼 액션
   function handleButtonActionA() {
     if (currentMenuMode === 'NONE') {
       openMainMenu();
@@ -472,7 +477,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     } else if (currentMenuMode === 'STATUS') {
       closeAllMenus();
     } else if (currentMenuMode === 'CONFIG') {
-      // ⚙️ CONFIG 메뉴: A 확인 버튼으로 토글 스위치 ON/OFF
       if (configCursorIndex === 1) {
         alwaysOnTopToggle.checked = !alwaysOnTopToggle.checked;
         alwaysOnTopToggle.dispatchEvent(new Event('change'));
@@ -510,7 +514,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       if (direction === 'DOWN') menuCursorIndex = (menuCursorIndex + 1) % shopItemsData.length;
       renderShopMenuCursor();
     } else if (currentMenuMode === 'CONFIG') {
-      // ⚙️ CONFIG 메뉴: 상하(UP/DOWN)로 항목 선택, 좌우(LEFT/RIGHT)로 슬라이더 조종
       if (direction === 'UP') {
         configCursorIndex = (configCursorIndex - 1 + 4) % 4;
         renderConfigMenuCursor();
@@ -520,44 +523,164 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       } else if (direction === 'LEFT' || direction === 'RIGHT') {
         if (configCursorIndex === 0) {
           const step = direction === 'LEFT' ? -5 : 5;
-          scaleRange.value = Math.max(70, Math.min(160, parseInt(scaleRange.value, 10) + step));
+          scaleRange.value = Math.max(70, Math.min(200, parseInt(scaleRange.value, 10) + step));
           scaleRange.dispatchEvent(new Event('input'));
         }
       }
     }
   }
 
-  // 🔘 물리/화면 버튼 클릭 & 누름 시각 효과(Pressed) 바인딩
-  function bindButtonEvents(btnId, normalFn, pressedClass = 'pressed') {
-    const el = document.getElementById(btnId);
+  // 8. 🖼️ 통합 256x256 레이어 스프라이트 로더 & 상태 스왑
+  const dpad8WayTextures = {};
+  const powerTextures = {};
+  const actionATextures = {};
+  const actionBTextures = {};
+  const dpadKeyState = { up: false, down: false, left: false, right: false };
+
+  function findSpriteFile(fileNames) {
+    const names = Array.isArray(fileNames) ? fileNames : [fileNames];
+    for (const fileName of names) {
+      const candidates = [
+        path.join(process.cwd(), 'assets/sprites', fileName),
+        path.join(process.cwd(), 'resources/assets/sprites', fileName),
+        path.join(process.cwd(), 'resources/app.asar/assets/sprites', fileName),
+        path.join(process.resourcesPath || '', 'assets/sprites', fileName),
+        path.join(__dirname, '../../assets/sprites', fileName),
+        path.join(__dirname, '../../../assets/sprites', fileName),
+        'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites/' + fileName
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) return p;
+      }
+    }
+    return null;
+  }
+
+  // 1) 케이스 배경 (console_case_bg.png)
+  const casePath = findSpriteFile('console_case_bg.png');
+  if (casePath && layerCaseBg) {
+    try {
+      const buf = fs.readFileSync(casePath);
+      layerCaseBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+      console.log('🎮 [CaseLoader] console_case_bg.png loaded.');
+    } catch (e) {}
+  }
+
+  // 2) LCD 스크린 배경 (screen_bg.png)
+  const screenBgPath = findSpriteFile('screen_bg.png');
+  if (screenBgPath && layerScreenBg) {
+    try {
+      const buf = fs.readFileSync(screenBgPath);
+      layerScreenBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+      console.log('📺 [ScreenLoader] screen_bg.png loaded.');
+    } catch (e) {}
+  }
+
+  // 3) 8방향 십자키 스프라이트 매핑
+  const dpad8WayFiles = {
+    neutral: ['btn_dpad.png'],
+    up: ['btn_dpad_pressed_up.png', 'btn_dpad_up_pressed.png'],
+    down: ['btn_dpad_pressed_down.png', 'btn_dpad_down_pressed.png'],
+    left: ['btn_dpad_pressed_left.png', 'btn_dpad_left_pressed.png'],
+    right: ['btn_dpad_pressed_right.png', 'btn_dpad_right_pressed.png'],
+    up_left: ['btn_dpad_pressed_up_left.png', 'btn_dpad_up_left_pressed.png', 'btn_dpad_pressed_ul.png'],
+    up_right: ['btn_dpad_pressed_up_right.png', 'btn_dpad_up_right_pressed.png', 'btn_dpad_pressed_ur.png'],
+    down_left: ['btn_dpad_pressed_down_left.png', 'btn_dpad_down_left_pressed.png', 'btn_dpad_pressed_dl.png'],
+    down_right: ['btn_dpad_pressed_down_right.png', 'btn_dpad_down_right_pressed.png', 'btn_dpad_pressed_dr.png']
+  };
+
+  for (const [dirKey, candidateFiles] of Object.entries(dpad8WayFiles)) {
+    const filePath = findSpriteFile(candidateFiles);
+    if (filePath) {
+      try {
+        const buf = fs.readFileSync(filePath);
+        dpad8WayTextures[dirKey] = `data:image/png;base64,${buf.toString('base64')}`;
+      } catch (e) {}
+    }
+  }
+
+  function update8WayDpadVisual() {
+    if (!layerDpad) return;
+    let dir = 'neutral';
+    if (dpadKeyState.up && dpadKeyState.left) dir = 'up_left';
+    else if (dpadKeyState.up && dpadKeyState.right) dir = 'up_right';
+    else if (dpadKeyState.down && dpadKeyState.left) dir = 'down_left';
+    else if (dpadKeyState.down && dpadKeyState.right) dir = 'down_right';
+    else if (dpadKeyState.up) dir = 'up';
+    else if (dpadKeyState.down) dir = 'down';
+    else if (dpadKeyState.left) dir = 'left';
+    else if (dpadKeyState.right) dir = 'right';
+
+    if (dpad8WayTextures[dir]) {
+      layerDpad.style.backgroundImage = `url("${dpad8WayTextures[dir]}")`;
+    } else if (dpad8WayTextures['neutral']) {
+      layerDpad.style.backgroundImage = `url("${dpad8WayTextures['neutral']}")`;
+    }
+  }
+
+  if (dpad8WayTextures.neutral && layerDpad) {
+    layerDpad.style.backgroundImage = `url("${dpad8WayTextures.neutral}")`;
+  }
+
+  // 4) 전원 버튼 스프라이트 매핑
+  const powerNorm = findSpriteFile('btn_power.png');
+  const powerPress = findSpriteFile('btn_power_pressed.png');
+  if (powerNorm) {
+    powerTextures.normal = `data:image/png;base64,${fs.readFileSync(powerNorm).toString('base64')}`;
+    if (layerPower) layerPower.style.backgroundImage = `url("${powerTextures.normal}")`;
+  }
+  if (powerPress) {
+    powerTextures.pressed = `data:image/png;base64,${fs.readFileSync(powerPress).toString('base64')}`;
+  }
+
+  // 5) A / B 버튼 스프라이트 매핑
+  const aNorm = findSpriteFile('btn_action_a.png');
+  const aPress = findSpriteFile('btn_action_a_pressed.png');
+  if (aNorm) {
+    actionATextures.normal = `data:image/png;base64,${fs.readFileSync(aNorm).toString('base64')}`;
+    if (layerActionA) layerActionA.style.backgroundImage = `url("${actionATextures.normal}")`;
+  }
+  if (aPress) {
+    actionATextures.pressed = `data:image/png;base64,${fs.readFileSync(aPress).toString('base64')}`;
+  }
+
+  const bNorm = findSpriteFile('btn_action_b.png');
+  const bPress = findSpriteFile('btn_action_b_pressed.png');
+  if (bNorm) {
+    actionBTextures.normal = `data:image/png;base64,${fs.readFileSync(bNorm).toString('base64')}`;
+    if (layerActionB) layerActionB.style.backgroundImage = `url("${actionBTextures.normal}")`;
+  }
+  if (bPress) {
+    actionBTextures.pressed = `data:image/png;base64,${fs.readFileSync(bPress).toString('base64')}`;
+  }
+
+  // 9. 🔘 히트존 마우스 이벤트 바인딩
+  function bindHitBtn(id, dirKey, actionFn, layerEl, textures) {
+    const el = document.getElementById(id);
     if (!el) return;
 
     el.addEventListener('click', (e) => {
       e.stopPropagation();
-      normalFn();
+      actionFn();
     });
 
     el.addEventListener('mousedown', () => {
-      el.classList.add(pressedClass);
-      if (btnId === 'btn-dpad-up') { dpadKeyState.up = true; update8WayDpadVisual(); }
-      if (btnId === 'btn-dpad-down') { dpadKeyState.down = true; update8WayDpadVisual(); }
-      if (btnId === 'btn-dpad-left') { dpadKeyState.left = true; update8WayDpadVisual(); }
-      if (btnId === 'btn-dpad-right') { dpadKeyState.right = true; update8WayDpadVisual(); }
-
-      if (buttonTextures[btnId] && buttonTextures[btnId].pressed) {
-        el.style.backgroundImage = `url("${buttonTextures[btnId].pressed}")`;
+      if (dirKey) {
+        dpadKeyState[dirKey] = true;
+        update8WayDpadVisual();
+      }
+      if (layerEl && textures && textures.pressed) {
+        layerEl.style.backgroundImage = `url("${textures.pressed}")`;
       }
     });
 
     const release = () => {
-      el.classList.remove(pressedClass);
-      if (btnId === 'btn-dpad-up') { dpadKeyState.up = false; update8WayDpadVisual(); }
-      if (btnId === 'btn-dpad-down') { dpadKeyState.down = false; update8WayDpadVisual(); }
-      if (btnId === 'btn-dpad-left') { dpadKeyState.left = false; update8WayDpadVisual(); }
-      if (btnId === 'btn-dpad-right') { dpadKeyState.right = false; update8WayDpadVisual(); }
-
-      if (buttonTextures[btnId] && buttonTextures[btnId].normal) {
-        el.style.backgroundImage = `url("${buttonTextures[btnId].normal}")`;
+      if (dirKey) {
+        dpadKeyState[dirKey] = false;
+        update8WayDpadVisual();
+      }
+      if (layerEl && textures && textures.normal) {
+        layerEl.style.backgroundImage = `url("${textures.normal}")`;
       }
     };
 
@@ -565,48 +688,47 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     el.addEventListener('mouseleave', release);
   }
 
-  bindButtonEvents('btn-action-a', () => handleButtonActionA());
-  bindButtonEvents('btn-action-b', () => handleButtonActionB());
-  bindButtonEvents('btn-dpad-up', () => handleDpadNav('UP'));
-  bindButtonEvents('btn-dpad-down', () => handleDpadNav('DOWN'));
-  bindButtonEvents('btn-dpad-left', () => handleDpadNav('LEFT'));
-  bindButtonEvents('btn-dpad-right', () => handleDpadNav('RIGHT'));
+  bindHitBtn('btn-dpad-up', 'up', () => handleDpadNav('UP'));
+  bindHitBtn('btn-dpad-down', 'down', () => handleDpadNav('DOWN'));
+  bindHitBtn('btn-dpad-left', 'left', () => handleDpadNav('LEFT'));
+  bindHitBtn('btn-dpad-right', 'right', () => handleDpadNav('RIGHT'));
+  bindHitBtn('btn-action-a', null, () => handleButtonActionA(), layerActionA, actionATextures);
+  bindHitBtn('btn-action-b', null, () => handleButtonActionB(), layerActionB, actionBTextures);
+  bindHitBtn('btn-power', null, () => {
+    if (window.electronAPI && window.electronAPI.quitApp) window.electronAPI.quitApp();
+  }, layerPower, powerTextures);
 
-  // 8. ⌨️ 키보드 레트로 컨트롤러 & 클리커 입력
+  // 10. ⌨️ 키보드 입력 바인딩
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
 
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
       dpadKeyState.up = true;
       update8WayDpadVisual();
-      triggerVisualButtonPress('btn-dpad-up');
       handleDpadNav('UP');
     } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
       dpadKeyState.down = true;
       update8WayDpadVisual();
-      triggerVisualButtonPress('btn-dpad-down');
       handleDpadNav('DOWN');
     } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
       dpadKeyState.left = true;
       update8WayDpadVisual();
-      triggerVisualButtonPress('btn-dpad-left');
       handleDpadNav('LEFT');
     } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
       dpadKeyState.right = true;
       update8WayDpadVisual();
-      triggerVisualButtonPress('btn-dpad-right');
       handleDpadNav('RIGHT');
     } else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
-      triggerVisualButtonPress('btn-action-a');
+      if (layerActionA && actionATextures.pressed) layerActionA.style.backgroundImage = `url("${actionATextures.pressed}")`;
       handleButtonActionA();
     } else if (e.key === 'Escape' || e.key === 'x' || e.key === 'X' || e.key === 'Backspace') {
-      triggerVisualButtonPress('btn-action-b');
+      if (layerActionB && actionBTextures.pressed) layerActionB.style.backgroundImage = `url("${actionBTextures.pressed}")`;
       handleButtonActionB();
     } else if (e.key === ' ' || e.key === 'c' || e.key === 'C') {
       if (currentMenuMode === 'NONE') {
         triggerPetClick(undefined, undefined);
       } else {
-        triggerVisualButtonPress('btn-action-a');
+        if (layerActionA && actionATextures.pressed) layerActionA.style.backgroundImage = `url("${actionATextures.pressed}")`;
         handleButtonActionA();
       }
     }
@@ -616,62 +738,38 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
       dpadKeyState.up = false;
       update8WayDpadVisual();
-      releaseVisualButtonPress('btn-dpad-up');
     }
     if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
       dpadKeyState.down = false;
       update8WayDpadVisual();
-      releaseVisualButtonPress('btn-dpad-down');
     }
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
       dpadKeyState.left = false;
       update8WayDpadVisual();
-      releaseVisualButtonPress('btn-dpad-left');
     }
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
       dpadKeyState.right = false;
       update8WayDpadVisual();
-      releaseVisualButtonPress('btn-dpad-right');
     }
-    if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') releaseVisualButtonPress('btn-action-a');
-    if (e.key === 'Escape' || e.key === 'x' || e.key === 'X' || e.key === 'Backspace') releaseVisualButtonPress('btn-action-b');
-    if (e.key === ' ' || e.key === 'c' || e.key === 'C') releaseVisualButtonPress('btn-action-a');
-  });
-
-  function triggerVisualButtonPress(btnId) {
-    const el = document.getElementById(btnId);
-    if (!el) return;
-    el.classList.add('pressed');
-    if (buttonTextures[btnId] && buttonTextures[btnId].pressed) {
-      el.style.backgroundImage = `url("${buttonTextures[btnId].pressed}")`;
+    if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
+      if (layerActionA && actionATextures.normal) layerActionA.style.backgroundImage = `url("${actionATextures.normal}")`;
     }
-  }
-
-  function releaseVisualButtonPress(btnId) {
-    const el = document.getElementById(btnId);
-    if (!el) return;
-    el.classList.remove('pressed');
-    if (buttonTextures[btnId] && buttonTextures[btnId].normal) {
-      el.style.backgroundImage = `url("${buttonTextures[btnId].normal}")`;
+    if (e.key === 'Escape' || e.key === 'x' || e.key === 'X' || e.key === 'Backspace') {
+      if (layerActionB && actionBTextures.normal) layerActionB.style.backgroundImage = `url("${actionBTextures.normal}")`;
     }
-  }
-
-  // 9. 전원 끄기 버튼 (POWER)
-  document.getElementById('btn-power').addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (window.electronAPI && window.electronAPI.quitApp) {
-      window.electronAPI.quitApp();
+    if (e.key === ' ' || e.key === 'c' || e.key === 'C') {
+      if (layerActionA && actionATextures.normal) layerActionA.style.backgroundImage = `url("${actionATextures.normal}")`;
     }
   });
 
-  // 10. 🎮 기계 본체 케이스 윈도우 드래그 이동 (어디든 잡고 이동)
+  // 11. 🎮 기계 본체 케이스 드래그 이동
   const casingEl = document.getElementById('console-casing');
   let isCasingDragging = false;
   let startWinPos = { x: 0, y: 0 };
   let startCursorScreen = { x: 0, y: 0 };
 
   casingEl.addEventListener('mousedown', async (e) => {
-    if (e.target.closest('button, #screen-bezel, input, label')) return;
+    if (e.target.closest('button, .screen-viewport, input, label')) return;
     if (e.button !== 0) return;
 
     isCasingDragging = true;
@@ -699,178 +797,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     isCasingDragging = false;
   });
 
-  // 11. 🔘 통합 8방향 십자키 (8-Way D-Pad) & 커스텀 버튼 에셋 자동 바인딩
-  const buttonTextures = {};
-  const dpad8WayTextures = {};
-  const dpadKeyState = { up: false, down: false, left: false, right: false };
-  const dpadContainerEl = document.querySelector('.dpad');
-
-  function update8WayDpadVisual() {
-    if (!dpadContainerEl) return;
-    let dir = 'neutral';
-
-    if (dpadKeyState.up && dpadKeyState.left) dir = 'up_left';
-    else if (dpadKeyState.up && dpadKeyState.right) dir = 'up_right';
-    else if (dpadKeyState.down && dpadKeyState.left) dir = 'down_left';
-    else if (dpadKeyState.down && dpadKeyState.right) dir = 'down_right';
-    else if (dpadKeyState.up) dir = 'up';
-    else if (dpadKeyState.down) dir = 'down';
-    else if (dpadKeyState.left) dir = 'left';
-    else if (dpadKeyState.right) dir = 'right';
-
-    if (dpad8WayTextures[dir]) {
-      dpadContainerEl.style.backgroundImage = `url("${dpad8WayTextures[dir]}")`;
-    } else if (dpad8WayTextures['neutral']) {
-      dpadContainerEl.style.backgroundImage = `url("${dpad8WayTextures['neutral']}")`;
-    }
-  }
-
-  function findSpriteFile(fileNames) {
-    const names = Array.isArray(fileNames) ? fileNames : [fileNames];
-    for (const fileName of names) {
-      const candidates = [
-        path.join(process.cwd(), 'assets/sprites', fileName),
-        path.join(process.cwd(), 'resources/assets/sprites', fileName),
-        path.join(process.cwd(), 'resources/app.asar/assets/sprites', fileName),
-        path.join(process.resourcesPath || '', 'assets/sprites', fileName),
-        path.join(__dirname, '../../assets/sprites', fileName),
-        path.join(__dirname, '../../../assets/sprites', fileName),
-        'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites/' + fileName
-      ];
-      for (const p of candidates) {
-        if (fs.existsSync(p)) return p;
-      }
-    }
-    return null;
-  }
-
-  // 🎮 레트로 게임기 본체 케이스 커스텀 스킨 (console_case_bg.png)
-  const casePath = findSpriteFile('console_case_bg.png');
-  if (casePath) {
-    try {
-      const buf = fs.readFileSync(casePath);
-      const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
-      casingEl.style.backgroundImage = `url("${dataUrl}")`;
-      casingEl.style.backgroundSize = '100% 100%';
-      casingEl.style.backgroundRepeat = 'no-repeat';
-      casingEl.style.backgroundColor = 'transparent';
-      casingEl.style.border = 'none';
-      casingEl.style.boxShadow = 'none';
-      console.log('🎮 [CaseLoader] Custom console_case_bg.png applied!');
-    } catch (e) {
-      console.error('Failed to load console_case_bg.png:', e);
-    }
-  }
-
-  // 📺 LCD 스크린 배경 커스텀 스킨 (screen_bg.png)
-  const screenBgPath = findSpriteFile('screen_bg.png');
-  if (screenBgPath) {
-    try {
-      const buf = fs.readFileSync(screenBgPath);
-      const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
-      screenGlassEl.style.backgroundImage = `url("${dataUrl}")`;
-      screenGlassEl.style.backgroundSize = '100% 100%';
-      screenGlassEl.style.backgroundRepeat = 'no-repeat';
-      console.log('📺 [ScreenLoader] Custom screen_bg.png applied!');
-    } catch (e) {}
-  }
-
-  // 8방향 십자키 스프라이트 매핑 로드 (기본 중립 1장 + 8방향 눌림)
-  const dpad8WayFiles = {
-    neutral: ['btn_dpad.png'],
-    up: ['btn_dpad_pressed_up.png', 'btn_dpad_up_pressed.png'],
-    down: ['btn_dpad_pressed_down.png', 'btn_dpad_down_pressed.png'],
-    left: ['btn_dpad_pressed_left.png', 'btn_dpad_left_pressed.png'],
-    right: ['btn_dpad_pressed_right.png', 'btn_dpad_right_pressed.png'],
-    up_left: ['btn_dpad_pressed_up_left.png', 'btn_dpad_up_left_pressed.png', 'btn_dpad_pressed_ul.png'],
-    up_right: ['btn_dpad_pressed_up_right.png', 'btn_dpad_up_right_pressed.png', 'btn_dpad_pressed_ur.png'],
-    down_left: ['btn_dpad_pressed_down_left.png', 'btn_dpad_down_left_pressed.png', 'btn_dpad_pressed_dl.png'],
-    down_right: ['btn_dpad_pressed_down_right.png', 'btn_dpad_down_right_pressed.png', 'btn_dpad_pressed_dr.png']
-  };
-
-  for (const [dirKey, candidateFiles] of Object.entries(dpad8WayFiles)) {
-    const filePath = findSpriteFile(candidateFiles);
-    if (filePath) {
-      try {
-        const buf = fs.readFileSync(filePath);
-        dpad8WayTextures[dirKey] = `data:image/png;base64,${buf.toString('base64')}`;
-        console.log(`🕹️ [8WayDpad] Loaded ${dirKey} sprite: ${path.basename(filePath)}`);
-      } catch (e) {}
-    }
-  }
-
-  if (dpadContainerEl && dpad8WayTextures.neutral) {
-    dpadContainerEl.style.backgroundImage = `url("${dpad8WayTextures.neutral}")`;
-    dpadContainerEl.style.backgroundSize = 'contain';
-    dpadContainerEl.style.backgroundRepeat = 'no-repeat';
-    dpadContainerEl.style.backgroundPosition = 'center';
-
-    // 통합 이미지가 있으면 개별 버튼의 자체 배경은 투명화
-    ['btn-dpad-up', 'btn-dpad-down', 'btn-dpad-left', 'btn-dpad-right'].forEach((id) => {
-      const btn = document.getElementById(id);
-      if (btn) {
-        btn.style.backgroundColor = 'transparent';
-        btn.style.borderColor = 'transparent';
-        btn.style.boxShadow = 'none';
-        btn.innerText = '';
-      }
-    });
-    const center = document.querySelector('.dpad-center');
-    if (center) center.style.backgroundColor = 'transparent';
-  }
-
-  // 액션 및 시스템 버튼 스프라이트 매핑 로드
-  const buttonSpriteMap = {
-    'btn-action-a': { normal: 'btn_action_a.png', pressed: 'btn_action_a_pressed.png' },
-    'btn-action-b': { normal: 'btn_action_b.png', pressed: 'btn_action_b_pressed.png' },
-    'btn-power': { normal: 'btn_power.png', pressed: 'btn_power_pressed.png' },
-    'mini-btn-power': { normal: 'mini_btn_power.png', pressed: 'mini_btn_power_pressed.png' },
-    'mini-btn-expand': { normal: 'mini_btn_expand.png', pressed: 'mini_btn_expand_pressed.png' }
-  };
-
-  for (const [btnId, spriteFiles] of Object.entries(buttonSpriteMap)) {
-    const el = document.getElementById(btnId);
-    if (!el) continue;
-
-    buttonTextures[btnId] = {};
-
-    const normPath = findSpriteFile(spriteFiles.normal);
-    if (normPath) {
-      try {
-        const buf = fs.readFileSync(normPath);
-        const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
-        buttonTextures[btnId].normal = dataUrl;
-        el.style.backgroundImage = `url("${dataUrl}")`;
-        el.style.backgroundSize = 'contain';
-        el.style.backgroundRepeat = 'no-repeat';
-        el.style.backgroundPosition = 'center';
-        el.style.backgroundColor = 'transparent';
-        el.style.borderColor = 'transparent';
-        el.innerText = '';
-        console.log(`🔘 [ButtonLoader] Loaded normal sprite for #${btnId}`);
-      } catch (err) {
-        console.error(`Failed to load button sprite ${spriteFiles.normal}:`, err);
-      }
-    }
-
-    const pressPath = findSpriteFile(spriteFiles.pressed);
-    if (pressPath) {
-      try {
-        const buf = fs.readFileSync(pressPath);
-        const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
-        buttonTextures[btnId].pressed = dataUrl;
-        console.log(`🔘 [ButtonLoader] Loaded pressed sprite for #${btnId}`);
-      } catch (err) {
-        console.error(`Failed to load pressed button sprite ${spriteFiles.pressed}:`, err);
-      }
-    }
-  }
-
   // 12. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {
     if (window.electronAPI && window.electronAPI.saveData) {
       const snap = petStats.getSnapshot();
-      snap.consoleScale = petStats.consoleScale || 1.0;
+      snap.consoleScale = petStats.consoleScale || 1.5;
       window.electronAPI.saveData({
         version: '1.0.0',
         petInfo: snap
@@ -878,7 +809,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   }, 30000);
 
-  // 13. 메인 렌더링 및 틱 루프 (PIXI Ticker)
+  // 13. 메인 렌더링 루프 (PIXI Ticker)
   app.ticker.add((ticker) => {
     const delta = ticker.deltaTime;
 

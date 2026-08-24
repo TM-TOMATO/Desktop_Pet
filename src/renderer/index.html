@@ -12,40 +12,28 @@
 
     <!-- ══════════════════════════════════════════════════
          미니 모드 패널 (작은 화면 모드)
-         - 화면 구석에 조그맣게 배치
-         - 버튼: 종료 + 미니모드 토글만
     ══════════════════════════════════════════════════ -->
     <div id="mini-panel" class="mini-panel hidden">
-      <div class="mini-screen" id="mini-canvas-container">
-        <!-- PixiJS 캔버스가 여기에도 렌더링됨 (공유) -->
-      </div>
+      <div class="mini-screen" id="mini-canvas-container"></div>
       <div class="mini-controls">
         <button class="mini-btn mini-quit-btn" id="mini-btn-power" title="종료">⏻</button>
         <button class="mini-btn mini-expand-btn" id="mini-btn-expand" title="전체 모드로 전환">⤢</button>
       </div>
     </div>
 
-    <!-- Retro Game Console Outer Casing -->
+    <!-- ══════════════════════════════════════════════════
+         통합 256x256 레트로 게임기 본체 (Retro Handheld Console)
+    ══════════════════════════════════════════════════ -->
     <div class="console-casing" id="console-casing">
 
-      <!-- Top System Header & Digital LCD Counter Strip -->
-      <div class="console-top-strip">
-        <div class="power-section">
-          <button id="btn-power" class="power-btn" title="전원 끄기 (종료)">⏻</button>
-          <span class="power-led on"></span>
-          <span class="brand-text">PET BOY // 8-BIT</span>
-        </div>
+      <!-- 1. 본체 케이스 레이어 (console_case_bg.png) -->
+      <div class="layer-sprite layer-case-bg" id="layer-case-bg"></div>
 
-        <!-- Segment Counter Display -->
-        <div class="lcd-counter-display">
-          <span class="counter-item">CLICKS: <b id="display-clicks">00000</b></span>
-          <span class="counter-divider">|</span>
-          <span class="counter-item">GOLD: <b id="display-gold">00000 G</b></span>
-        </div>
-      </div>
+      <!-- 2. LCD 스크린 배경 레이어 (screen_bg.png) -->
+      <div class="layer-sprite layer-screen-bg" id="layer-screen-bg"></div>
 
-      <!-- Center Screen Bezel -->
-      <div class="screen-bezel" id="screen-bezel">
+      <!-- 3. LCD 화면 뷰포트 & 캔버스 영역 -->
+      <div class="screen-viewport" id="screen-viewport">
         <div class="screen-glass" id="screen-glass">
           <!-- PixiJS Canvas Viewport -->
           <div id="canvas-container"></div>
@@ -81,9 +69,9 @@
           <div id="status-modal" class="osd-modal hidden">
             <div class="osd-modal-box">
               <div class="osd-title">=== PET STATUS ===</div>
-              <div class="osd-stat-row"><span>레벨 (LV):</span> <b id="stat-level">Lv.1</b></div>
-              <div class="osd-stat-row"><span>누적 클릭:</span> <b id="stat-clicks">0 회</b></div>
-              <div class="osd-stat-row"><span>보유 골드:</span> <b id="stat-gold" class="gold-text">0 G</b></div>
+              <div class="osd-stat-row"><span>레벨:</span> <b id="stat-level">Lv.1</b></div>
+              <div class="osd-stat-row"><span>클릭:</span> <b id="stat-clicks">0 회</b></div>
+              <div class="osd-stat-row"><span>골드:</span> <b id="stat-gold" class="gold-text">0 G</b></div>
               <div class="osd-stat-bar-row">
                 <span>허기:</span>
                 <div class="osd-bar-bg"><div id="bar-fullness" class="osd-bar-fill" style="width:80%;"></div></div>
@@ -103,32 +91,30 @@
               <div class="osd-shop-gold">GOLD: <b id="shop-gold-display">0 G</b></div>
               <div class="osd-shop-list" id="osd-shop-items">
                 <div class="osd-shop-row active" data-index="0" data-item="apple" data-price="10">
-                  <span>▶ 🍎 사과 (+20허기)</span> <b>10G</b>
+                  <span>▶ 🍎 사과 (+20)</span> <b>10G</b>
                 </div>
                 <div class="osd-shop-row" data-index="1" data-item="meat" data-price="25">
-                  <span>&nbsp;&nbsp;🍗 고기 (+50허기)</span> <b>25G</b>
+                  <span>&nbsp;&nbsp;🍗 고기 (+50)</span> <b>25G</b>
                 </div>
                 <div class="osd-shop-row" data-index="2" data-item="fish" data-price="20">
-                  <span>&nbsp;&nbsp;🐟 생선 (+35허기)</span> <b>20G</b>
+                  <span>&nbsp;&nbsp;🐟 생선 (+35)</span> <b>20G</b>
                 </div>
                 <div class="osd-shop-row" data-index="3" data-item="candy" data-price="40">
-                  <span>&nbsp;&nbsp;🍬 캔디 (+40행복)</span> <b>40G</b>
+                  <span>&nbsp;&nbsp;🍬 캔디 (+40)</span> <b>40G</b>
                 </div>
               </div>
               <div class="osd-hint">[A] 구매 | [B] 뒤로</div>
             </div>
           </div>
 
-          <!-- OSD Settings Modal (게임기 크기 + 항상 위 토글) -->
+          <!-- OSD Settings Modal -->
           <div id="settings-modal" class="osd-modal hidden">
             <div class="osd-modal-box">
               <div class="osd-title">=== CONFIG ===</div>
-
               <div class="osd-setting-row">
-                <span>게임기 크기: <b id="scale-value">100%</b></span>
+                <span>크기: <b id="scale-value">100%</b></span>
                 <input type="range" id="scale-range" min="70" max="160" step="5" value="100" />
               </div>
-
               <div class="osd-setting-row">
                 <span>항상 위에 고정</span>
                 <label class="toggle-switch">
@@ -136,7 +122,6 @@
                   <span class="toggle-slider"></span>
                 </label>
               </div>
-
               <div class="osd-setting-row">
                 <span>히트박스 표시</span>
                 <label class="toggle-switch">
@@ -144,7 +129,6 @@
                   <span class="toggle-slider"></span>
                 </label>
               </div>
-
               <div class="osd-setting-row">
                 <span>작은 화면 모드</span>
                 <label class="toggle-switch">
@@ -152,42 +136,45 @@
                   <span class="toggle-slider"></span>
                 </label>
               </div>
-
-              <div class="osd-hint">[◀/▶] 크기조절 | [B] 완료</div>
+              <div class="osd-hint">[◀/▶] 크기 | [B] 완료</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Bottom Physical Gamepad Controls -->
-      <div class="console-gamepad">
-        <!-- Left: D-Pad -->
-        <div class="dpad-container">
-          <div class="dpad">
-            <button class="dpad-btn dpad-up"    id="btn-dpad-up"    title="위 (Up)">▲</button>
-            <button class="dpad-btn dpad-left"  id="btn-dpad-left"  title="왼쪽 (Left)">◀</button>
-            <div class="dpad-center"></div>
-            <button class="dpad-btn dpad-right" id="btn-dpad-right" title="오른쪽 (Right)">▶</button>
-            <button class="dpad-btn dpad-down"  id="btn-dpad-down"  title="아래 (Down)">▼</button>
-          </div>
-        </div>
+      <!-- 4. 십자키 스프라이트 레이어 (btn_dpad.png / _pressed.png) -->
+      <div class="layer-sprite layer-dpad" id="layer-dpad"></div>
 
-        <!-- Center Speaker Grille -->
-        <div class="speaker-grille">
-          <span></span><span></span><span></span><span></span>
-        </div>
+      <!-- 5. 전원 버튼 스프라이트 레이어 (btn_power.png / _pressed.png) -->
+      <div class="layer-sprite layer-power" id="layer-power"></div>
 
-        <!-- Right: Action Buttons (A / B) -->
-        <div class="action-buttons-container">
-          <div class="action-btn-wrapper">
-            <button class="action-btn btn-b" id="btn-action-b" title="취소 / 뒤로가기 [B / Esc]">B</button>
-            <span class="btn-subtext">취소/BACK</span>
-          </div>
-          <div class="action-btn-wrapper">
-            <button class="action-btn btn-a" id="btn-action-a" title="확인 / 메뉴선택 [A / Enter]">A</button>
-            <span class="btn-subtext">확인/OK</span>
-          </div>
+      <!-- 6. A/B 버튼 스프라이트 레이어 -->
+      <div class="layer-sprite layer-action-a" id="layer-action-a"></div>
+      <div class="layer-sprite layer-action-b" id="layer-action-b"></div>
+
+      <!-- 7. 상단 디지털 LCD 스트립 (HUD) -->
+      <div class="console-top-strip">
+        <div class="lcd-counter-display">
+          <span>CLK:<b id="display-clicks">00000</b></span>
+          <span class="counter-divider">|</span>
+          <span>GOLD:<b id="display-gold">00000G</b></span>
         </div>
+      </div>
+
+      <!-- 8. 인터랙티브 클릭 영역 (위치 맞춤형 버튼 히트존) -->
+      <div class="hitbox-layer">
+        <!-- 전원 버튼 -->
+        <button class="hit-btn hit-power" id="btn-power" title="전원 끄기"></button>
+        
+        <!-- 십자키 4방향 -->
+        <button class="hit-btn hit-dpad-up" id="btn-dpad-up" title="위 (Up)"></button>
+        <button class="hit-btn hit-dpad-down" id="btn-dpad-down" title="아래 (Down)"></button>
+        <button class="hit-btn hit-dpad-left" id="btn-dpad-left" title="왼쪽 (Left)"></button>
+        <button class="hit-btn hit-dpad-right" id="btn-dpad-right" title="오른쪽 (Right)"></button>
+
+        <!-- A / B 액션 버튼 -->
+        <button class="hit-btn hit-action-b" id="btn-action-b" title="취소 [B / Esc]"></button>
+        <button class="hit-btn hit-action-a" id="btn-action-a" title="확인 [A / Enter]"></button>
       </div>
 
     </div><!-- /.console-casing -->
