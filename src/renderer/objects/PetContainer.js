@@ -15,11 +15,11 @@ class PetContainer extends PIXI.Container {
 
     this.walkDirection = 1;
     this.walkSpeed = 1.8;
-    this.baseScale = 1.5; // 기본 1.5배 (챔버에 최적화된 96x96 크기)
+    this.baseScale = 1.5; // 기본 1.5배 (96x96)
     this.bouncePhase = 0;
     this.velocityY = 0;
 
-    // 점프 이동 상태 변수 (1, 2, 10 프레임 착지 상태)
+    // 점프 이동 상태 변수
     this.isGroundedFrame = true;
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
@@ -31,7 +31,12 @@ class PetContainer extends PIXI.Container {
     this.showHitbox = false;
 
     this.loadedAnimations = {};
+    this.loadedAnimationHitboxes = {}; // 프레임별 자동 계산된 정밀 히트박스 목록
     this.loadedSingleTextures = {};
+    this.loadedSingleHitboxes = {};
+
+    this.currentHitboxes = [];
+    this.currentFrameIdx = 0;
 
     this.eventMode = 'static';
     this.cursor = 'grab';
@@ -137,11 +142,68 @@ class PetContainer extends PIXI.Container {
       console.log(`✅ [AssetLoader] ${logMsg} from: ${foundPath}`);
       this.debugLog.push(logMsg);
 
-      return { texture, width: img.width, height: img.height };
+      return { texture, width: img.width, height: img.height, imageElement: img };
     } catch (err) {
       console.error(`❌ [AssetLoader] Failed to decode '${filename}':`, err);
       return null;
     }
+  }
+
+  // 🔍 투명 픽셀 자동 스캔 알고리즘 (알파 바운딩 박스 + 여유 패딩 계산)
+  calculateFrameHitboxes(img, frameSize, count) {
+    const hitboxes = [];
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+
+    for (let i = 0; i < count; i++) {
+      const startX = i * frameSize;
+      const imgData = ctx.getImageData(startX, 0, frameSize, frameSize);
+      const data = imgData.data;
+
+      let minX = frameSize;
+      let minY = frameSize;
+      let maxX = 0;
+      let maxY = 0;
+      let hasPixels = false;
+
+      for (let y = 0; y < frameSize; y++) {
+        for (let x = 0; x < frameSize; x++) {
+          const idx = (y * frameSize + x) * 4;
+          const alpha = data[idx + 3];
+
+          // 투명도가 있는 실제 픽셀 감지 (alpha > 15)
+          if (alpha > 15) {
+            hasPixels = true;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      if (hasPixels) {
+        // 유저 클릭 편의를 위해 외곽선에 +2px 여유 패딩 추가
+        const pad = 2;
+        const finalMinX = Math.max(0, minX - pad);
+        const finalMinY = Math.max(0, minY - pad);
+        const finalMaxX = Math.min(frameSize, maxX + pad + 1);
+        const finalMaxY = Math.min(frameSize, maxY + pad + 1);
+
+        const w = finalMaxX - finalMinX;
+        const h = finalMaxY - finalMinY;
+
+        hitboxes.push(new PIXI.Rectangle(finalMinX, finalMinY, w, h));
+      } else {
+        // 픽셀이 없는 경우 기본 중앙 히트박스 폴백
+        hitboxes.push(new PIXI.Rectangle(16, 26, 32, 38));
+      }
+    }
+
+    return hitboxes;
   }
 
   async loadAllPetAssets() {
@@ -153,10 +215,18 @@ class PetContainer extends PIXI.Container {
       const sheetData = await this.loadTextureViaDataUrl(sheetFileName);
 
       if (sheetData && sheetData.width > 0 && sheetData.height > 0) {
+        const frameSize = sheetData.height > 0 ? sheetData.height : 64;
+        const count = Math.max(1, Math.floor(sheetData.width / frameSize));
+
+        // 1) 프레임 텍스처 슬라이싱
         const frames = this.sliceTextureToFrames(sheetData.texture, sheetData.width, sheetData.height);
+        // 2) 프레임별 투명 픽셀 자동 스캔 히트박스 생성
+        const hitboxes = this.calculateFrameHitboxes(sheetData.imageElement, frameSize, count);
+
         if (frames.length > 0) {
           this.loadedAnimations[stateKey] = frames;
-          console.log(`🎉 [AssetLoader] Animation '${stateKey}' ready with ${frames.length} frames.`);
+          this.loadedAnimationHitboxes[stateKey] = hitboxes;
+          console.log(`🎉 [AssetLoader] Animation '${stateKey}' ready (${frames.length} frames, ${hitboxes.length} auto-hitboxes).`);
           loadedCount++;
           continue;
         }
@@ -167,6 +237,8 @@ class PetContainer extends PIXI.Container {
 
       if (singleData && singleData.width > 0) {
         this.loadedSingleTextures[stateKey] = singleData.texture;
+        const singleHitboxes = this.calculateFrameHitboxes(singleData.imageElement, singleData.height, 1);
+        this.loadedSingleHitboxes[stateKey] = singleHitboxes[0] || new PIXI.Rectangle(16, 26, 32, 38);
         console.log(`🎉 [AssetLoader] Single sprite '${stateKey}' ready (${singleData.width}px).`);
         loadedCount++;
       }
@@ -211,6 +283,8 @@ class PetContainer extends PIXI.Container {
 
     if (this.loadedAnimations[key] && this.loadedAnimations[key].length > 0) {
       const frames = this.loadedAnimations[key];
+      const hitboxes = this.loadedAnimationHitboxes[key] || [];
+      this.currentHitboxes = hitboxes;
 
       if (this.singleSprite) this.singleSprite.visible = false;
       if (this.graphicsFallback) this.graphicsFallback.visible = false;
@@ -240,21 +314,30 @@ class PetContainer extends PIXI.Container {
         this.animatedSprite.animationSpeed = speed;
       }
 
-      if (key === 'walk') {
-        this.animatedSprite.onFrameChange = (currentFrame) => {
-          const frameIdx = currentFrame % frames.length;
-          // 0, 1, 9번 프레임은 착지(정지), 나머지는 점프 이동
+      // 프레임 변경 시: 1) 착지 여부 갱신, 2) 프레임별 정밀 히트박스 실시간 교체!
+      this.animatedSprite.onFrameChange = (currentFrame) => {
+        const frameIdx = currentFrame % frames.length;
+        this.currentFrameIdx = frameIdx;
+
+        // 프레임별 자동 감지된 정밀 히트박스 적용
+        if (this.currentHitboxes && this.currentHitboxes[frameIdx]) {
+          this.hitArea = this.currentHitboxes[frameIdx];
+          this.updateHitbox();
+        }
+
+        // walk 애니메이션 착지/점프 상태 판정
+        if (key === 'walk') {
           if (frameIdx === 0 || frameIdx === 1 || frameIdx === frames.length - 1) {
             this.isGroundedFrame = true;
           } else {
             this.isGroundedFrame = false;
           }
-        };
-      } else {
-        this.animatedSprite.onFrameChange = null;
-        this.isGroundedFrame = true;
-      }
+        } else {
+          this.isGroundedFrame = true;
+        }
+      };
 
+      this.hitArea = hitboxes[0] || new PIXI.Rectangle(16, 26, 32, 38);
       this.animatedSprite.visible = true;
       this.animatedSprite.play();
       this.updateHitbox();
@@ -284,6 +367,7 @@ class PetContainer extends PIXI.Container {
         this.singleSprite.position.set(texW / 2, texH);
       }
 
+      this.hitArea = this.loadedSingleHitboxes[key] || new PIXI.Rectangle(16, 26, 32, 38);
       this.singleSprite.visible = true;
       this.updateHitbox();
       return;
@@ -295,12 +379,12 @@ class PetContainer extends PIXI.Container {
       this.pivot.set(32, 64);
       this.graphicsFallback.visible = true;
       this.drawFallbackPet(state);
+      this.hitArea = new PIXI.Rectangle(16, 26, 32, 38);
       this.updateHitbox();
     }
   }
 
   setupInteractions() {
-    // 64x64 프레임 중 실제 캐릭터가 위치한 하단 중앙 영역만 정밀하게 히트박스로 지정 (투명 여백 제거)
     this.hitArea = new PIXI.Rectangle(16, 26, 32, 38);
 
     this.on('pointerdown', (e) => {
@@ -313,7 +397,6 @@ class PetContainer extends PIXI.Container {
       const localMouseX = e.clientX - rect.left;
       const localMouseY = e.clientY - rect.top;
 
-      // 마우스가 클릭한 정확한 위치 기준으로 오프셋 계산 (오른쪽 위 쏠림 해결)
       this.dragOffset = {
         x: this.x - localMouseX,
         y: this.y - localMouseY
@@ -364,8 +447,10 @@ class PetContainer extends PIXI.Container {
       this.addChild(this.hitboxGraphics);
     }
     this.hitboxGraphics.clear();
-    // 캐릭터 실제 영역에 맞춘 정밀 히트박스
-    this.hitboxGraphics.rect(16, 26, 32, 38);
+    
+    // 현재 활성화된 프레임의 정밀 히트박스 사각형 렌더링
+    const box = this.hitArea || new PIXI.Rectangle(16, 26, 32, 38);
+    this.hitboxGraphics.rect(box.x, box.y, box.width, box.height);
     this.hitboxGraphics.fill({ color: 0x00e5ff, alpha: 0.25 });
     this.hitboxGraphics.stroke({ width: 1.5, color: 0x00e5ff, alpha: 0.95 });
     this.hitboxGraphics.visible = true;
@@ -410,7 +495,7 @@ class PetContainer extends PIXI.Container {
       this.scale.set(1 * this.baseScale, this.baseScale);
     }
 
-    // 챔버 내부 중력 낙하 (드래그 후 놓았을 때 챔버 바닥 y = 220으로 착지)
+    // 챔버 내부 중력 낙하
     const groundY = 220;
     if (!this.isDragging && this.y < groundY) {
       this.velocityY += 0.6 * delta;

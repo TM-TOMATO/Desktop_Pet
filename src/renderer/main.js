@@ -245,7 +245,61 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   });
 
-  // 8. 주기적 게임 자동 저장 (매 30초)
+  // 8. 커스텀 버튼 이미지 에셋 자동 바인딩 (assets/sprites/ 에 PNG 존재 시 자동 적용)
+  const path = require('path');
+  const fs = require('fs');
+
+  const buttonSpriteMap = {
+    'btn-feed': 'btn_feed.png',
+    'btn-play': 'btn_play.png',
+    'btn-shop': 'btn_shop.png',
+    'btn-info': 'btn_status.png',
+    'btn-settings': 'btn_config.png',
+    'btn-minimize-app': 'btn_minimize.png',
+    'btn-quit-app': 'btn_close.png',
+    'btn-modal-close': 'btn_modal_close.png',
+    'btn-shop-close': 'btn_modal_close.png',
+    'btn-settings-close': 'btn_modal_close.png'
+  };
+
+  for (const [btnId, fileName] of Object.entries(buttonSpriteMap)) {
+    const el = document.getElementById(btnId);
+    if (!el) continue;
+
+    const candidates = [
+      path.join(__dirname, '../../../assets/sprites', fileName),
+      path.join(__dirname, '../../assets/sprites', fileName),
+      path.join(process.cwd(), 'assets/sprites', fileName),
+      path.join(process.cwd(), 'resources/assets/sprites', fileName)
+    ];
+
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        try {
+          const buf = fs.readFileSync(p);
+          const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+          el.style.backgroundImage = `url("${dataUrl}")`;
+          el.style.backgroundSize = 'contain';
+          el.style.backgroundRepeat = 'no-repeat';
+          el.style.backgroundPosition = 'center';
+          el.style.backgroundColor = 'transparent';
+          el.style.borderColor = 'transparent';
+
+          const iconSpan = el.querySelector('.btn-icon');
+          const labelSpan = el.querySelector('.btn-label');
+          if (iconSpan) iconSpan.style.display = 'none';
+          if (labelSpan) labelSpan.style.display = 'none';
+          if (el.classList.contains('hdr-btn')) el.innerText = '';
+          console.log(`🔘 [ButtonLoader] Custom sprite applied to #${btnId}: ${fileName}`);
+          break;
+        } catch (err) {
+          console.error(`Failed to load button sprite ${fileName}:`, err);
+        }
+      }
+    }
+  }
+
+  // 9. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {
     if (window.electronAPI && window.electronAPI.saveData) {
       window.electronAPI.saveData({
