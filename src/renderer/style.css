@@ -65,10 +65,10 @@ html, body {
   position: absolute;
   left: 62px;
   top: 22px;
-  width: 105px;
-  height: 143px;
+  width: 70px;
+  height: 88px;
   z-index: 2;
-  border-radius: 4px;
+  border-radius: 0;
   overflow: hidden;
   cursor: default;
   background: transparent !important;
