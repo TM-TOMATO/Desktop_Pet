@@ -104,11 +104,13 @@ class PetContainer extends PIXI.Container {
 
   async loadTextureViaDataUrl(filename) {
     const candidates = [
-      path.join(__dirname, '../../../assets/sprites', filename),
-      path.join(__dirname, '../../assets/sprites', filename),
       path.join(process.cwd(), 'assets/sprites', filename),
       path.join(process.cwd(), 'resources/assets/sprites', filename),
-      path.join(process.cwd(), 'resources/app/assets/sprites', filename)
+      path.join(process.cwd(), 'resources/app.asar/assets/sprites', filename),
+      path.join(process.resourcesPath || '', 'assets/sprites', filename),
+      path.join(__dirname, '../../assets/sprites', filename),
+      path.join(__dirname, '../../../assets/sprites', filename),
+      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites/' + filename
     ];
 
     let foundPath = null;

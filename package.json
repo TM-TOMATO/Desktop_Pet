@@ -27,6 +27,10 @@
       {
         "from": "node_modules/uiohook-napi",
         "to": "node_modules/uiohook-napi"
+      },
+      {
+        "from": "assets",
+        "to": "assets"
       }
     ]
   },

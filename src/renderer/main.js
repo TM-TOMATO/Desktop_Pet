@@ -729,16 +729,50 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const names = Array.isArray(fileNames) ? fileNames : [fileNames];
     for (const fileName of names) {
       const candidates = [
-        path.join(__dirname, '../../../assets/sprites', fileName),
-        path.join(__dirname, '../../assets/sprites', fileName),
         path.join(process.cwd(), 'assets/sprites', fileName),
-        path.join(process.cwd(), 'resources/assets/sprites', fileName)
+        path.join(process.cwd(), 'resources/assets/sprites', fileName),
+        path.join(process.cwd(), 'resources/app.asar/assets/sprites', fileName),
+        path.join(process.resourcesPath || '', 'assets/sprites', fileName),
+        path.join(__dirname, '../../assets/sprites', fileName),
+        path.join(__dirname, '../../../assets/sprites', fileName),
+        'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites/' + fileName
       ];
       for (const p of candidates) {
         if (fs.existsSync(p)) return p;
       }
     }
     return null;
+  }
+
+  // 🎮 레트로 게임기 본체 케이스 커스텀 스킨 (console_case_bg.png)
+  const casePath = findSpriteFile('console_case_bg.png');
+  if (casePath) {
+    try {
+      const buf = fs.readFileSync(casePath);
+      const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+      casingEl.style.backgroundImage = `url("${dataUrl}")`;
+      casingEl.style.backgroundSize = '100% 100%';
+      casingEl.style.backgroundRepeat = 'no-repeat';
+      casingEl.style.backgroundColor = 'transparent';
+      casingEl.style.border = 'none';
+      casingEl.style.boxShadow = 'none';
+      console.log('🎮 [CaseLoader] Custom console_case_bg.png applied!');
+    } catch (e) {
+      console.error('Failed to load console_case_bg.png:', e);
+    }
+  }
+
+  // 📺 LCD 스크린 배경 커스텀 스킨 (screen_bg.png)
+  const screenBgPath = findSpriteFile('screen_bg.png');
+  if (screenBgPath) {
+    try {
+      const buf = fs.readFileSync(screenBgPath);
+      const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+      screenGlassEl.style.backgroundImage = `url("${dataUrl}")`;
+      screenGlassEl.style.backgroundSize = '100% 100%';
+      screenGlassEl.style.backgroundRepeat = 'no-repeat';
+      console.log('📺 [ScreenLoader] Custom screen_bg.png applied!');
+    } catch (e) {}
   }
 
   // 8방향 십자키 스프라이트 매핑 로드 (기본 중립 1장 + 8방향 눌림)
