@@ -539,6 +539,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
     el.addEventListener('mousedown', () => {
       el.classList.add(pressedClass);
+      if (btnId === 'btn-dpad-up') { dpadKeyState.up = true; update8WayDpadVisual(); }
+      if (btnId === 'btn-dpad-down') { dpadKeyState.down = true; update8WayDpadVisual(); }
+      if (btnId === 'btn-dpad-left') { dpadKeyState.left = true; update8WayDpadVisual(); }
+      if (btnId === 'btn-dpad-right') { dpadKeyState.right = true; update8WayDpadVisual(); }
+
       if (buttonTextures[btnId] && buttonTextures[btnId].pressed) {
         el.style.backgroundImage = `url("${buttonTextures[btnId].pressed}")`;
       }
@@ -546,6 +551,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
     const release = () => {
       el.classList.remove(pressedClass);
+      if (btnId === 'btn-dpad-up') { dpadKeyState.up = false; update8WayDpadVisual(); }
+      if (btnId === 'btn-dpad-down') { dpadKeyState.down = false; update8WayDpadVisual(); }
+      if (btnId === 'btn-dpad-left') { dpadKeyState.left = false; update8WayDpadVisual(); }
+      if (btnId === 'btn-dpad-right') { dpadKeyState.right = false; update8WayDpadVisual(); }
+
       if (buttonTextures[btnId] && buttonTextures[btnId].normal) {
         el.style.backgroundImage = `url("${buttonTextures[btnId].normal}")`;
       }
@@ -567,15 +577,23 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (e.repeat) return;
 
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      dpadKeyState.up = true;
+      update8WayDpadVisual();
       triggerVisualButtonPress('btn-dpad-up');
       handleDpadNav('UP');
     } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      dpadKeyState.down = true;
+      update8WayDpadVisual();
       triggerVisualButtonPress('btn-dpad-down');
       handleDpadNav('DOWN');
     } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      dpadKeyState.left = true;
+      update8WayDpadVisual();
       triggerVisualButtonPress('btn-dpad-left');
       handleDpadNav('LEFT');
     } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      dpadKeyState.right = true;
+      update8WayDpadVisual();
       triggerVisualButtonPress('btn-dpad-right');
       handleDpadNav('RIGHT');
     } else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
@@ -595,10 +613,26 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   });
 
   window.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') releaseVisualButtonPress('btn-dpad-up');
-    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') releaseVisualButtonPress('btn-dpad-down');
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') releaseVisualButtonPress('btn-dpad-left');
-    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') releaseVisualButtonPress('btn-dpad-right');
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      dpadKeyState.up = false;
+      update8WayDpadVisual();
+      releaseVisualButtonPress('btn-dpad-up');
+    }
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      dpadKeyState.down = false;
+      update8WayDpadVisual();
+      releaseVisualButtonPress('btn-dpad-down');
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      dpadKeyState.left = false;
+      update8WayDpadVisual();
+      releaseVisualButtonPress('btn-dpad-left');
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      dpadKeyState.right = false;
+      update8WayDpadVisual();
+      releaseVisualButtonPress('btn-dpad-right');
+    }
     if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') releaseVisualButtonPress('btn-action-a');
     if (e.key === 'Escape' || e.key === 'x' || e.key === 'X' || e.key === 'Backspace') releaseVisualButtonPress('btn-action-b');
     if (e.key === ' ' || e.key === 'c' || e.key === 'C') releaseVisualButtonPress('btn-action-a');
@@ -665,62 +699,100 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     isCasingDragging = false;
   });
 
-  // 11. 🔘 커스텀 버튼 (Normal & Pressed) 이미지 에셋 자동 바인딩
+  // 11. 🔘 통합 8방향 십자키 (8-Way D-Pad) & 커스텀 버튼 에셋 자동 바인딩
   const buttonTextures = {};
-  const buttonSpriteMap = {
-    'btn-action-a': { normal: 'btn_action_a.png', pressed: 'btn_action_a_pressed.png' },
-    'btn-action-b': { normal: 'btn_action_b.png', pressed: 'btn_action_b_pressed.png' },
-    'btn-power': { normal: 'btn_power.png', pressed: 'btn_power_pressed.png' },
-    'btn-dpad-up': { normal: 'btn_dpad_up.png', pressed: 'btn_dpad_up_pressed.png' },
-    'btn-dpad-down': { normal: 'btn_dpad_down.png', pressed: 'btn_dpad_down_pressed.png' },
-    'btn-dpad-left': { normal: 'btn_dpad_left.png', pressed: 'btn_dpad_left_pressed.png' },
-    'btn-dpad-right': { normal: 'btn_dpad_right.png', pressed: 'btn_dpad_right_pressed.png' },
-    'mini-btn-power': { normal: 'mini_btn_power.png', pressed: 'mini_btn_power_pressed.png' },
-    'mini-btn-expand': { normal: 'mini_btn_expand.png', pressed: 'mini_btn_expand_pressed.png' }
-  };
+  const dpad8WayTextures = {};
+  const dpadKeyState = { up: false, down: false, left: false, right: false };
+  const dpadContainerEl = document.querySelector('.dpad');
 
-  function findSpriteFile(fileName) {
-    const candidates = [
-      path.join(__dirname, '../../../assets/sprites', fileName),
-      path.join(__dirname, '../../assets/sprites', fileName),
-      path.join(process.cwd(), 'assets/sprites', fileName),
-      path.join(process.cwd(), 'resources/assets/sprites', fileName)
-    ];
-    for (const p of candidates) {
-      if (fs.existsSync(p)) return p;
+  function update8WayDpadVisual() {
+    if (!dpadContainerEl) return;
+    let dir = 'neutral';
+
+    if (dpadKeyState.up && dpadKeyState.left) dir = 'up_left';
+    else if (dpadKeyState.up && dpadKeyState.right) dir = 'up_right';
+    else if (dpadKeyState.down && dpadKeyState.left) dir = 'down_left';
+    else if (dpadKeyState.down && dpadKeyState.right) dir = 'down_right';
+    else if (dpadKeyState.up) dir = 'up';
+    else if (dpadKeyState.down) dir = 'down';
+    else if (dpadKeyState.left) dir = 'left';
+    else if (dpadKeyState.right) dir = 'right';
+
+    if (dpad8WayTextures[dir]) {
+      dpadContainerEl.style.backgroundImage = `url("${dpad8WayTextures[dir]}")`;
+    } else if (dpad8WayTextures['neutral']) {
+      dpadContainerEl.style.backgroundImage = `url("${dpad8WayTextures['neutral']}")`;
+    }
+  }
+
+  function findSpriteFile(fileNames) {
+    const names = Array.isArray(fileNames) ? fileNames : [fileNames];
+    for (const fileName of names) {
+      const candidates = [
+        path.join(__dirname, '../../../assets/sprites', fileName),
+        path.join(__dirname, '../../assets/sprites', fileName),
+        path.join(process.cwd(), 'assets/sprites', fileName),
+        path.join(process.cwd(), 'resources/assets/sprites', fileName)
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) return p;
+      }
     }
     return null;
   }
 
-  // 십자키 통합 1장 (btn_dpad.png) 지원
-  const dpadContainerEl = document.querySelector('.dpad');
-  if (dpadContainerEl) {
-    const integratedDpadPath = findSpriteFile('btn_dpad.png');
-    if (integratedDpadPath) {
+  // 8방향 십자키 스프라이트 매핑 로드 (기본 중립 1장 + 8방향 눌림)
+  const dpad8WayFiles = {
+    neutral: ['btn_dpad.png'],
+    up: ['btn_dpad_pressed_up.png', 'btn_dpad_up_pressed.png'],
+    down: ['btn_dpad_pressed_down.png', 'btn_dpad_down_pressed.png'],
+    left: ['btn_dpad_pressed_left.png', 'btn_dpad_left_pressed.png'],
+    right: ['btn_dpad_pressed_right.png', 'btn_dpad_right_pressed.png'],
+    up_left: ['btn_dpad_pressed_up_left.png', 'btn_dpad_up_left_pressed.png', 'btn_dpad_pressed_ul.png'],
+    up_right: ['btn_dpad_pressed_up_right.png', 'btn_dpad_up_right_pressed.png', 'btn_dpad_pressed_ur.png'],
+    down_left: ['btn_dpad_pressed_down_left.png', 'btn_dpad_down_left_pressed.png', 'btn_dpad_pressed_dl.png'],
+    down_right: ['btn_dpad_pressed_down_right.png', 'btn_dpad_down_right_pressed.png', 'btn_dpad_pressed_dr.png']
+  };
+
+  for (const [dirKey, candidateFiles] of Object.entries(dpad8WayFiles)) {
+    const filePath = findSpriteFile(candidateFiles);
+    if (filePath) {
       try {
-        const buf = fs.readFileSync(integratedDpadPath);
-        const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
-        dpadContainerEl.style.backgroundImage = `url("${dataUrl}")`;
-        dpadContainerEl.style.backgroundSize = 'contain';
-        dpadContainerEl.style.backgroundRepeat = 'no-repeat';
-        dpadContainerEl.style.backgroundPosition = 'center';
-        
-        // 통합 이미지가 있으면 개별 버튼은 투명 클릭 영역으로 변경
-        ['btn-dpad-up', 'btn-dpad-down', 'btn-dpad-left', 'btn-dpad-right'].forEach((id) => {
-          const btn = document.getElementById(id);
-          if (btn) {
-            btn.style.backgroundColor = 'transparent';
-            btn.style.borderColor = 'transparent';
-            btn.style.boxShadow = 'none';
-            btn.innerText = '';
-          }
-        });
-        const center = document.querySelector('.dpad-center');
-        if (center) center.style.backgroundColor = 'transparent';
-        console.log('🔘 [ButtonLoader] Integrated btn_dpad.png applied.');
+        const buf = fs.readFileSync(filePath);
+        dpad8WayTextures[dirKey] = `data:image/png;base64,${buf.toString('base64')}`;
+        console.log(`🕹️ [8WayDpad] Loaded ${dirKey} sprite: ${path.basename(filePath)}`);
       } catch (e) {}
     }
   }
+
+  if (dpadContainerEl && dpad8WayTextures.neutral) {
+    dpadContainerEl.style.backgroundImage = `url("${dpad8WayTextures.neutral}")`;
+    dpadContainerEl.style.backgroundSize = 'contain';
+    dpadContainerEl.style.backgroundRepeat = 'no-repeat';
+    dpadContainerEl.style.backgroundPosition = 'center';
+
+    // 통합 이미지가 있으면 개별 버튼의 자체 배경은 투명화
+    ['btn-dpad-up', 'btn-dpad-down', 'btn-dpad-left', 'btn-dpad-right'].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.style.backgroundColor = 'transparent';
+        btn.style.borderColor = 'transparent';
+        btn.style.boxShadow = 'none';
+        btn.innerText = '';
+      }
+    });
+    const center = document.querySelector('.dpad-center');
+    if (center) center.style.backgroundColor = 'transparent';
+  }
+
+  // 액션 및 시스템 버튼 스프라이트 매핑 로드
+  const buttonSpriteMap = {
+    'btn-action-a': { normal: 'btn_action_a.png', pressed: 'btn_action_a_pressed.png' },
+    'btn-action-b': { normal: 'btn_action_b.png', pressed: 'btn_action_b_pressed.png' },
+    'btn-power': { normal: 'btn_power.png', pressed: 'btn_power_pressed.png' },
+    'mini-btn-power': { normal: 'mini_btn_power.png', pressed: 'mini_btn_power_pressed.png' },
+    'mini-btn-expand': { normal: 'mini_btn_expand.png', pressed: 'mini_btn_expand_pressed.png' }
+  };
 
   for (const [btnId, spriteFiles] of Object.entries(buttonSpriteMap)) {
     const el = document.getElementById(btnId);
