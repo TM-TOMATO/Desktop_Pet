@@ -17,27 +17,35 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  width: 320px;
+  height: 300px;
 }
 
 canvas {
   display: block;
-  pointer-events: auto;
+  width: 320px;
+  height: 300px;
 }
 
 /* 말풍선 UI */
 .pet-dialog {
   position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   border: 2px solid #ffd166;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   font-size: 13px;
   font-weight: 600;
   color: #333;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 290px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: auto;
   transition: opacity 0.2s ease, transform 0.2s ease;
   z-index: 100;
@@ -45,20 +53,23 @@ canvas {
 
 .pet-dialog.hidden {
   opacity: 0;
-  transform: scale(0.8);
+  transform: translateX(-50%) scale(0.8);
   pointer-events: none;
 }
 
 /* 래디얼 메뉴 */
 .radial-menu {
   position: absolute;
+  bottom: 135px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 8px;
-  background: rgba(40, 44, 52, 0.88);
+  background: rgba(40, 44, 52, 0.92);
   backdrop-filter: blur(8px);
   padding: 8px 14px;
   border-radius: 30px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
   pointer-events: auto;
   transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 101;
@@ -66,40 +77,43 @@ canvas {
 
 .radial-menu.hidden {
   opacity: 0;
-  transform: scale(0.5);
+  transform: translateX(-50%) scale(0.5);
   pointer-events: none;
 }
 
 .menu-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   border: none;
   background: #ffffff;
-  font-size: 16px;
+  font-size: 17px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   transition: transform 0.15s ease, background 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menu-btn:hover {
-  transform: scale(1.15);
+  transform: scale(1.18);
   background: #ffe066;
 }
 
 /* 상태 모달 & 설정 모달 */
 .status-modal {
-  position: fixed;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.96);
-  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 18px 20px;
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
   pointer-events: auto;
   z-index: 200;
-  min-width: 280px;
+  width: 290px;
 }
 
 .status-modal.hidden {
@@ -107,9 +121,10 @@ canvas {
 }
 
 .modal-content h3 {
-  font-size: 16px;
-  margin-bottom: 14px;
+  font-size: 15px;
+  margin-bottom: 12px;
   color: #2b2d42;
+  text-align: center;
 }
 
 .stat-row {
@@ -119,11 +134,11 @@ canvas {
 }
 
 .setting-row {
-  margin-top: 12px;
-  margin-bottom: 14px;
+  margin-top: 10px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
   color: #2b2d42;
   font-weight: 600;
@@ -186,12 +201,11 @@ canvas {
   transform: translateX(20px);
 }
 
-
 .setting-hint {
   font-size: 11px;
   color: #6c757d;
   line-height: 1.4;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .bar-bg {
@@ -219,7 +233,7 @@ canvas {
 }
 
 .close-modal-btn {
-  margin-top: 14px;
+  margin-top: 10px;
   width: 100%;
   padding: 8px;
   border: none;
@@ -228,6 +242,7 @@ canvas {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 13px;
 }
 
 .close-modal-btn:hover {

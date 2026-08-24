@@ -5,10 +5,14 @@ const { PetContainer } = require('./objects/PetContainer.js');
 const { FoodItem } = require('./objects/FoodItem.js');
 
 (async () => {
-  // 1. PixiJS App 초기화
+  const WIN_W = 320;
+  const WIN_H = 300;
+
+  // 1. PixiJS App 초기화 (320x300 컴팩트 윈도우)
   const app = new PIXI.Application();
   await app.init({
-    resizeTo: window,
+    width: WIN_W,
+    height: WIN_H,
     backgroundAlpha: 0,
     antialias: true
   });
@@ -16,7 +20,29 @@ const { FoodItem } = require('./objects/FoodItem.js');
   const containerEl = document.getElementById('canvas-container');
   containerEl.appendChild(app.canvas);
 
-  // 2. 세이브 데이터 로드 및 PetStats 초기화
+  // 2. 화면 작업 영역(WorkArea) 및 초기 위치 계산 (작업표시줄 바로 위)
+  let workArea = null;
+  if (window.electronAPI && window.electronAPI.getWorkArea) {
+    workArea = await window.electronAPI.getWorkArea();
+  }
+
+  const screenW = workArea ? workArea.width : window.screen.availWidth;
+  const screenH = workArea ? workArea.height : window.screen.availHeight;
+  const workX = workArea ? workArea.x : 0;
+  const workY = workArea ? workArea.y : 0;
+
+  const groundY = workY + screenH - WIN_H;
+  let currentWinX = workX + Math.round((screenW - WIN_W) / 2);
+  let currentWinY = groundY;
+  let velocityY = 0;
+
+  let isDragging = false;
+  let dragStartMouseX = 0;
+  let dragStartMouseY = 0;
+  let dragStartWinX = currentWinX;
+  let dragStartWinY = currentWinY;
+
+  // 3. 세이브 데이터 로드 및 PetStats 초기화
   let saveData = null;
   if (window.electronAPI && window.electronAPI.loadData) {
     saveData = await window.electronAPI.loadData();
@@ -24,8 +50,8 @@ const { FoodItem } = require('./objects/FoodItem.js');
   }
 
   const petStats = new PetStats(saveData ? saveData.petInfo : {});
-  
-  // 3. 오프라인 시간 경과 계산 (방치 보상)
+
+  // 오프라인 방치 보상 계산
   if (saveData && saveData.lastOnlineTimestamp) {
     const offlineSec = Math.floor((Date.now() - saveData.lastOnlineTimestamp) / 1000);
     if (offlineSec > 60) {
@@ -58,8 +84,8 @@ const { FoodItem } = require('./objects/FoodItem.js');
   const scaleValueLabel = document.getElementById('scale-value');
   const hitboxToggle = document.getElementById('hitbox-toggle');
 
-  // 저장된 스케일 적용
-  const savedScale = petStats.scaleFactor || 1.0;
+  // 저장된 스케일 적용 (기본 2.0 = 200%)
+  const savedScale = petStats.scaleFactor || 2.0;
   scaleRange.value = Math.round(savedScale * 100);
   scaleValueLabel.textContent = `${Math.round(savedScale * 100)}%`;
   pet.setBaseScale(savedScale);
@@ -76,13 +102,13 @@ const { FoodItem } = require('./objects/FoodItem.js');
     pet.setHitboxVisible(hitboxToggle.checked);
   });
 
+  let dialogTimer = null;
   function showDialog(text, durationMs = 3500) {
+    if (dialogTimer) clearTimeout(dialogTimer);
     dialogTextEl.innerText = text;
-    dialogEl.style.left = `${pet.x - 50}px`;
-    dialogEl.style.top = `${pet.y - 140}px`;
     dialogEl.classList.remove('hidden');
 
-    setTimeout(() => {
+    dialogTimer = setTimeout(() => {
       dialogEl.classList.add('hidden');
     }, durationMs);
   }
@@ -112,29 +138,53 @@ const { FoodItem } = require('./objects/FoodItem.js');
 
   updateHUD(petStats.getSnapshot());
 
-  // 6. 펫 인터랙션 이벤트 바인딩
-  pet.onDragStart = () => {
+  // 6. 펫 드래그 및 마우스 인터랙션 바인딩
+  pet.onDragStart = (screenMouseX, screenMouseY) => {
+    isDragging = true;
+    dragStartMouseX = screenMouseX;
+    dragStartMouseY = screenMouseY;
+    dragStartWinX = currentWinX;
+    dragStartWinY = currentWinY;
+
     stateMachine.changeState(PetState.DRAGGED);
     radialMenuEl.classList.add('hidden');
+    statusModalEl.classList.add('hidden');
+    settingsModalEl.classList.add('hidden');
     showDialog('우와! 날 어디로 데려가는 거야? 😮');
   };
 
+  window.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      currentWinX = Math.round(dragStartWinX + (e.screenX - dragStartMouseX));
+      currentWinY = Math.round(dragStartWinY + (e.screenY - dragStartMouseY));
+
+      if (window.electronAPI && window.electronAPI.setWindowPosition) {
+        window.electronAPI.setWindowPosition(currentWinX, currentWinY);
+      }
+    }
+  });
+
   pet.onDragEnd = () => {
-    stateMachine.changeState(PetState.IDLE);
-    showDialog('후아~ 안착! 🐾');
+    if (isDragging) {
+      isDragging = false;
+      velocityY = 0;
+      stateMachine.changeState(PetState.IDLE);
+      showDialog('후아~ 안착! 🐾');
+    }
   };
 
-  pet.onRightClick = (x, y) => {
-    radialMenuEl.style.left = `${x - 60}px`;
-    radialMenuEl.style.top = `${y - 60}px`;
-    radialMenuEl.classList.remove('hidden');
+  pet.onRightClick = () => {
+    statusModalEl.classList.add('hidden');
+    settingsModalEl.classList.add('hidden');
+    radialMenuEl.classList.toggle('hidden');
   };
 
   // 7. 래디얼 메뉴 동작
-  document.getElementById('btn-feed').addEventListener('click', () => {
+  document.getElementById('btn-feed').addEventListener('click', (e) => {
+    e.stopPropagation();
     radialMenuEl.classList.add('hidden');
 
-    const food = new FoodItem(app, pet.x + (pet.walkDirection * 60), pet.y);
+    const food = new FoodItem(app, pet.x + (pet.walkDirection * 40), pet.y);
     app.stage.addChild(food);
     activeFoods.push(food);
 
@@ -147,82 +197,44 @@ const { FoodItem } = require('./objects/FoodItem.js');
     }, 1500);
   });
 
-  document.getElementById('btn-play').addEventListener('click', () => {
+  document.getElementById('btn-play').addEventListener('click', (e) => {
+    e.stopPropagation();
     radialMenuEl.classList.add('hidden');
     petStats.play(25);
     stateMachine.changeState(PetState.HAPPY);
     showDialog('신난다! 🎾 쓰다듬어줘서 고마워!');
   });
 
-  document.getElementById('btn-info').addEventListener('click', () => {
+  document.getElementById('btn-info').addEventListener('click', (e) => {
+    e.stopPropagation();
     radialMenuEl.classList.add('hidden');
+    settingsModalEl.classList.add('hidden');
     statusModalEl.classList.remove('hidden');
   });
 
-  document.getElementById('btn-settings').addEventListener('click', () => {
+  document.getElementById('btn-settings').addEventListener('click', (e) => {
+    e.stopPropagation();
     radialMenuEl.classList.add('hidden');
+    statusModalEl.classList.add('hidden');
     settingsModalEl.classList.remove('hidden');
   });
 
-  document.getElementById('btn-close').addEventListener('click', () => {
+  document.getElementById('btn-close').addEventListener('click', (e) => {
+    e.stopPropagation();
     radialMenuEl.classList.add('hidden');
   });
 
-  document.getElementById('btn-modal-close').addEventListener('click', () => {
+  document.getElementById('btn-modal-close').addEventListener('click', (e) => {
+    e.stopPropagation();
     statusModalEl.classList.add('hidden');
   });
 
-  document.getElementById('btn-settings-close').addEventListener('click', () => {
+  document.getElementById('btn-settings-close').addEventListener('click', (e) => {
+    e.stopPropagation();
     settingsModalEl.classList.add('hidden');
   });
 
-  // 8. Ghost Mode - 위치 기반 마우스 투과 제어
-  // forward:true 상태에서도 mousemove 이벤트는 발생하므로,
-  // 매 마우스 이동마다 펫/UI 위에 있는지 직접 좌표 비교
-  let _isIgnoring = false;
-
-  function setIgnore(ignore) {
-    if (!window.electronAPI) return;
-    if (_isIgnoring === ignore) return;  // 불필요한 IPC 호출 방지
-    _isIgnoring = ignore;
-    if (ignore) {
-      window.electronAPI.setIgnoreMouseEvents(true, { forward: true });
-    } else {
-      window.electronAPI.setIgnoreMouseEvents(false);
-    }
-  }
-
-  window.addEventListener('mousemove', (e) => {
-    if (pet.isDragging) {
-      setIgnore(false);
-      return;
-    }
-
-    const mx = e.clientX;
-    const my = e.clientY;
-
-    // 펫 히트박스 체크 (스케일 반영)
-    const halfW = 32 * pet.baseScale;
-    const h     = 64 * pet.baseScale;
-    const overPet = (
-      mx >= pet.x - halfW && mx <= pet.x + halfW &&
-      my >= pet.y - h     && my <= pet.y
-    );
-
-    // UI 요소 위 체크 (HTML elementFromPoint 활용)
-    const el = document.elementFromPoint(mx, my);
-    const uiRoots = [radialMenuEl, statusModalEl, settingsModalEl, dialogEl];
-    const overUI = el && uiRoots.some(root => root && root !== document.body && root.contains(el));
-
-    setIgnore(!(overPet || overUI));
-  });
-
-  // contextmenu(우클릭)도 마우스 캡처 해제 후 처리
-  window.addEventListener('contextmenu', (e) => {
-    setIgnore(false);
-  }, true); // capture 단계에서 먼저 처리
-
-  // 9. 주기적 게임 자동 저장 (매 30초)
+  // 8. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {
     if (window.electronAPI && window.electronAPI.saveData) {
       window.electronAPI.saveData({
@@ -232,7 +244,7 @@ const { FoodItem } = require('./objects/FoodItem.js');
     }
   }, 30000);
 
-  // 10. 메인 렌더링 및 틱 루프 (PIXI Ticker)
+  // 9. 메인 렌더링 및 틱 루프 (PIXI Ticker)
   app.ticker.add((ticker) => {
     const delta = ticker.deltaTime;
 
@@ -240,6 +252,44 @@ const { FoodItem } = require('./objects/FoodItem.js');
     stateMachine.update(delta);
     pet.update(delta, stateMachine.currentState);
 
+    // 공중 낙하 중력 물리 (드래그 후 놓았을 때)
+    if (!isDragging && currentWinY < groundY) {
+      velocityY += 0.8 * delta;
+      currentWinY += velocityY;
+
+      if (currentWinY >= groundY) {
+        currentWinY = groundY;
+        velocityY = 0;
+      }
+
+      if (window.electronAPI && window.electronAPI.setWindowPosition) {
+        window.electronAPI.setWindowPosition(currentWinX, currentWinY);
+      }
+    }
+
+    // 걷기 점프 이동 물리 (바닥에 있을 때 & 공중 프레임일 때만 전진)
+    if (!isDragging && currentWinY >= groundY && stateMachine.currentState === PetState.WALK) {
+      if (!pet.isGroundedFrame) {
+        currentWinX += pet.walkDirection * pet.walkSpeed * delta;
+
+        const minX = workX;
+        const maxX = workX + screenW - WIN_W;
+
+        if (currentWinX <= minX) {
+          currentWinX = minX;
+          pet.walkDirection = 1;
+        } else if (currentWinX >= maxX) {
+          currentWinX = maxX;
+          pet.walkDirection = -1;
+        }
+
+        if (window.electronAPI && window.electronAPI.setWindowPosition) {
+          window.electronAPI.setWindowPosition(currentWinX, currentWinY);
+        }
+      }
+    }
+
+    // 활성화된 음식 아이템 업데이트
     for (let i = activeFoods.length - 1; i >= 0; i--) {
       const food = activeFoods[i];
       food.update(delta);
@@ -247,19 +297,14 @@ const { FoodItem } = require('./objects/FoodItem.js');
         activeFoods.splice(i, 1);
       }
     }
-
-    if (!dialogEl.classList.contains('hidden')) {
-      dialogEl.style.left = `${pet.x - 50}px`;
-      dialogEl.style.top = `${pet.y - 140}px`;
-    }
   });
 
   // 로드된 사용자 에셋 상태 표시
   setTimeout(() => {
     if (pet.debugLog.length > 0) {
-      showDialog(`🎨 적용 성공: ${pet.debugLog.join(', ')}`, 5000);
+      showDialog(`🎨 적용 성공: ${pet.debugLog.join(', ')}`, 4000);
     } else {
-      showDialog(`⚠️ 에셋 미감지: assets/sprites/ 폴더를 확인해줘!`, 5000);
+      showDialog(`안녕! 바탕화면 다마고치야 🐾`, 3500);
     }
-  }, 1000);
+  }, 800);
 })();

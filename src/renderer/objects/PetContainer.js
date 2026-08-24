@@ -7,19 +7,17 @@ class PetContainer extends PIXI.Container {
   constructor(app) {
     super();
     this.app = app;
-    this.pivot.set(32, 64);
-    
-    this.x = window.innerWidth / 2;
-    this.y = window.innerHeight;   // 작업표시줄 바로 위 바닥
+    this.pivot.set(32, 64); // 64x64 프레임의 하단 중앙
+
+    // 320x300 창 내부에서 펫의 고정 기준점 (중앙 하단)
+    this.x = 160;
+    this.y = 270;
 
     this.walkDirection = 1;
-    this.walkSpeed = 2.4;
-    this.baseScale = 2.0;          // 기본 크기 2배
-    this.isDragging = false;
-    this.dragOffset = { x: 0, y: 0 };
+    this.baseScale = 2.0; // 기본 2배 크기 (128x128 렌더링)
     this.bouncePhase = 0;
 
-    // 점프 이동 제어 변수 (1, 2, 10 프레임 착지 상태 여부)
+    // 점프 이동 상태 변수 (1, 2, 10 프레임 착지 상태)
     this.isGroundedFrame = true;
 
     this.animatedSprite = null;
@@ -132,7 +130,7 @@ class PetContainer extends PIXI.Container {
       console.log(`✅ [AssetLoader] ${logMsg} from: ${foundPath}`);
       this.debugLog.push(logMsg);
 
-      return { texture, width: img.width, height: img.height, image: img };
+      return { texture, width: img.width, height: img.height };
     } catch (err) {
       console.error(`❌ [AssetLoader] Failed to decode '${filename}':`, err);
       return null;
@@ -213,10 +211,9 @@ class PetContainer extends PIXI.Container {
       const frameH = firstFrame.height || 64;
       this.pivot.set(frameW / 2, frameH);
 
-      // 애니메이션 프레임 속도 설정 (idle: 3fps, walk: 0.25)
       const animSpeedMap = {
-        idle: 3 / 60, // 약 0.05 (3fps)
-        walk: 0.25,   // 부드러운 점프 모션 재생
+        idle: 3 / 60, // 3fps
+        walk: 0.25,
         happy: 0.25,
         eating: 0.2
       };
@@ -234,12 +231,10 @@ class PetContainer extends PIXI.Container {
         this.animatedSprite.animationSpeed = speed;
       }
 
-      // walk 애니메이션 프레임별 점프/착지 감지
       if (key === 'walk') {
         this.animatedSprite.onFrameChange = (currentFrame) => {
-          // 10개 프레임 기준 (0-indexed: 0, 1, 9번은 지면 착지 상태 -> 이동 멈춤)
-          // 2 ~ 8번 프레임(3, 4, 5, 6, 7, 8, 9번 프레임)은 공중 점프 상태 -> 이동!
           const frameIdx = currentFrame % frames.length;
+          // 0, 1, 9번 프레임은 착지(정지), 나머지는 점프 이동
           if (frameIdx === 0 || frameIdx === 1 || frameIdx === frames.length - 1) {
             this.isGroundedFrame = true;
           } else {
@@ -253,6 +248,7 @@ class PetContainer extends PIXI.Container {
 
       this.animatedSprite.visible = true;
       this.animatedSprite.play();
+      this.updateHitbox();
       return;
     }
 
@@ -281,71 +277,49 @@ class PetContainer extends PIXI.Container {
       }
 
       this.singleSprite.visible = true;
+      this.updateHitbox();
       return;
     }
 
-    // 3. 대체 젤리 슬라임 렌더링
+    // 3. Fallback
     if (this.animatedSprite) this.animatedSprite.visible = false;
     if (this.singleSprite) this.singleSprite.visible = false;
     if (this.graphicsFallback) {
       this.pivot.set(32, 64);
       this.graphicsFallback.visible = true;
       this.drawFallbackPet(state);
+      this.updateHitbox();
     }
   }
 
   setupInteractions() {
     this.hitArea = new PIXI.Rectangle(0, 0, 64, 64);
 
-    // 좌클릭 드래그
     this.on('pointerdown', (e) => {
-      this.isDragging = true;
-      this.cursor = 'grabbing';
-      this.dragOffset = {
-        x: this.x - e.global.x,
-        y: this.y - e.global.y
-      };
-      if (this.onDragStart) this.onDragStart();
-    });
+      // 우클릭(button === 2)은 무시 (contextmenu에서 처리)
+      if (e.button === 2) return;
 
-    window.addEventListener('pointermove', (e) => {
-      if (this.isDragging) {
-        this.x = e.clientX + this.dragOffset.x;
-        this.y = e.clientY + this.dragOffset.y;
-        this.clampPosition();
+      this.cursor = 'grabbing';
+      if (this.onDragStart) {
+        this.onDragStart(e.screenX || e.clientX, e.screenY || e.clientY);
       }
     });
 
     window.addEventListener('pointerup', () => {
-      if (this.isDragging) {
-        this.isDragging = false;
-        this.cursor = 'grab';
-        if (this.onDragEnd) this.onDragEnd();
-      }
+      this.cursor = 'grab';
+      if (this.onDragEnd) this.onDragEnd();
     });
 
-    // 우클릭: native contextmenu 이벤트로 안정적으로 처리
-    // (PIXI rightdown은 setIgnoreMouseEvents 타이밍 문제로 불안정)
+    // 우클릭 메뉴
     window.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-      const mx = e.clientX;
-      const my = e.clientY;
-      // 펫 히트박스 안에서 우클릭했을 때만 메뉴 표시
-      const halfW = 32 * this.baseScale;
-      const h     = 64 * this.baseScale;
-      if (mx >= this.x - halfW && mx <= this.x + halfW &&
-          my >= this.y - h     && my <= this.y) {
-        if (this.onRightClick) this.onRightClick(mx, my);
-      }
+      if (this.onRightClick) this.onRightClick(e.clientX, e.clientY);
     });
   }
 
-  setHitboxVisible(visible) {
-    this.showHitbox = visible;
-    if (!visible) {
-      if (this.hitboxGraphics) {
-        this.hitboxGraphics.visible = false;
-      }
+  updateHitbox() {
+    if (!this.showHitbox) {
+      if (this.hitboxGraphics) this.hitboxGraphics.visible = false;
       return;
     }
     if (!this.hitboxGraphics) {
@@ -354,9 +328,14 @@ class PetContainer extends PIXI.Container {
     }
     this.hitboxGraphics.clear();
     this.hitboxGraphics.rect(0, 0, 64, 64);
-    this.hitboxGraphics.fill({ color: 0x00ff88, alpha: 0.18 });
-    this.hitboxGraphics.stroke({ width: 2, color: 0x00ff88, alpha: 0.8 });
+    this.hitboxGraphics.fill({ color: 0x00ff88, alpha: 0.2 });
+    this.hitboxGraphics.stroke({ width: 2, color: 0x00ff88, alpha: 0.9 });
     this.hitboxGraphics.visible = true;
+  }
+
+  setHitboxVisible(visible) {
+    this.showHitbox = visible;
+    this.updateHitbox();
   }
 
   onStateChange(newState) {
@@ -366,53 +345,16 @@ class PetContainer extends PIXI.Container {
   setBaseScale(scaleVal) {
     this.baseScale = scaleVal;
     this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
+    this.updateHitbox();
   }
 
   update(delta, currentState) {
     this.bouncePhase += delta * 0.1;
-
-    if (currentState === PetState.WALK && !this.isDragging) {
-      if (!this.isGroundedFrame) {
-        this.x += this.walkDirection * this.walkSpeed * delta;
-      }
-      
-      this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
-
-      const minX = 64 * this.baseScale;
-      const maxX = window.innerWidth - 64 * this.baseScale;
-      if (this.x <= minX) {
-        this.x = minX;
-        this.walkDirection = 1;
-      } else if (this.x >= maxX) {
-        this.x = maxX;
-        this.walkDirection = -1;
-      }
-    } else if (currentState === PetState.IDLE) {
-      this.scale.set(1 * this.baseScale, this.baseScale);
-    }
+    this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
 
     if (this.graphicsFallback && this.graphicsFallback.visible) {
       this.drawFallbackPet(currentState);
     }
-
-    if (!this.isDragging) {
-      const groundY = window.innerHeight;  // 작업표시줄 바로 위
-      if (this.y < groundY) {
-        this.y += 6 * delta;
-        if (this.y > groundY) this.y = groundY;
-      }
-    }
-  }
-
-  clampPosition() {
-    const sz  = 64 * this.baseScale;
-    const minX = sz / 2;
-    const maxX = window.innerWidth - sz / 2;
-    const minY = sz;
-    const maxY = window.innerHeight;
-
-    this.x = Math.max(minX, Math.min(maxX, this.x));
-    this.y = Math.max(minY, Math.min(maxY, this.y));
   }
 }
 
