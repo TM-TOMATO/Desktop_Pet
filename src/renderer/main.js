@@ -4,23 +4,29 @@ const { PetStats } = require('./core/PetStats.js');
 const { PetContainer } = require('./objects/PetContainer.js');
 const { FoodItem } = require('./objects/FoodItem.js');
 
+// 픽셀 아트 선명도 유지 (Nearest Filtering)
+if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
+  PIXI.TextureSource.defaultOptions.scaleMode = 'nearest';
+}
+
 (async () => {
   const WIN_W = 320;
   const WIN_H = 300;
 
-  // 1. PixiJS App 초기화 (320x300 컴팩트 윈도우)
+  // 1. PixiJS App 초기화 (320x300 컴팩트 윈도우, 픽셀 아트용 antialias: false)
   const app = new PIXI.Application();
   await app.init({
     width: WIN_W,
     height: WIN_H,
     backgroundAlpha: 0,
-    antialias: true
+    antialias: false,
+    roundPixels: true
   });
 
   const containerEl = document.getElementById('canvas-container');
   containerEl.appendChild(app.canvas);
 
-  // 2. 화면 작업 영역(WorkArea) 및 초기 위치 계산 (작업표시줄 바로 위)
+  // 2. 화면 작업 영역(WorkArea) 및 초기 위치 계산
   let workArea = null;
   if (window.electronAPI && window.electronAPI.getWorkArea) {
     workArea = await window.electronAPI.getWorkArea();
@@ -31,16 +37,16 @@ const { FoodItem } = require('./objects/FoodItem.js');
   const workX = workArea ? workArea.x : 0;
   const workY = workArea ? workArea.y : 0;
 
-  const groundY = workY + screenH - WIN_H;
+  // 기본 바닥 높이 (작업표시줄 위)
+  const defaultGroundY = workY + screenH - WIN_H;
+  let groundY = defaultGroundY;
   let currentWinX = workX + Math.round((screenW - WIN_W) / 2);
-  let currentWinY = groundY;
+  let currentWinY = defaultGroundY;
   let velocityY = 0;
 
   let isDragging = false;
-  let dragStartMouseX = 0;
-  let dragStartMouseY = 0;
-  let dragStartWinX = currentWinX;
-  let dragStartWinY = currentWinY;
+  let dragMouseOffsetX = 160;
+  let dragMouseOffsetY = 240;
 
   // 3. 세이브 데이터 로드 및 PetStats 초기화
   let saveData = null;
@@ -138,25 +144,27 @@ const { FoodItem } = require('./objects/FoodItem.js');
 
   updateHUD(petStats.getSnapshot());
 
-  // 6. 펫 드래그 및 마우스 인터랙션 바인딩
-  pet.onDragStart = (screenMouseX, screenMouseY) => {
+  // 6. 펫 마우스 드래그 이동 (어디든 부드럽게 끌어서 이동)
+  window.addEventListener('mousedown', (e) => {
+    // 좌클릭만 드래그 시작 (모달 및 메뉴 버튼 클릭 시는 제외)
+    if (e.button !== 0) return;
+    if (e.target.closest('#radial-menu, #status-modal, #settings-modal')) return;
+
     isDragging = true;
-    dragStartMouseX = screenMouseX;
-    dragStartMouseY = screenMouseY;
-    dragStartWinX = currentWinX;
-    dragStartWinY = currentWinY;
+    dragMouseOffsetX = e.clientX;
+    dragMouseOffsetY = e.clientY;
 
     stateMachine.changeState(PetState.DRAGGED);
     radialMenuEl.classList.add('hidden');
     statusModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
     showDialog('우와! 날 어디로 데려가는 거야? 😮');
-  };
+  });
 
   window.addEventListener('mousemove', (e) => {
     if (isDragging) {
-      currentWinX = Math.round(dragStartWinX + (e.screenX - dragStartMouseX));
-      currentWinY = Math.round(dragStartWinY + (e.screenY - dragStartMouseY));
+      currentWinX = Math.round(e.screenX - dragMouseOffsetX);
+      currentWinY = Math.round(e.screenY - dragMouseOffsetY);
 
       if (window.electronAPI && window.electronAPI.setWindowPosition) {
         window.electronAPI.setWindowPosition(currentWinX, currentWinY);
@@ -164,15 +172,16 @@ const { FoodItem } = require('./objects/FoodItem.js');
     }
   });
 
-  pet.onDragEnd = () => {
-    if (isDragging) {
+  window.addEventListener('mouseup', (e) => {
+    if (isDragging && e.button === 0) {
       isDragging = false;
       velocityY = 0;
       stateMachine.changeState(PetState.IDLE);
       showDialog('후아~ 안착! 🐾');
     }
-  };
+  });
 
+  // 우클릭 메뉴
   pet.onRightClick = () => {
     statusModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
@@ -252,7 +261,7 @@ const { FoodItem } = require('./objects/FoodItem.js');
     stateMachine.update(delta);
     pet.update(delta, stateMachine.currentState);
 
-    // 공중 낙하 중력 물리 (드래그 후 놓았을 때)
+    // 공중 낙하 중력 물리 (화면 아래 바닥으로 자연스럽게 착지)
     if (!isDragging && currentWinY < groundY) {
       velocityY += 0.8 * delta;
       currentWinY += velocityY;

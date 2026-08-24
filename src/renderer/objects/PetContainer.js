@@ -126,6 +126,9 @@ class PetContainer extends PIXI.Container {
       }
 
       const texture = PIXI.Texture.from(img);
+      if (texture.source) {
+        texture.source.scaleMode = 'nearest';
+      }
       const logMsg = `Found ${filename} (${img.width}x${img.height})`;
       console.log(`✅ [AssetLoader] ${logMsg} from: ${foundPath}`);
       this.debugLog.push(logMsg);
@@ -180,6 +183,9 @@ class PetContainer extends PIXI.Container {
         source: baseTexture.source || baseTexture,
         frame: rect
       });
+      if (frameTexture.source) {
+        frameTexture.source.scaleMode = 'nearest';
+      }
       frames.push(frameTexture);
     }
 
