@@ -63,12 +63,12 @@ html, body {
 
 .screen-viewport {
   position: absolute;
-  left: 62px;
-  top: 22px;
-  width: 92px;
-  height: 136px;
+  left: 65px;
+  top: 25px;
+  width: 102px;
+  height: 142px;
   z-index: 2;
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
   cursor: default;
   background: transparent !important;
@@ -135,7 +135,7 @@ canvas {
 }
 
 /* ========================================================
-   3. OSD 메뉴 & 모달 창 (92x136 픽셀 비율 완벽 피팅)
+   3. OSD 메뉴 & 모달 창 (화면 비율 맞춤)
    ======================================================== */
 .osd-menu, .osd-modal {
   position: absolute;
@@ -144,7 +144,7 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  padding: 0;
   z-index: 100;
   cursor: default;
 }
@@ -156,10 +156,10 @@ canvas {
 .osd-menu-box, .osd-modal-box {
   width: 100%;
   height: 100%;
-  background: rgba(139, 172, 15, 0.96);
+  background: rgba(150, 188, 0, 0.96);
   border: 1.5px solid #0f380f;
-  border-radius: 3px;
-  padding: 3px 4px;
+  border-radius: 4px;
+  padding: 4px 5px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -171,29 +171,31 @@ canvas {
   font-weight: 900;
   text-align: center;
   border-bottom: 1px solid #0f380f;
-  padding-bottom: 1.5px;
+  padding-bottom: 2px;
   letter-spacing: 0.5px;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .osd-items, .osd-shop-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5px;
-  margin: 1.5px 0;
+  gap: 2px;
+  margin: 2px 0;
   overflow-y: auto;
 }
 
 .osd-item, .osd-shop-row {
   font-size: 7.5px;
   font-weight: 800;
-  padding: 1.5px 2px;
+  padding: 2px 3px;
   border-radius: 2px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .osd-item.active, .osd-shop-row.active {
