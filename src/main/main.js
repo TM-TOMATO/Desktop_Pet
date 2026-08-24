@@ -4,6 +4,7 @@ const store = require('./store');
 
 let mainWindow = null;
 let tray = null;
+let uIOhookInstance = null;
 
 const DEFAULT_WIN_W = 440;
 const DEFAULT_WIN_H = 490;
@@ -42,6 +43,32 @@ function createWindow() {
   });
 }
 
+function setupGlobalInputHook() {
+  try {
+    const { uIOhook } = require('uiohook-napi');
+    uIOhookInstance = uIOhook;
+
+    // 컴퓨터 화면 전체의 글로벌 마우스 클릭 감지
+    uIOhook.on('click', () => {
+      if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+        mainWindow.webContents.send('global-input', { type: 'click' });
+      }
+    });
+
+    // 컴퓨터 화면 전체의 글로벌 키보드 타자 감지
+    uIOhook.on('keydown', () => {
+      if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+        mainWindow.webContents.send('global-input', { type: 'keydown' });
+      }
+    });
+
+    uIOhook.start();
+    console.log('✅ [GlobalInput] uIOhook global input listener started successfully.');
+  } catch (err) {
+    console.log('⚠️ [GlobalInput] uIOhook initialization note:', err.message);
+  }
+}
+
 function createTray() {
   tray = new Tray(path.join(__dirname, '../../assets/ui/tray_icon.png').replace('app.asar', 'app.asar.unpacked'));
   
@@ -71,6 +98,7 @@ function createTray() {
     {
       label: '전원 끄기 (종료)',
       click: () => {
+        if (uIOhookInstance) uIOhookInstance.stop();
         app.quit();
       }
     }
@@ -93,6 +121,14 @@ ipcMain.on('set-window-size', (event, { w, h }) => {
   }
 });
 
+ipcMain.handle('get-window-pos', () => {
+  if (mainWindow) {
+    const [x, y] = mainWindow.getPosition();
+    return { x, y };
+  }
+  return { x: 0, y: 0 };
+});
+
 ipcMain.handle('get-work-area', () => {
   const primaryDisplay = screen.getPrimaryDisplay();
   return {
@@ -104,6 +140,9 @@ ipcMain.handle('get-work-area', () => {
 });
 
 ipcMain.on('quit-app', () => {
+  if (uIOhookInstance) {
+    try { uIOhookInstance.stop(); } catch (e) {}
+  }
   app.quit();
 });
 
@@ -117,6 +156,7 @@ ipcMain.handle('load-data', () => {
 
 app.whenReady().then(() => {
   createWindow();
+  setupGlobalInputHook();
   
   try {
     createTray();
@@ -130,5 +170,8 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  if (uIOhookInstance) {
+    try { uIOhookInstance.stop(); } catch (e) {}
+  }
   if (process.platform !== 'darwin') app.quit();
 });

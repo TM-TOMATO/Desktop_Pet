@@ -129,14 +129,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   updateHUD(petStats.getSnapshot());
 
-  // 5. 🖱️ & ⌨️ 클릭 및 키보드 입력 시 코인 획득 & 플로팅 텍스트 이펙트 (클리커 엔진)
+  // 5. 🖱️ & ⌨️ 컴퓨터 화면 전체(글로벌) 클릭 & 키보드 타자 인식 클리커 엔진
   function triggerPetClick(posX, posY) {
     if (currentMenuMode !== 'NONE') return;
 
     petStats.clickPet(1);
 
-    // 펫 리액션
-    pet.bouncePhase += 0.5;
+    // 펫 바운스 리액션
+    pet.bouncePhase += 0.4;
 
     // 플로팅 코인 이펙트
     createCoinPopup(posX, posY, '+1 G');
@@ -144,22 +144,23 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function createCoinPopup(clientX, clientY, text) {
     let x = 180;
-    let y = 100;
+    let y = 90;
 
     if (clientX !== undefined && clientY !== undefined) {
       const rect = containerEl.getBoundingClientRect();
-      x = (clientX - rect.left) / (petStats.consoleScale || 1.0);
-      y = (clientY - rect.top) / (petStats.consoleScale || 1.0);
+      const currentScale = petStats.consoleScale || 1.0;
+      x = (clientX - rect.left) / currentScale;
+      y = (clientY - rect.top) / currentScale;
     } else {
       x = pet.x - 15;
-      y = pet.y - 50;
+      y = pet.y - 45;
     }
 
     const popup = document.createElement('div');
     popup.className = 'coin-popup';
     popup.innerText = text;
     popup.style.left = `${Math.max(10, Math.min(310, x - 15))}px`;
-    popup.style.top = `${Math.max(10, Math.min(180, y - 20))}px`;
+    popup.style.top = `${Math.max(10, Math.min(170, y - 20))}px`;
 
     coinPopupLayer.appendChild(popup);
     setTimeout(() => {
@@ -168,20 +169,28 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   // 1) 펫 직접 클릭 감지
-  pet.onPetClick = (localX, localY) => {
+  pet.onPetClick = () => {
     if (currentMenuMode === 'NONE') {
       triggerPetClick(undefined, undefined);
     }
   };
 
-  // 2) LCD 화면 영역 클릭 감지
+  // 2) 게임기 LCD 화면 영역 클릭 감지
   screenGlassEl.addEventListener('pointerdown', (e) => {
-    // 모달이나 메뉴를 클릭한 경우는 클리커 제외
     if (e.target.closest('.osd-menu, .osd-modal')) return;
     if (currentMenuMode === 'NONE') {
       triggerPetClick(e.clientX, e.clientY);
     }
   });
+
+  // 3) 🌐 컴퓨터 화면 전체 (다른 작업창, 게임, 크롬 등) 마우스 클릭 & 키보드 입력 실시간 감지!
+  if (window.electronAPI && window.electronAPI.onGlobalInput) {
+    window.electronAPI.onGlobalInput(() => {
+      if (currentMenuMode === 'NONE') {
+        triggerPetClick(undefined, undefined);
+      }
+    });
+  }
 
   // 6. 🎮 레트로 OSD 메뉴 컨트롤러 (D-Pad & A/B 버튼 제어)
   let currentMenuMode = 'NONE'; // 'NONE' | 'MAIN' | 'FEED' | 'SHOP' | 'STATUS' | 'CONFIG'
@@ -411,7 +420,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     handleDpadNav('RIGHT');
   });
 
-  // 8. ⌨️ 키보드 레트로 컨트롤러 & 클리커 입력 완벽 지원
+  // 8. ⌨️ 키보드 레트로 컨트롤러 & 클리커 입력
   window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
       handleDpadNav('UP');
@@ -426,7 +435,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     } else if (e.key === 'Escape' || e.key === 'x' || e.key === 'X' || e.key === 'Backspace') {
       handleButtonActionB();
     } else if (e.key === ' ' || e.key === 'c' || e.key === 'C') {
-      // 스페이스바나 C키 입력 시: 메뉴 중이면 A버튼, 기본 화면이면 클리커 골드 획득!
       if (currentMenuMode === 'NONE') {
         triggerPetClick(undefined, undefined);
       } else {
@@ -443,26 +451,31 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   });
 
-  // 10. 기계 본체 케이스 윈도우 드래그 이동 (JS 백업 지원)
+  // 10. 🎮 기계 본체 케이스 윈도우 드래그 이동 (어디든 잡고 이동)
   const casingEl = document.getElementById('console-casing');
-  let isWindowDragging = false;
-  let dragOffsetScreenX = 0;
-  let dragOffsetScreenY = 0;
+  let isCasingDragging = false;
+  let startWinPos = { x: 0, y: 0 };
+  let startCursorScreen = { x: 0, y: 0 };
 
-  casingEl.addEventListener('mousedown', (e) => {
-    // 버튼이나 스크린 안쪽을 클릭한 경우는 창 드래그 제외
+  casingEl.addEventListener('mousedown', async (e) => {
+    // 버튼, 스크린, 인풋을 클릭한 경우는 창 드래그 제외
     if (e.target.closest('button, #screen-bezel, input, label')) return;
     if (e.button !== 0) return;
 
-    isWindowDragging = true;
-    dragOffsetScreenX = e.clientX;
-    dragOffsetScreenY = e.clientY;
+    isCasingDragging = true;
+    startCursorScreen = { x: e.screenX, y: e.screenY };
+
+    if (window.electronAPI && window.electronAPI.getWindowPosition) {
+      startWinPos = await window.electronAPI.getWindowPosition();
+    }
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (isWindowDragging) {
-      const newWinX = Math.round(e.screenX - dragOffsetScreenX);
-      const newWinY = Math.round(e.screenY - dragOffsetScreenY);
+    if (isCasingDragging) {
+      const deltaX = e.screenX - startCursorScreen.x;
+      const deltaY = e.screenY - startCursorScreen.y;
+      const newWinX = Math.round(startWinPos.x + deltaX);
+      const newWinY = Math.round(startWinPos.y + deltaY);
 
       if (window.electronAPI && window.electronAPI.setWindowPosition) {
         window.electronAPI.setWindowPosition(newWinX, newWinY);
@@ -471,10 +484,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   });
 
   window.addEventListener('mouseup', () => {
-    isWindowDragging = false;
+    isCasingDragging = false;
   });
 
-  // 11. 커스텀 버튼 이미지 에셋 자동 바인딩 (assets/sprites/ 에 PNG 존재 시 자동 적용)
+  // 11. 커스텀 버튼 이미지 에셋 자동 바인딩
   const buttonSpriteMap = {
     'btn-action-a': 'btn_action_a.png',
     'btn-action-b': 'btn_action_b.png',
