@@ -71,6 +71,7 @@ html, body {
   border-radius: 2px;
   overflow: hidden;
   cursor: default;
+  background: transparent !important;
 }
 
 .layer-case-bg {
@@ -85,11 +86,10 @@ html, body {
 .screen-glass {
   width: 100%;
   height: 100%;
-  background: #9bbc0f;
+  background: transparent !important;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: inset 0 0 8px rgba(15, 56, 15, 0.4);
 }
 
 #canvas-container {
@@ -121,7 +121,7 @@ canvas {
 
 .coin-popup {
   position: absolute;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   color: #0f380f;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
@@ -135,16 +135,16 @@ canvas {
 }
 
 /* ========================================================
-   3. OSD 메뉴 & 모달 창
+   3. OSD 메뉴 & 모달 창 (92x136 픽셀 비율 완벽 피팅)
    ======================================================== */
 .osd-menu, .osd-modal {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(15, 56, 15, 0.92);
+  background: rgba(15, 56, 15, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 2px;
   z-index: 100;
   cursor: default;
 }
@@ -156,10 +156,10 @@ canvas {
 .osd-menu-box, .osd-modal-box {
   width: 100%;
   height: 100%;
-  background: #8bac0f;
-  border: 2px solid #0f380f;
+  background: rgba(139, 172, 15, 0.96);
+  border: 1.5px solid #0f380f;
   border-radius: 3px;
-  padding: 4px 6px;
+  padding: 3px 4px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -167,31 +167,33 @@ canvas {
 }
 
 .osd-title {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 900;
   text-align: center;
-  border-bottom: 1.5px solid #0f380f;
-  padding-bottom: 2px;
+  border-bottom: 1px solid #0f380f;
+  padding-bottom: 1.5px;
   letter-spacing: 0.5px;
+  line-height: 1.1;
 }
 
 .osd-items, .osd-shop-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin: 2px 0;
+  gap: 1.5px;
+  margin: 1.5px 0;
   overflow-y: auto;
 }
 
 .osd-item, .osd-shop-row {
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: 800;
-  padding: 2px 4px;
+  padding: 1.5px 2px;
   border-radius: 2px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  line-height: 1.2;
 }
 
 .osd-item.active, .osd-shop-row.active {
@@ -200,36 +202,38 @@ canvas {
 }
 
 .osd-hint {
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: 900;
   text-align: center;
   border-top: 1px solid #0f380f;
-  padding-top: 2px;
+  padding-top: 1.5px;
+  line-height: 1.1;
 }
 
 .osd-stat-row {
   display: flex;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: 800;
-  margin-bottom: 2px;
+  margin-bottom: 1.5px;
+  line-height: 1.2;
 }
 
 .osd-stat-bar-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: 800;
-  margin-bottom: 2px;
+  margin-bottom: 1.5px;
 }
 
 .osd-bar-bg {
-  width: 55px;
-  height: 6px;
+  width: 46px;
+  height: 5px;
   background: #9bbc0f;
   border: 1px solid #0f380f;
-  border-radius: 2px;
+  border-radius: 1.5px;
   overflow: hidden;
 }
 
@@ -242,11 +246,26 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: 800;
-  margin: 2px 0;
-  padding: 2px 4px;
-  border-radius: 3px;
+  margin: 1.5px 0;
+  padding: 1.5px 2px;
+  border-radius: 2px;
+}
+
+.osd-setting-row.config-active {
+  background: #0f380f;
+  color: #9bbc0f;
+}
+
+.osd-setting-row input[type="range"] {
+  width: 38px;
+  height: 8px;
+  accent-color: #0f380f;
+}
+
+.osd-setting-row.config-active input[type="range"] {
+  accent-color: #9bbc0f;
 }
 
 .osd-setting-row.config-active {
