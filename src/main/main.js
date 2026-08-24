@@ -17,8 +17,8 @@ function createWindow() {
   const { width: workW, height: workH } = primaryDisplay.workAreaSize;
   const { x: workX, y: workY } = primaryDisplay.workArea;
 
-  const startX = Math.round(workX + workW - DEFAULT_WIN_W - 20);
-  const startY = Math.round(workY + workH - DEFAULT_WIN_H - 20);
+  const startX = Math.round(workX + (workW - DEFAULT_WIN_W) / 2);
+  const startY = Math.round(workY + (workH - DEFAULT_WIN_H) / 2);
 
   mainWindow = new BrowserWindow({
     width: DEFAULT_WIN_W,
