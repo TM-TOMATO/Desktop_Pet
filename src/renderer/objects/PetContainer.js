@@ -300,29 +300,36 @@ class PetContainer extends PIXI.Container {
   }
 
   setupInteractions() {
-    this.hitArea = new PIXI.Rectangle(0, 0, 64, 64);
+    // 64x64 프레임 중 실제 캐릭터가 위치한 하단 중앙 영역만 정밀하게 히트박스로 지정 (투명 여백 제거)
+    this.hitArea = new PIXI.Rectangle(16, 26, 32, 38);
 
     this.on('pointerdown', (e) => {
       if (e.button === 2) return;
       this.isDragging = true;
       this.cursor = 'grabbing';
+
+      const container = document.getElementById('canvas-container');
+      const rect = container ? container.getBoundingClientRect() : { left: 0, top: 0 };
+      const localMouseX = e.clientX - rect.left;
+      const localMouseY = e.clientY - rect.top;
+
+      // 마우스가 클릭한 정확한 위치 기준으로 오프셋 계산 (오른쪽 위 쏠림 해결)
       this.dragOffset = {
-        x: this.x - e.clientX,
-        y: this.y - e.clientY
+        x: this.x - localMouseX,
+        y: this.y - localMouseY
       };
       if (this.onDragStart) this.onDragStart();
     });
 
     window.addEventListener('pointermove', (e) => {
       if (this.isDragging) {
-        // 챔버 내부 컨테이너 좌표계로 변환
         const container = document.getElementById('canvas-container');
         const rect = container ? container.getBoundingClientRect() : { left: 0, top: 0 };
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const localMouseX = e.clientX - rect.left;
+        const localMouseY = e.clientY - rect.top;
 
-        this.x = mouseX + this.dragOffset.x;
-        this.y = mouseY + this.dragOffset.y;
+        this.x = localMouseX + this.dragOffset.x;
+        this.y = localMouseY + this.dragOffset.y;
         this.clampPosition();
       }
     });
@@ -357,9 +364,10 @@ class PetContainer extends PIXI.Container {
       this.addChild(this.hitboxGraphics);
     }
     this.hitboxGraphics.clear();
-    this.hitboxGraphics.rect(0, 0, 64, 64);
-    this.hitboxGraphics.fill({ color: 0x00e5ff, alpha: 0.2 });
-    this.hitboxGraphics.stroke({ width: 2, color: 0x00e5ff, alpha: 0.9 });
+    // 캐릭터 실제 영역에 맞춘 정밀 히트박스
+    this.hitboxGraphics.rect(16, 26, 32, 38);
+    this.hitboxGraphics.fill({ color: 0x00e5ff, alpha: 0.25 });
+    this.hitboxGraphics.stroke({ width: 1.5, color: 0x00e5ff, alpha: 0.95 });
     this.hitboxGraphics.visible = true;
   }
 

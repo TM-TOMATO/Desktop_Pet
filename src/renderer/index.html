@@ -9,13 +9,13 @@
 <body>
   <!-- Machine Chassis (기계 본체 케이스) -->
   <div class="machine-frame" id="machine-frame">
-    <!-- Top Drag Bar / Header Panel -->
+    <!-- Top Drag Bar / Header Panel (창 이동 가능 영역) -->
     <div class="machine-header" id="machine-header">
       <div class="header-status">
         <span class="led-status active"></span>
         <span class="header-title">CHAMBER UNIT // v1.0</span>
       </div>
-      <div class="drag-grip">≡ ≡ ≡</div>
+      <div class="drag-grip">≡ ≡ ≡ [ DRAG TO MOVE ] ≡ ≡ ≡</div>
       <div class="header-actions">
         <button id="btn-minimize-app" class="hdr-btn" title="트레이로 숨기기">−</button>
         <button id="btn-quit-app" class="hdr-btn close" title="종료">×</button>
@@ -29,15 +29,14 @@
       <!-- PixiJS Canvas Container -->
       <div id="canvas-container"></div>
 
-      <!-- Speech Bubble -->
-      <div id="pet-dialog" class="pet-dialog hidden">
-        <span id="dialog-text">안녕! 나랑 놀자 🐾</span>
-      </div>
-
       <!-- Status Modal HUD (진단 모니터) -->
       <div id="status-modal" class="status-modal hidden">
         <div class="modal-content">
           <h3>📊 생체 상태 진단 (Status)</h3>
+          <div class="stat-row">
+            <span>보유 골드:</span>
+            <span id="stat-gold" class="gold-text">💰 100 G</span>
+          </div>
           <div class="stat-row">
             <span>허기 (Fullness):</span>
             <div class="bar-bg"><div id="bar-fullness" class="bar-fill" style="width: 80%;"></div></div>
@@ -54,6 +53,63 @@
         </div>
       </div>
 
+      <!-- Shop Modal (상점 시스템 기반) -->
+      <div id="shop-modal" class="status-modal hidden">
+        <div class="modal-content">
+          <h3>🛒 사이버 상점 (Shop)</h3>
+          <div class="shop-gold-bar">
+            <span>보유 골드:</span>
+            <span id="shop-gold-display" class="gold-text">💰 100 G</span>
+          </div>
+          <div class="shop-item-list">
+            <div class="shop-item" data-item="apple" data-price="10">
+              <div class="item-info">
+                <span class="item-icon">🍎</span>
+                <div class="item-desc">
+                  <div class="item-name">사과 (Apple)</div>
+                  <div class="item-effect">허기 +20 | 10G</div>
+                </div>
+              </div>
+              <button class="buy-btn" data-item="apple" data-price="10">구매</button>
+            </div>
+
+            <div class="shop-item" data-item="meat" data-price="25">
+              <div class="item-info">
+                <span class="item-icon">🍗</span>
+                <div class="item-desc">
+                  <div class="item-name">고급 고기 (Meat)</div>
+                  <div class="item-effect">허기 +50, 행복 +15 | 25G</div>
+                </div>
+              </div>
+              <button class="buy-btn" data-item="meat" data-price="25">구매</button>
+            </div>
+
+            <div class="shop-item" data-item="fish" data-price="20">
+              <div class="item-info">
+                <span class="item-icon">🐟</span>
+                <div class="item-desc">
+                  <div class="item-name">신선한 생선 (Fish)</div>
+                  <div class="item-effect">허기 +35, EXP +20 | 20G</div>
+                </div>
+              </div>
+              <button class="buy-btn" data-item="fish" data-price="20">구매</button>
+            </div>
+
+            <div class="shop-item" data-item="candy" data-price="40">
+              <div class="item-info">
+                <span class="item-icon">🍬</span>
+                <div class="item-desc">
+                  <div class="item-name">호감도 캔디 (Candy)</div>
+                  <div class="item-effect">행복도 +40 즉시 | 40G</div>
+                </div>
+              </div>
+              <button class="buy-btn" data-item="candy" data-price="40">구매</button>
+            </div>
+          </div>
+          <button id="btn-shop-close" class="close-modal-btn">상점 닫기</button>
+        </div>
+      </div>
+
       <!-- Settings Modal UI (장치 설정 모니터) -->
       <div id="settings-modal" class="status-modal hidden">
         <div class="modal-content">
@@ -63,14 +119,14 @@
             <input type="range" id="scale-range" min="50" max="250" step="5" value="150" />
           </div>
           <div class="setting-row setting-row--inline">
-            <label for="hitbox-toggle">히트박스 표시</label>
+            <label for="hitbox-toggle">정밀 히트박스 표시</label>
             <label class="toggle-switch">
               <input type="checkbox" id="hitbox-toggle" />
               <span class="toggle-slider"></span>
             </label>
           </div>
           <div class="setting-hint">
-            💡 기계 챔버 안에서 펫이 자유롭게 활동합니다.
+            💡 상단 바를 마우스로 잡고 바탕화면 어디든 자유롭게 옮길 수 있습니다.
           </div>
           <button id="btn-settings-close" class="close-modal-btn">설정 완료</button>
         </div>
@@ -79,13 +135,17 @@
 
     <!-- Bottom Control Deck (하단 기계 조작 패널) -->
     <div class="machine-control-deck">
-      <button class="deck-btn" id="btn-feed" title="음식 투입">
+      <button class="deck-btn" id="btn-feed" title="음식 주기">
         <span class="btn-icon">🍎</span>
         <span class="btn-label">FEED</span>
       </button>
       <button class="deck-btn" id="btn-play" title="놀아주기">
         <span class="btn-icon">🎾</span>
         <span class="btn-label">PLAY</span>
+      </button>
+      <button class="deck-btn" id="btn-shop" title="상점 열기">
+        <span class="btn-icon">🛒</span>
+        <span class="btn-label">SHOP</span>
       </button>
       <button class="deck-btn" id="btn-info" title="상태 진단">
         <span class="btn-icon">📊</span>

@@ -7,12 +7,42 @@ class PetStats {
     
     this.fullness = initialData.fullness !== undefined ? initialData.fullness : 80;
     this.happiness = initialData.happiness !== undefined ? initialData.happiness : 90;
-    this.gold = initialData.gold || 100;
-    this.scaleFactor = initialData.scaleFactor || 1.0;
+    this.gold = initialData.gold !== undefined ? initialData.gold : 100;
+    this.scaleFactor = initialData.scaleFactor || 1.5;
+    this.inventory = initialData.inventory || {
+      apple: 3,
+      meat: 1,
+      fish: 0,
+      candy: 0
+    };
 
     this.tickTimer = 0;
     this.onStatChange = null;
     this.onLevelUp = null;
+  }
+
+  spendGold(amount) {
+    if (this.gold >= amount) {
+      this.gold -= amount;
+      if (this.onStatChange) this.onStatChange(this.getSnapshot());
+      return true;
+    }
+    return false;
+  }
+
+  addItem(itemKey, count = 1) {
+    if (!this.inventory[itemKey]) this.inventory[itemKey] = 0;
+    this.inventory[itemKey] += count;
+    if (this.onStatChange) this.onStatChange(this.getSnapshot());
+  }
+
+  useItem(itemKey) {
+    if (this.inventory[itemKey] && this.inventory[itemKey] > 0) {
+      this.inventory[itemKey] -= 1;
+      if (this.onStatChange) this.onStatChange(this.getSnapshot());
+      return true;
+    }
+    return false;
   }
 
   calculateMaxExp(level) {
@@ -85,7 +115,8 @@ class PetStats {
       fullness: Math.round(this.fullness),
       happiness: Math.round(this.happiness),
       gold: this.gold,
-      scaleFactor: this.scaleFactor
+      scaleFactor: this.scaleFactor,
+      inventory: { ...this.inventory }
     };
   }
 }

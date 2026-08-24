@@ -53,10 +53,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   // 4. UI 요소 참조
   const headerEl = document.getElementById('machine-header');
-  const dialogEl = document.getElementById('pet-dialog');
-  const dialogTextEl = document.getElementById('dialog-text');
   const statusModalEl = document.getElementById('status-modal');
+  const shopModalEl = document.getElementById('shop-modal');
   const settingsModalEl = document.getElementById('settings-modal');
+
+  const statGoldEl = document.getElementById('stat-gold');
+  const shopGoldDisplayEl = document.getElementById('shop-gold-display');
 
   const barFullness = document.getElementById('bar-fullness');
   const barHappiness = document.getElementById('bar-happiness');
@@ -83,18 +85,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     pet.setHitboxVisible(hitboxToggle.checked);
   });
 
-  let dialogTimer = null;
-  function showDialog(text, durationMs = 3500) {
-    if (dialogTimer) clearTimeout(dialogTimer);
-    dialogTextEl.innerText = text;
-    dialogEl.classList.remove('hidden');
-
-    dialogTimer = setTimeout(() => {
-      dialogEl.classList.add('hidden');
-    }, durationMs);
-  }
-
   function updateHUD(snapshot) {
+    if (statGoldEl) statGoldEl.innerText = `💰 ${snapshot.gold} G`;
+    if (shopGoldDisplayEl) shopGoldDisplayEl.innerText = `💰 ${snapshot.gold} G`;
     if (barFullness) barFullness.style.width = `${snapshot.fullness}%`;
     if (barHappiness) barHappiness.style.width = `${snapshot.happiness}%`;
     if (barExp) {
@@ -108,18 +101,16 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
     if (snapshot.fullness <= 20 && stateMachine.currentState === PetState.IDLE) {
       stateMachine.changeState(PetState.HUNGRY);
-      showDialog('꼬르륵... 배가 너무 고파요 😢');
     }
   };
 
-  petStats.onLevelUp = (newLevel) => {
+  petStats.onLevelUp = () => {
     stateMachine.changeState(PetState.HAPPY);
-    showDialog(`🎉 우와! 레벨업! (Lv.${newLevel})`);
   };
 
   updateHUD(petStats.getSnapshot());
 
-  // 5. 기계 본체 윈도우 드래그 이동 (상단 헤더 바를 잡고 이동)
+  // 5. 기계 본체 윈도우 드래그 이동 (상단 헤더 바 JS 백업 지원)
   let isWindowDragging = false;
   let dragOffsetScreenX = 0;
   let dragOffsetScreenY = 0;
@@ -152,18 +143,18 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   pet.onDragStart = () => {
     stateMachine.changeState(PetState.DRAGGED);
     statusModalEl.classList.add('hidden');
+    shopModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
-    showDialog('우와! 챔버 안에서 둥실둥실~ 😮');
   };
 
   pet.onDragEnd = () => {
     stateMachine.changeState(PetState.IDLE);
-    showDialog('후아~ 챔버 바닥 안착! 🐾');
   };
 
   // 7. 하단 기계 조작 패널 (Control Deck) 동작
   document.getElementById('btn-feed').addEventListener('click', () => {
     statusModalEl.classList.add('hidden');
+    shopModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
 
     const food = new FoodItem(app, pet.x + (pet.walkDirection * 35), 220);
@@ -171,7 +162,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     activeFoods.push(food);
 
     stateMachine.changeState(PetState.EATING);
-    showDialog('냠냠! 🍎 맛있는 사과다!');
 
     setTimeout(() => {
       food.consume();
@@ -181,19 +171,27 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   document.getElementById('btn-play').addEventListener('click', () => {
     statusModalEl.classList.add('hidden');
+    shopModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
     petStats.play(25);
     stateMachine.changeState(PetState.HAPPY);
-    showDialog('신난다! 🎾 기계 너머로 교감 중!');
+  });
+
+  document.getElementById('btn-shop').addEventListener('click', () => {
+    statusModalEl.classList.add('hidden');
+    settingsModalEl.classList.add('hidden');
+    shopModalEl.classList.toggle('hidden');
   });
 
   document.getElementById('btn-info').addEventListener('click', () => {
+    shopModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
     statusModalEl.classList.toggle('hidden');
   });
 
   document.getElementById('btn-settings').addEventListener('click', () => {
     statusModalEl.classList.add('hidden');
+    shopModalEl.classList.add('hidden');
     settingsModalEl.classList.toggle('hidden');
   });
 
@@ -201,8 +199,37 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     statusModalEl.classList.add('hidden');
   });
 
+  document.getElementById('btn-shop-close').addEventListener('click', () => {
+    shopModalEl.classList.add('hidden');
+  });
+
   document.getElementById('btn-settings-close').addEventListener('click', () => {
     settingsModalEl.classList.add('hidden');
+  });
+
+  // 상점 아이템 구매 핸들러
+  document.querySelectorAll('.buy-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const itemKey = e.target.getAttribute('data-item');
+      const price = parseInt(e.target.getAttribute('data-price'), 10);
+
+      if (petStats.spendGold(price)) {
+        petStats.addItem(itemKey, 1);
+        btn.innerText = '구매완료!';
+        btn.style.background = '#00ff88';
+        setTimeout(() => {
+          btn.innerText = '구매';
+          btn.style.background = '#00e5ff';
+        }, 1000);
+      } else {
+        btn.innerText = '골드부족';
+        btn.style.background = '#ff5252';
+        setTimeout(() => {
+          btn.innerText = '구매';
+          btn.style.background = '#00e5ff';
+        }, 1000);
+      }
+    });
   });
 
   // 헤더 닫기/숨기기 버튼
@@ -213,12 +240,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   });
 
   document.getElementById('btn-minimize-app').addEventListener('click', () => {
-    showDialog('트레이 아이콘에서 언제든 다시 열 수 있어! 🐾', 2000);
-    setTimeout(() => {
-      if (window.electronAPI && window.electronAPI.setWindowPosition) {
-        // 창 숨기기 또는 닫기
-      }
-    }, 1000);
+    if (window.electronAPI && window.electronAPI.setWindowPosition) {
+      // 닫기 또는 숨기기
+    }
   });
 
   // 8. 주기적 게임 자동 저장 (매 30초)
@@ -248,13 +272,4 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       }
     }
   });
-
-  // 로드된 사용자 에셋 상태 표시
-  setTimeout(() => {
-    if (pet.debugLog.length > 0) {
-      showDialog(`🎨 챔버 가동 완료: ${pet.debugLog.join(', ')}`, 4000);
-    } else {
-      showDialog(`사이버 펫 챔버 유닛 가동 완료 🐾`, 3500);
-    }
-  }, 600);
 })();
