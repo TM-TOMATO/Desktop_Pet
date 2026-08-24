@@ -18,7 +18,98 @@ html, body {
   height: 490px;
   transform-origin: top left;
   display: flex;
+  position: relative;
 }
+
+/* ========================================================
+   MINI MODE - 작은 화면 모드 패널
+   ======================================================== */
+.mini-panel {
+  width: 140px;
+  height: 160px;
+  background: linear-gradient(180deg, #d8d6cf 0%, #b8b4a8 100%);
+  border: 3px solid #8e8a7d;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 2px 0 rgba(255,255,255,0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: grab;
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 9999;
+}
+
+.mini-panel:active {
+  cursor: grabbing;
+}
+
+.mini-panel.hidden {
+  display: none;
+}
+
+/* 미니 모드에서는 .console-casing 숨김 */
+body.mini-mode .console-casing {
+  display: none;
+}
+
+body.mini-mode #app-scaler {
+  width: 140px;
+  height: 160px;
+}
+
+.mini-screen {
+  flex: 1;
+  background: #9bbc0f;
+  border: 2px solid #8bac0f;
+  border-radius: 6px 6px 0 0;
+  margin: 6px 6px 0 6px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.mini-controls {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 10px;
+}
+
+.mini-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #5a5a5a;
+  background: #2b2b2b;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.08s, background 0.1s;
+}
+
+.mini-btn:active {
+  transform: scale(0.88);
+}
+
+.mini-quit-btn {
+  background: #e63946;
+  border-color: #9d0208;
+}
+
+.mini-quit-btn:hover { background: #ff4d6d; }
+
+.mini-expand-btn {
+  background: #3a86ff;
+  border-color: #1a56cc;
+  font-size: 15px;
+}
+
+.mini-expand-btn:hover { background: #5e9eff; }
 
 /* ========================================================
    1. 레트로 게임기 본체 케이스 (Console Outer Chassis)

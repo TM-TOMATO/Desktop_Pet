@@ -65,6 +65,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const scaleRange = document.getElementById('scale-range');
   const scaleValueLabel = document.getElementById('scale-value');
   const hitboxToggle = document.getElementById('hitbox-toggle');
+  const alwaysOnTopToggle = document.getElementById('always-on-top-toggle');
+  const miniModeToggle = document.getElementById('mini-mode-toggle');
+  const miniPanel = document.getElementById('mini-panel');
+  const miniCanvasContainer = document.getElementById('mini-canvas-container');
+
 
   // 🎮 게임기 전체 크기 조작 함수 (Scale Console Unit)
   const BASE_CONSOLE_W = 440;
@@ -98,6 +103,100 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   hitboxToggle.addEventListener('change', () => {
     pet.setHitboxVisible(hitboxToggle.checked);
   });
+
+  // ── 항상 위에 고정 토글 ──────────────────────────────────
+  const savedAlwaysOnTop = (saveData && saveData.petInfo && saveData.petInfo.alwaysOnTop !== undefined)
+    ? saveData.petInfo.alwaysOnTop : true;
+  alwaysOnTopToggle.checked = savedAlwaysOnTop;
+  if (window.electronAPI) window.electronAPI.setAlwaysOnTop(savedAlwaysOnTop);
+
+  alwaysOnTopToggle.addEventListener('change', () => {
+    if (window.electronAPI) window.electronAPI.setAlwaysOnTop(alwaysOnTopToggle.checked);
+    petStats.alwaysOnTop = alwaysOnTopToggle.checked;
+  });
+
+  // 트레이/메인에서 항상 위 상태가 바뀌면 체크박스 동기화
+  if (window.electronAPI && window.electronAPI.onAlwaysOnTopChanged) {
+    window.electronAPI.onAlwaysOnTopChanged((val) => {
+      alwaysOnTopToggle.checked = val;
+    });
+  }
+
+  // ── 미니 모드 (작은 화면 모드) ───────────────────────────
+  let isMiniMode = false;
+
+  function activateMiniMode() {
+    isMiniMode = true;
+    document.body.classList.add('mini-mode');
+    miniPanel.classList.remove('hidden');
+    miniModeToggle.checked = true;
+
+    // PixiJS 캔버스를 미니 스크린으로 이동
+    if (app.canvas && miniCanvasContainer) {
+      miniCanvasContainer.appendChild(app.canvas);
+      app.renderer.resize(128, 110);
+    }
+
+    if (window.electronAPI) window.electronAPI.setMiniMode(true);
+  }
+
+  function deactivateMiniMode() {
+    isMiniMode = false;
+    document.body.classList.remove('mini-mode');
+    miniPanel.classList.add('hidden');
+    miniModeToggle.checked = false;
+
+    // PixiJS 캔버스를 원래 컨테이너로 복원
+    if (app.canvas && containerEl) {
+      containerEl.appendChild(app.canvas);
+      app.renderer.resize(360, 220);
+    }
+
+    if (window.electronAPI) window.electronAPI.setMiniMode(false);
+  }
+
+  miniModeToggle.addEventListener('change', () => {
+    if (miniModeToggle.checked) activateMiniMode();
+    else deactivateMiniMode();
+  });
+
+  // 미니 패널 버튼 바인딩
+  document.getElementById('mini-btn-power').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.electronAPI) window.electronAPI.quitApp();
+  });
+
+  document.getElementById('mini-btn-expand').addEventListener('click', (e) => {
+    e.stopPropagation();
+    deactivateMiniMode();
+  });
+
+  // 미니 패널 드래그 이동 (케이스처럼 잡고 이동)
+  let isMiniDragging = false;
+  let miniDragStart = { x: 0, y: 0 };
+  let miniWinStart = { x: 0, y: 0 };
+
+  miniPanel.addEventListener('mousedown', async (e) => {
+    if (e.target.closest('button')) return;
+    if (e.button !== 0) return;
+    isMiniDragging = true;
+    miniDragStart = { x: e.screenX, y: e.screenY };
+    if (window.electronAPI) {
+      miniWinStart = await window.electronAPI.getWindowPosition();
+    }
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (isMiniDragging) {
+      const dx = e.screenX - miniDragStart.x;
+      const dy = e.screenY - miniDragStart.y;
+      if (window.electronAPI) {
+        window.electronAPI.setWindowPosition(miniWinStart.x + dx, miniWinStart.y + dy);
+      }
+    }
+  });
+
+  window.addEventListener('mouseup', () => { isMiniDragging = false; });
 
   // 상단 LCD 카운터 스트립 및 상태 HUD 갱신
   function updateHUD(snapshot) {

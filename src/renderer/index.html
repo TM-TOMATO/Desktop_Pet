@@ -9,9 +9,25 @@
 <body>
   <!-- App Scaler Container (게임기 전체 크기 조절용 래퍼) -->
   <div id="app-scaler">
-    <!-- Retro Game Console Outer Casing (케이스를 잡고 어디든 창 이동 가능) -->
+
+    <!-- ══════════════════════════════════════════════════
+         미니 모드 패널 (작은 화면 모드)
+         - 화면 구석에 조그맣게 배치
+         - 버튼: 종료 + 미니모드 토글만
+    ══════════════════════════════════════════════════ -->
+    <div id="mini-panel" class="mini-panel hidden">
+      <div class="mini-screen" id="mini-canvas-container">
+        <!-- PixiJS 캔버스가 여기에도 렌더링됨 (공유) -->
+      </div>
+      <div class="mini-controls">
+        <button class="mini-btn mini-quit-btn" id="mini-btn-power" title="종료">⏻</button>
+        <button class="mini-btn mini-expand-btn" id="mini-btn-expand" title="전체 모드로 전환">⤢</button>
+      </div>
+    </div>
+
+    <!-- Retro Game Console Outer Casing -->
     <div class="console-casing" id="console-casing">
-      
+
       <!-- Top System Header & Digital LCD Counter Strip -->
       <div class="console-top-strip">
         <div class="power-section">
@@ -20,7 +36,7 @@
           <span class="brand-text">PET BOY // 8-BIT</span>
         </div>
 
-        <!-- Segment Counter Display (클릭수 & 코인 실시간 표시 디스플레이) -->
+        <!-- Segment Counter Display -->
         <div class="lcd-counter-display">
           <span class="counter-item">CLICKS: <b id="display-clicks">00000</b></span>
           <span class="counter-divider">|</span>
@@ -28,7 +44,7 @@
         </div>
       </div>
 
-      <!-- Center Screen Bezel (LCD 화면 챔버) -->
+      <!-- Center Screen Bezel -->
       <div class="screen-bezel" id="screen-bezel">
         <div class="screen-glass" id="screen-glass">
           <!-- PixiJS Canvas Viewport -->
@@ -37,7 +53,7 @@
           <!-- Floating Click Coin Text Container -->
           <div id="coin-popup-layer" class="coin-popup-layer"></div>
 
-          <!-- Retro OSD Main Menu Overlay (A버튼 누르면 열리는 메인 메뉴) -->
+          <!-- Retro OSD Main Menu Overlay -->
           <div id="osd-menu" class="osd-menu hidden">
             <div class="osd-menu-box">
               <div class="osd-title">=== MAIN MENU ===</div>
@@ -52,43 +68,35 @@
             </div>
           </div>
 
-          <!-- OSD Feed Select Submenu (음식 선택 메뉴) -->
+          <!-- OSD Feed Select Submenu -->
           <div id="osd-feed-menu" class="osd-menu hidden">
             <div class="osd-menu-box">
               <div class="osd-title">=== SELECT FOOD ===</div>
-              <div class="osd-items" id="feed-item-list">
-                <!-- Dynamically populated -->
-              </div>
+              <div class="osd-items" id="feed-item-list"></div>
               <div class="osd-hint">[A] 먹이기 | [B] 뒤로</div>
             </div>
           </div>
 
-          <!-- OSD Status HUD (상태 모달) -->
+          <!-- OSD Status Modal -->
           <div id="status-modal" class="osd-modal hidden">
             <div class="osd-modal-box">
               <div class="osd-title">=== PET STATUS ===</div>
-              <div class="osd-stat-row">
-                <span>레벨 (LV):</span> <b id="stat-level">Lv.1</b>
-              </div>
-              <div class="osd-stat-row">
-                <span>누적 클릭:</span> <b id="stat-clicks">0 회</b>
-              </div>
-              <div class="osd-stat-row">
-                <span>보유 골드:</span> <b id="stat-gold" class="gold-text">0 G</b>
-              </div>
+              <div class="osd-stat-row"><span>레벨 (LV):</span> <b id="stat-level">Lv.1</b></div>
+              <div class="osd-stat-row"><span>누적 클릭:</span> <b id="stat-clicks">0 회</b></div>
+              <div class="osd-stat-row"><span>보유 골드:</span> <b id="stat-gold" class="gold-text">0 G</b></div>
               <div class="osd-stat-bar-row">
                 <span>허기:</span>
-                <div class="osd-bar-bg"><div id="bar-fullness" class="osd-bar-fill" style="width: 80%;"></div></div>
+                <div class="osd-bar-bg"><div id="bar-fullness" class="osd-bar-fill" style="width:80%;"></div></div>
               </div>
               <div class="osd-stat-bar-row">
                 <span>행복:</span>
-                <div class="osd-bar-bg"><div id="bar-happiness" class="osd-bar-fill happy" style="width: 90%;"></div></div>
+                <div class="osd-bar-bg"><div id="bar-happiness" class="osd-bar-fill" style="width:90%;"></div></div>
               </div>
               <div class="osd-hint">[B] 닫기</div>
             </div>
           </div>
 
-          <!-- OSD Shop Modal (상점 모달) -->
+          <!-- OSD Shop Modal -->
           <div id="shop-modal" class="osd-modal hidden">
             <div class="osd-modal-box">
               <div class="osd-title">=== CYBER SHOP ===</div>
@@ -111,14 +119,24 @@
             </div>
           </div>
 
-          <!-- OSD Settings Modal (게임기 전체 크기 조작 설정 모달) -->
+          <!-- OSD Settings Modal (게임기 크기 + 항상 위 토글) -->
           <div id="settings-modal" class="osd-modal hidden">
             <div class="osd-modal-box">
               <div class="osd-title">=== CONFIG ===</div>
+
               <div class="osd-setting-row">
                 <span>게임기 크기: <b id="scale-value">100%</b></span>
                 <input type="range" id="scale-range" min="70" max="160" step="5" value="100" />
               </div>
+
+              <div class="osd-setting-row">
+                <span>항상 위에 고정</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="always-on-top-toggle" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
               <div class="osd-setting-row">
                 <span>히트박스 표시</span>
                 <label class="toggle-switch">
@@ -126,22 +144,31 @@
                   <span class="toggle-slider"></span>
                 </label>
               </div>
-              <div class="osd-hint">[◀/▶] 크기조절 | [B] 설정완료</div>
+
+              <div class="osd-setting-row">
+                <span>작은 화면 모드</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="mini-mode-toggle" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="osd-hint">[◀/▶] 크기조절 | [B] 완료</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Bottom Physical Gamepad Controls (방향키 & A/B 확인/취소 버튼) -->
+      <!-- Bottom Physical Gamepad Controls -->
       <div class="console-gamepad">
-        <!-- Left: D-Pad (방향키) -->
+        <!-- Left: D-Pad -->
         <div class="dpad-container">
           <div class="dpad">
-            <button class="dpad-btn dpad-up" id="btn-dpad-up" title="위 (Up)">▲</button>
-            <button class="dpad-btn dpad-left" id="btn-dpad-left" title="왼쪽 (Left)">◀</button>
+            <button class="dpad-btn dpad-up"    id="btn-dpad-up"    title="위 (Up)">▲</button>
+            <button class="dpad-btn dpad-left"  id="btn-dpad-left"  title="왼쪽 (Left)">◀</button>
             <div class="dpad-center"></div>
             <button class="dpad-btn dpad-right" id="btn-dpad-right" title="오른쪽 (Right)">▶</button>
-            <button class="dpad-btn dpad-down" id="btn-dpad-down" title="아래 (Down)">▼</button>
+            <button class="dpad-btn dpad-down"  id="btn-dpad-down"  title="아래 (Down)">▼</button>
           </div>
         </div>
 
@@ -150,7 +177,7 @@
           <span></span><span></span><span></span><span></span>
         </div>
 
-        <!-- Right: Action Buttons (A 확인 / B 취소) -->
+        <!-- Right: Action Buttons (A / B) -->
         <div class="action-buttons-container">
           <div class="action-btn-wrapper">
             <button class="action-btn btn-b" id="btn-action-b" title="취소 / 뒤로가기 [B / Esc]">B</button>
@@ -163,8 +190,8 @@
         </div>
       </div>
 
-    </div>
-  </div>
+    </div><!-- /.console-casing -->
+  </div><!-- /#app-scaler -->
 
   <script src="main.js"></script>
 </body>
