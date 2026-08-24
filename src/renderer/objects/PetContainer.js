@@ -432,11 +432,16 @@ class PetContainer extends PIXI.Container {
     });
   }
 
+  setBounds(minX, maxX, minY, maxY) {
+    this.bounds = { minX, maxX, minY, maxY };
+    this.clampPosition();
+  }
+
   clampPosition() {
-    const minX = 40;
-    const maxX = 340;
-    const minY = 80;
-    const maxY = 220;
+    const minX = this.bounds ? this.bounds.minX : 40;
+    const maxX = this.bounds ? this.bounds.maxX : 340;
+    const minY = this.bounds ? this.bounds.minY : 80;
+    const maxY = this.bounds ? this.bounds.maxY : 220;
 
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
@@ -466,7 +471,7 @@ class PetContainer extends PIXI.Container {
     this.updateHitbox();
   }
 
-  onStateChange(newState) {
+  setPetState(newState) {
     this.updateSpriteDisplay(newState);
   }
 
@@ -479,6 +484,10 @@ class PetContainer extends PIXI.Container {
   update(delta, currentState) {
     this.bouncePhase += delta * 0.1;
 
+    const minX = this.bounds ? this.bounds.minX : 45;
+    const maxX = this.bounds ? this.bounds.maxX : 335;
+    const groundY = this.bounds ? this.bounds.maxY : 220;
+
     // 챔버 내부 걷기 이동 물리 (좌우 벽 반사)
     if (currentState === PetState.WALK && !this.isDragging) {
       if (!this.isGroundedFrame) {
@@ -487,8 +496,6 @@ class PetContainer extends PIXI.Container {
 
       this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
 
-      const minX = 45;
-      const maxX = 335;
       if (this.x <= minX) {
         this.x = minX;
         this.walkDirection = 1;
@@ -501,7 +508,6 @@ class PetContainer extends PIXI.Container {
     }
 
     // 챔버 내부 중력 낙하
-    const groundY = 220;
     if (!this.isDragging && this.y < groundY) {
       this.velocityY += 0.6 * delta;
       this.y += this.velocityY;
