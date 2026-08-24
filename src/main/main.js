@@ -5,17 +5,16 @@ const store = require('./store');
 let mainWindow = null;
 let tray = null;
 
-const DEFAULT_WIN_W = 420;
-const DEFAULT_WIN_H = 360;
+const DEFAULT_WIN_W = 440;
+const DEFAULT_WIN_H = 490;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: workW, height: workH } = primaryDisplay.workAreaSize;
   const { x: workX, y: workY } = primaryDisplay.workArea;
 
-  // 우측 하단 기본 배치 (작업표시줄 위 바탕화면 기계 가젯 느낌)
-  const startX = Math.round(workX + workW - DEFAULT_WIN_W - 30);
-  const startY = Math.round(workY + workH - DEFAULT_WIN_H - 30);
+  const startX = Math.round(workX + workW - DEFAULT_WIN_W - 20);
+  const startY = Math.round(workY + workH - DEFAULT_WIN_H - 20);
 
   mainWindow = new BrowserWindow({
     width: DEFAULT_WIN_W,
@@ -47,10 +46,10 @@ function createTray() {
   tray = new Tray(path.join(__dirname, '../../assets/ui/tray_icon.png').replace('app.asar', 'app.asar.unpacked'));
   
   const contextMenu = Menu.buildFromTemplate([
-    { label: '🐾 Cyber Pet Machine Unit', enabled: false },
+    { label: '🎮 Retro Pet Console', enabled: false },
     { type: 'separator' },
     {
-      label: '장치 보이기 / 숨기기',
+      label: '게임기 보이기 / 숨기기',
       click: () => {
         if (mainWindow) {
           if (mainWindow.isVisible()) mainWindow.hide();
@@ -70,14 +69,14 @@ function createTray() {
     },
     { type: 'separator' },
     {
-      label: '종료',
+      label: '전원 끄기 (종료)',
       click: () => {
         app.quit();
       }
     }
   ]);
 
-  tray.setToolTip('Desktop Pet - 사이버 머신 유닛');
+  tray.setToolTip('Desktop Pet - 레트로 게임기');
   tray.setContextMenu(contextMenu);
 }
 

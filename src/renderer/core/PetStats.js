@@ -7,10 +7,11 @@ class PetStats {
     
     this.fullness = initialData.fullness !== undefined ? initialData.fullness : 80;
     this.happiness = initialData.happiness !== undefined ? initialData.happiness : 90;
-    this.gold = initialData.gold !== undefined ? initialData.gold : 100;
+    this.gold = initialData.gold !== undefined ? initialData.gold : 0;
+    this.clicks = initialData.clicks || 0;
     this.scaleFactor = initialData.scaleFactor || 1.5;
     this.inventory = initialData.inventory || {
-      apple: 3,
+      apple: 2,
       meat: 1,
       fish: 0,
       candy: 0
@@ -19,6 +20,16 @@ class PetStats {
     this.tickTimer = 0;
     this.onStatChange = null;
     this.onLevelUp = null;
+  }
+
+  // 🖱️ 클릭할 때마다 코인 획득 & 클릭수 카운트 증가 (방치형 X -> 클리커형 O)
+  clickPet(rewardGold = 1) {
+    this.clicks += 1;
+    this.gold += rewardGold;
+    this.happiness = Math.min(100, this.happiness + 0.2);
+    this.addExp(1);
+    if (this.onStatChange) this.onStatChange(this.getSnapshot());
+    return { gold: this.gold, clicks: this.clicks };
   }
 
   spendGold(amount) {
@@ -115,6 +126,7 @@ class PetStats {
       fullness: Math.round(this.fullness),
       happiness: Math.round(this.happiness),
       gold: this.gold,
+      clicks: this.clicks,
       scaleFactor: this.scaleFactor,
       inventory: { ...this.inventory }
     };
