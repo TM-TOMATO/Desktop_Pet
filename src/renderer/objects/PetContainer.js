@@ -7,18 +7,22 @@ class PetContainer extends PIXI.Container {
   constructor(app) {
     super();
     this.app = app;
-    this.pivot.set(32, 64); // 64x64 프레임의 하단 중앙
+    this.pivot.set(32, 64); // 64x64 프레임 하단 중앙
 
-    // 320x300 창 내부에서 펫의 고정 기준점 (중앙 하단)
-    this.x = 160;
-    this.y = 270;
+    // 챔버 내부 (380x232) 기준 초기 위치
+    this.x = 190;
+    this.y = 220;
 
     this.walkDirection = 1;
-    this.baseScale = 2.0; // 기본 2배 크기 (128x128 렌더링)
+    this.walkSpeed = 1.8;
+    this.baseScale = 1.5; // 기본 1.5배 (챔버에 최적화된 96x96 크기)
     this.bouncePhase = 0;
+    this.velocityY = 0;
 
     // 점프 이동 상태 변수 (1, 2, 10 프레임 착지 상태)
     this.isGroundedFrame = true;
+    this.isDragging = false;
+    this.dragOffset = { x: 0, y: 0 };
 
     this.animatedSprite = null;
     this.singleSprite = null;
@@ -205,7 +209,6 @@ class PetContainer extends PIXI.Container {
 
     const key = keyMap[state] || 'idle';
 
-    // 1. 프레임시트 애니메이션 적용
     if (this.loadedAnimations[key] && this.loadedAnimations[key].length > 0) {
       const frames = this.loadedAnimations[key];
 
@@ -258,7 +261,6 @@ class PetContainer extends PIXI.Container {
       return;
     }
 
-    // 2. 단일 이미지 적용
     if (this.loadedSingleTextures[key]) {
       const texture = this.loadedSingleTextures[key];
 
@@ -287,7 +289,6 @@ class PetContainer extends PIXI.Container {
       return;
     }
 
-    // 3. Fallback
     if (this.animatedSprite) this.animatedSprite.visible = false;
     if (this.singleSprite) this.singleSprite.visible = false;
     if (this.graphicsFallback) {
@@ -302,25 +303,48 @@ class PetContainer extends PIXI.Container {
     this.hitArea = new PIXI.Rectangle(0, 0, 64, 64);
 
     this.on('pointerdown', (e) => {
-      // 우클릭(button === 2)은 무시 (contextmenu에서 처리)
       if (e.button === 2) return;
-
+      this.isDragging = true;
       this.cursor = 'grabbing';
-      if (this.onDragStart) {
-        this.onDragStart(e.screenX || e.clientX, e.screenY || e.clientY);
+      this.dragOffset = {
+        x: this.x - e.clientX,
+        y: this.y - e.clientY
+      };
+      if (this.onDragStart) this.onDragStart();
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (this.isDragging) {
+        // 챔버 내부 컨테이너 좌표계로 변환
+        const container = document.getElementById('canvas-container');
+        const rect = container ? container.getBoundingClientRect() : { left: 0, top: 0 };
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        this.x = mouseX + this.dragOffset.x;
+        this.y = mouseY + this.dragOffset.y;
+        this.clampPosition();
       }
     });
 
     window.addEventListener('pointerup', () => {
-      this.cursor = 'grab';
-      if (this.onDragEnd) this.onDragEnd();
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.cursor = 'grab';
+        this.velocityY = 0;
+        if (this.onDragEnd) this.onDragEnd();
+      }
     });
+  }
 
-    // 우클릭 메뉴
-    window.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      if (this.onRightClick) this.onRightClick(e.clientX, e.clientY);
-    });
+  clampPosition() {
+    const minX = 40;
+    const maxX = 340;
+    const minY = 80;
+    const maxY = 220;
+
+    this.x = Math.max(minX, Math.min(maxX, this.x));
+    this.y = Math.max(minY, Math.min(maxY, this.y));
   }
 
   updateHitbox() {
@@ -334,8 +358,8 @@ class PetContainer extends PIXI.Container {
     }
     this.hitboxGraphics.clear();
     this.hitboxGraphics.rect(0, 0, 64, 64);
-    this.hitboxGraphics.fill({ color: 0x00ff88, alpha: 0.2 });
-    this.hitboxGraphics.stroke({ width: 2, color: 0x00ff88, alpha: 0.9 });
+    this.hitboxGraphics.fill({ color: 0x00e5ff, alpha: 0.2 });
+    this.hitboxGraphics.stroke({ width: 2, color: 0x00e5ff, alpha: 0.9 });
     this.hitboxGraphics.visible = true;
   }
 
@@ -356,7 +380,38 @@ class PetContainer extends PIXI.Container {
 
   update(delta, currentState) {
     this.bouncePhase += delta * 0.1;
-    this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
+
+    // 챔버 내부 걷기 이동 물리 (좌우 벽 반사)
+    if (currentState === PetState.WALK && !this.isDragging) {
+      if (!this.isGroundedFrame) {
+        this.x += this.walkDirection * this.walkSpeed * delta;
+      }
+
+      this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
+
+      const minX = 45;
+      const maxX = 335;
+      if (this.x <= minX) {
+        this.x = minX;
+        this.walkDirection = 1;
+      } else if (this.x >= maxX) {
+        this.x = maxX;
+        this.walkDirection = -1;
+      }
+    } else if (currentState === PetState.IDLE) {
+      this.scale.set(1 * this.baseScale, this.baseScale);
+    }
+
+    // 챔버 내부 중력 낙하 (드래그 후 놓았을 때 챔버 바닥 y = 220으로 착지)
+    const groundY = 220;
+    if (!this.isDragging && this.y < groundY) {
+      this.velocityY += 0.6 * delta;
+      this.y += this.velocityY;
+      if (this.y >= groundY) {
+        this.y = groundY;
+        this.velocityY = 0;
+      }
+    }
 
     if (this.graphicsFallback && this.graphicsFallback.visible) {
       this.drawFallbackPet(currentState);

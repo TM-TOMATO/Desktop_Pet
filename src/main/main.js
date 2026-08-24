@@ -5,16 +5,17 @@ const store = require('./store');
 let mainWindow = null;
 let tray = null;
 
-const DEFAULT_WIN_W = 320;
-const DEFAULT_WIN_H = 300;
+const DEFAULT_WIN_W = 420;
+const DEFAULT_WIN_H = 360;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: workW, height: workH } = primaryDisplay.workAreaSize;
   const { x: workX, y: workY } = primaryDisplay.workArea;
 
-  const startX = Math.round(workX + (workW - DEFAULT_WIN_W) / 2);
-  const startY = Math.round(workY + workH - DEFAULT_WIN_H);
+  // 우측 하단 기본 배치 (작업표시줄 위 바탕화면 기계 가젯 느낌)
+  const startX = Math.round(workX + workW - DEFAULT_WIN_W - 30);
+  const startY = Math.round(workY + workH - DEFAULT_WIN_H - 30);
 
   mainWindow = new BrowserWindow({
     width: DEFAULT_WIN_W,
@@ -34,7 +35,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.setAlwaysOnTop(true, 'screen-saver');
+  mainWindow.setAlwaysOnTop(true, 'floating');
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
   mainWindow.on('closed', () => {
@@ -46,10 +47,10 @@ function createTray() {
   tray = new Tray(path.join(__dirname, '../../assets/ui/tray_icon.png').replace('app.asar', 'app.asar.unpacked'));
   
   const contextMenu = Menu.buildFromTemplate([
-    { label: '🐾 Desktop Pet 다마고치', enabled: false },
+    { label: '🐾 Cyber Pet Machine Unit', enabled: false },
     { type: 'separator' },
     {
-      label: '펫 보이기 / 숨기기',
+      label: '장치 보이기 / 숨기기',
       click: () => {
         if (mainWindow) {
           if (mainWindow.isVisible()) mainWindow.hide();
@@ -63,7 +64,7 @@ function createTray() {
       checked: true,
       click: (item) => {
         if (mainWindow) {
-          mainWindow.setAlwaysOnTop(item.checked, 'screen-saver');
+          mainWindow.setAlwaysOnTop(item.checked, 'floating');
         }
       }
     },
@@ -76,7 +77,7 @@ function createTray() {
     }
   ]);
 
-  tray.setToolTip('Desktop Pet - 다마고치');
+  tray.setToolTip('Desktop Pet - 사이버 머신 유닛');
   tray.setContextMenu(contextMenu);
 }
 

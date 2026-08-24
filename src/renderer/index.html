@@ -3,66 +3,98 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Desktop Pet</title>
+  <title>Desktop Pet - Cyber Unit</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- PixiJS Canvas Container -->
-  <div id="canvas-container"></div>
-
-  <!-- Pet Status Speech Bubble Overlay -->
-  <div id="pet-dialog" class="pet-dialog hidden">
-    <span id="dialog-text">안녕! 나랑 놀자 🐾</span>
-  </div>
-
-  <!-- Radial Context Menu Overlay -->
-  <div id="radial-menu" class="radial-menu hidden">
-    <button class="menu-btn" id="btn-feed" title="음식 주기">🍎</button>
-    <button class="menu-btn" id="btn-play" title="놀아주기">🎾</button>
-    <button class="menu-btn" id="btn-info" title="상태 보기">📊</button>
-    <button class="menu-btn" id="btn-settings" title="설정 창">⚙️</button>
-    <button class="menu-btn" id="btn-close" title="닫기">❌</button>
-  </div>
-
-  <!-- Status Modal HUD -->
-  <div id="status-modal" class="status-modal hidden">
-    <div class="modal-content">
-      <h3>🐾 펫 상태 (Status)</h3>
-      <div class="stat-row">
-        <span>허기 (Fullness):</span>
-        <div class="bar-bg"><div id="bar-fullness" class="bar-fill" style="width: 80%;"></div></div>
+  <!-- Machine Chassis (기계 본체 케이스) -->
+  <div class="machine-frame" id="machine-frame">
+    <!-- Top Drag Bar / Header Panel -->
+    <div class="machine-header" id="machine-header">
+      <div class="header-status">
+        <span class="led-status active"></span>
+        <span class="header-title">CHAMBER UNIT // v1.0</span>
       </div>
-      <div class="stat-row">
-        <span>행복도 (Happiness):</span>
-        <div class="bar-bg"><div id="bar-happiness" class="bar-fill happy" style="width: 90%;"></div></div>
+      <div class="drag-grip">≡ ≡ ≡</div>
+      <div class="header-actions">
+        <button id="btn-minimize-app" class="hdr-btn" title="트레이로 숨기기">−</button>
+        <button id="btn-quit-app" class="hdr-btn close" title="종료">×</button>
       </div>
-      <div class="stat-row">
-        <span>경험치 (EXP):</span>
-        <div class="bar-bg"><div id="bar-exp" class="bar-fill exp" style="width: 45%;"></div></div>
-      </div>
-      <button id="btn-modal-close" class="close-modal-btn">닫기</button>
     </div>
-  </div>
 
-  <!-- Settings Modal UI (NEW) -->
-  <div id="settings-modal" class="status-modal hidden">
-    <div class="modal-content">
-      <h3>⚙️ 게임 & 캐릭터 설정</h3>
-      <div class="setting-row">
-        <label for="scale-range">캐릭터 크기: <span id="scale-value">100%</span></label>
-        <input type="range" id="scale-range" min="50" max="250" step="5" value="100" />
+    <!-- Middle Chamber Screen Viewport (펫이 서식하는 내부 챔버) -->
+    <div class="chamber-container" id="chamber-container">
+      <div class="chamber-grid"></div>
+      
+      <!-- PixiJS Canvas Container -->
+      <div id="canvas-container"></div>
+
+      <!-- Speech Bubble -->
+      <div id="pet-dialog" class="pet-dialog hidden">
+        <span id="dialog-text">안녕! 나랑 놀자 🐾</span>
       </div>
-      <div class="setting-row setting-row--inline">
-        <label for="hitbox-toggle">히트박스 표시</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="hitbox-toggle" />
-          <span class="toggle-slider"></span>
-        </label>
+
+      <!-- Status Modal HUD (진단 모니터) -->
+      <div id="status-modal" class="status-modal hidden">
+        <div class="modal-content">
+          <h3>📊 생체 상태 진단 (Status)</h3>
+          <div class="stat-row">
+            <span>허기 (Fullness):</span>
+            <div class="bar-bg"><div id="bar-fullness" class="bar-fill" style="width: 80%;"></div></div>
+          </div>
+          <div class="stat-row">
+            <span>행복도 (Happiness):</span>
+            <div class="bar-bg"><div id="bar-happiness" class="bar-fill happy" style="width: 90%;"></div></div>
+          </div>
+          <div class="stat-row">
+            <span>경험치 (EXP):</span>
+            <div class="bar-bg"><div id="bar-exp" class="bar-fill exp" style="width: 45%;"></div></div>
+          </div>
+          <button id="btn-modal-close" class="close-modal-btn">진단 닫기</button>
+        </div>
       </div>
-      <div class="setting-hint">
-        💡 슬라이더를 조절하여 다마고치 펫의 크기를 실시간으로 변경해보세요!
+
+      <!-- Settings Modal UI (장치 설정 모니터) -->
+      <div id="settings-modal" class="status-modal hidden">
+        <div class="modal-content">
+          <h3>⚙️ 챔버 & 캐릭터 설정</h3>
+          <div class="setting-row">
+            <label for="scale-range">캐릭터 크기: <span id="scale-value">150%</span></label>
+            <input type="range" id="scale-range" min="50" max="250" step="5" value="150" />
+          </div>
+          <div class="setting-row setting-row--inline">
+            <label for="hitbox-toggle">히트박스 표시</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="hitbox-toggle" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-hint">
+            💡 기계 챔버 안에서 펫이 자유롭게 활동합니다.
+          </div>
+          <button id="btn-settings-close" class="close-modal-btn">설정 완료</button>
+        </div>
       </div>
-      <button id="btn-settings-close" class="close-modal-btn">설정 완료</button>
+    </div>
+
+    <!-- Bottom Control Deck (하단 기계 조작 패널) -->
+    <div class="machine-control-deck">
+      <button class="deck-btn" id="btn-feed" title="음식 투입">
+        <span class="btn-icon">🍎</span>
+        <span class="btn-label">FEED</span>
+      </button>
+      <button class="deck-btn" id="btn-play" title="놀아주기">
+        <span class="btn-icon">🎾</span>
+        <span class="btn-label">PLAY</span>
+      </button>
+      <button class="deck-btn" id="btn-info" title="상태 진단">
+        <span class="btn-icon">📊</span>
+        <span class="btn-label">STATUS</span>
+      </button>
+      <button class="deck-btn" id="btn-settings" title="장치 설정">
+        <span class="btn-icon">⚙️</span>
+        <span class="btn-label">CONFIG</span>
+      </button>
     </div>
   </div>
 

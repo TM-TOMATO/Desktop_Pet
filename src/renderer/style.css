@@ -10,21 +10,140 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: transparent !important;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', 'Consolas', 'Courier New', monospace;
+}
+
+/* 기계 본체 외형 프레임 (Machine Chassis) */
+.machine-frame {
+  width: 400px;
+  height: 340px;
+  margin: 10px;
+  background: linear-gradient(180deg, #2b303c 0%, #1a1d24 100%);
+  border: 3px solid #3d4454;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 상단 드래그 헤더 바 */
+.machine-header {
+  height: 36px;
+  background: #14171d;
+  border-bottom: 2px solid #2d3340;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  cursor: grab;
+}
+
+.machine-header:active {
+  cursor: grabbing;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.led-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  animation: pulse-led 2s infinite ease-in-out;
+}
+
+@keyframes pulse-led {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.header-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #00e5ff;
+}
+
+.drag-grip {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #58637a;
+  font-weight: 900;
+}
+
+.header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.hdr-btn {
+  width: 20px;
+  height: 20px;
+  background: #252a36;
+  border: 1px solid #3d4454;
+  color: #adb5bd;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+
+.hdr-btn:hover {
+  background: #3b4254;
+  color: #fff;
+}
+
+.hdr-btn.close:hover {
+  background: #e63946;
+  border-color: #e63946;
+  color: #fff;
+}
+
+/* 챔버 뷰포트 (펫 서식 유리관 / 스크린) */
+.chamber-container {
+  flex: 1;
+  position: relative;
+  margin: 8px 10px;
+  background: radial-gradient(circle at 50% 40%, #16202c 0%, #0d1218 100%);
+  border: 2px solid #233142;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.chamber-grid {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
 }
 
 #canvas-container {
   position: absolute;
   top: 0;
   left: 0;
-  width: 320px;
-  height: 300px;
+  width: 100%;
+  height: 100%;
 }
 
 canvas {
   display: block;
-  width: 320px;
-  height: 300px;
+  width: 100%;
+  height: 100%;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
@@ -32,20 +151,20 @@ canvas {
 /* 말풍선 UI */
 .pet-dialog {
   position: absolute;
-  top: 30px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #ffd166;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  font-size: 13px;
+  padding: 6px 12px;
+  background: rgba(13, 27, 42, 0.92);
+  border: 1.5px solid #00e5ff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 229, 255, 0.2);
+  font-size: 12px;
   font-weight: 600;
-  color: #333;
+  color: #e0f7fa;
   text-align: center;
   white-space: nowrap;
-  max-width: 290px;
+  max-width: 320px;
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: auto;
@@ -59,63 +178,71 @@ canvas {
   pointer-events: none;
 }
 
-/* 래디얼 메뉴 */
-.radial-menu {
-  position: absolute;
-  bottom: 135px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  background: rgba(40, 44, 52, 0.92);
-  backdrop-filter: blur(8px);
-  padding: 8px 14px;
-  border-radius: 30px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  pointer-events: auto;
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 101;
-}
-
-.radial-menu.hidden {
-  opacity: 0;
-  transform: translateX(-50%) scale(0.5);
-  pointer-events: none;
-}
-
-.menu-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: none;
-  background: #ffffff;
-  font-size: 17px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  transition: transform 0.15s ease, background 0.15s ease;
+/* 하단 조작 패널 (Machine Control Deck) */
+.machine-control-deck {
+  height: 52px;
+  background: #14171d;
+  border-top: 2px solid #2d3340;
   display: flex;
   align-items: center;
+  justify-content: space-around;
+  padding: 0 12px;
+  gap: 8px;
+}
+
+.deck-btn {
+  flex: 1;
+  height: 38px;
+  background: linear-gradient(180deg, #2b313d 0%, #1b1e26 100%);
+  border: 1.5px solid #3d4659;
+  border-radius: 8px;
+  color: #cfd8dc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: transform 0.1s, background 0.15s, border-color 0.15s;
 }
 
-.menu-btn:hover {
-  transform: scale(1.18);
-  background: #ffe066;
+.deck-btn:hover {
+  background: linear-gradient(180deg, #373f4f 0%, #242934 100%);
+  border-color: #00e5ff;
+  color: #ffffff;
 }
 
-/* 상태 모달 & 설정 모달 */
+.deck-btn:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+}
+
+.btn-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.btn-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* 상태 진단 & 설정 모달 */
 .status-modal {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.98);
-  padding: 18px 20px;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  background: rgba(15, 23, 36, 0.96);
+  border: 2px solid #00e5ff;
+  padding: 16px 18px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.2);
   pointer-events: auto;
   z-index: 200;
-  width: 290px;
+  width: 320px;
 }
 
 .status-modal.hidden {
@@ -123,32 +250,33 @@ canvas {
 }
 
 .modal-content h3 {
-  font-size: 15px;
+  font-size: 13px;
   margin-bottom: 12px;
-  color: #2b2d42;
+  color: #00e5ff;
   text-align: center;
+  letter-spacing: 1px;
 }
 
 .stat-row {
-  margin-bottom: 10px;
-  font-size: 12px;
-  color: #4a4e69;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #b0bec5;
 }
 
 .setting-row {
-  margin-top: 10px;
-  margin-bottom: 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
-  color: #2b2d42;
+  gap: 4px;
+  font-size: 12px;
+  color: #e0e6ed;
   font-weight: 600;
 }
 
 .setting-row input[type="range"] {
   width: 100%;
-  accent-color: #ff6b6b;
+  accent-color: #00e5ff;
   cursor: pointer;
 }
 
@@ -162,8 +290,8 @@ canvas {
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: 40px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -177,26 +305,25 @@ canvas {
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: #ced4da;
-  border-radius: 24px;
+  background: #374151;
+  border-radius: 20px;
   transition: background 0.2s ease;
 }
 
 .toggle-slider:before {
   content: '';
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   left: 3px;
   bottom: 3px;
   background: white;
   border-radius: 50%;
   transition: transform 0.2s ease;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background: #00c896;
+  background: #00e5ff;
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -204,49 +331,52 @@ canvas {
 }
 
 .setting-hint {
-  font-size: 11px;
-  color: #6c757d;
+  font-size: 10px;
+  color: #78909c;
   line-height: 1.4;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .bar-bg {
   width: 100%;
-  height: 10px;
-  background: #e9ecef;
-  border-radius: 5px;
+  height: 8px;
+  background: #1e293b;
+  border-radius: 4px;
   overflow: hidden;
-  margin-top: 4px;
+  margin-top: 3px;
+  border: 1px solid #334155;
 }
 
 .bar-fill {
   height: 100%;
-  background: #ff6b6b;
-  border-radius: 5px;
+  background: #ff5252;
+  border-radius: 4px;
   transition: width 0.3s ease;
 }
 
 .bar-fill.happy {
-  background: #4ecdc4;
+  background: #00e5ff;
 }
 
 .bar-fill.exp {
-  background: #ffe66d;
+  background: #ffd600;
 }
 
 .close-modal-btn {
   margin-top: 10px;
   width: 100%;
-  padding: 8px;
-  border: none;
-  background: #4a4e69;
-  color: white;
-  border-radius: 8px;
+  padding: 6px;
+  border: 1px solid #3d4d65;
+  background: #202b3c;
+  color: #00e5ff;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 700;
+  font-size: 12px;
+  transition: all 0.15s;
 }
 
 .close-modal-btn:hover {
-  background: #2b2d42;
+  background: #00e5ff;
+  color: #0d1218;
 }

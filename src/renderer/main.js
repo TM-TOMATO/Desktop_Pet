@@ -4,20 +4,17 @@ const { PetStats } = require('./core/PetStats.js');
 const { PetContainer } = require('./objects/PetContainer.js');
 const { FoodItem } = require('./objects/FoodItem.js');
 
-// 픽셀 아트 선명도 유지 (Nearest Filtering)
+// 픽셀 아트 선명도 유지 (Nearest-Neighbor Filter)
 if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   PIXI.TextureSource.defaultOptions.scaleMode = 'nearest';
 }
 
 (async () => {
-  const WIN_W = 320;
-  const WIN_H = 300;
-
-  // 1. PixiJS App 초기화 (320x300 컴팩트 윈도우, 픽셀 아트용 antialias: false)
+  // 1. PixiJS App 초기화 (챔버 뷰포트 내부 380x232)
   const app = new PIXI.Application();
   await app.init({
-    width: WIN_W,
-    height: WIN_H,
+    width: 380,
+    height: 232,
     backgroundAlpha: 0,
     antialias: false,
     roundPixels: true
@@ -26,29 +23,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const containerEl = document.getElementById('canvas-container');
   containerEl.appendChild(app.canvas);
 
-  // 2. 화면 작업 영역(WorkArea) 및 초기 위치 계산
-  let workArea = null;
-  if (window.electronAPI && window.electronAPI.getWorkArea) {
-    workArea = await window.electronAPI.getWorkArea();
-  }
-
-  const screenW = workArea ? workArea.width : window.screen.availWidth;
-  const screenH = workArea ? workArea.height : window.screen.availHeight;
-  const workX = workArea ? workArea.x : 0;
-  const workY = workArea ? workArea.y : 0;
-
-  // 기본 바닥 높이 (작업표시줄 위)
-  const defaultGroundY = workY + screenH - WIN_H;
-  let groundY = defaultGroundY;
-  let currentWinX = workX + Math.round((screenW - WIN_W) / 2);
-  let currentWinY = defaultGroundY;
-  let velocityY = 0;
-
-  let isDragging = false;
-  let dragMouseOffsetX = 160;
-  let dragMouseOffsetY = 240;
-
-  // 3. 세이브 데이터 로드 및 PetStats 초기화
+  // 2. 세이브 데이터 로드 및 PetStats 초기화
   let saveData = null;
   if (window.electronAPI && window.electronAPI.loadData) {
     saveData = await window.electronAPI.loadData();
@@ -69,17 +44,17 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   }
 
-  // 4. 펫 객체 및 상태 머신 생성
+  // 3. 펫 객체 및 상태 머신 생성
   const pet = new PetContainer(app);
   app.stage.addChild(pet);
 
   const stateMachine = new StateMachine(pet);
   const activeFoods = [];
 
-  // 5. UI 요소 참조
+  // 4. UI 요소 참조
+  const headerEl = document.getElementById('machine-header');
   const dialogEl = document.getElementById('pet-dialog');
   const dialogTextEl = document.getElementById('dialog-text');
-  const radialMenuEl = document.getElementById('radial-menu');
   const statusModalEl = document.getElementById('status-modal');
   const settingsModalEl = document.getElementById('settings-modal');
 
@@ -90,8 +65,8 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const scaleValueLabel = document.getElementById('scale-value');
   const hitboxToggle = document.getElementById('hitbox-toggle');
 
-  // 저장된 스케일 적용 (기본 2.0 = 200%)
-  const savedScale = petStats.scaleFactor || 2.0;
+  // 저장된 스케일 적용 (기본 1.5 = 150%)
+  const savedScale = petStats.scaleFactor || 1.5;
   scaleRange.value = Math.round(savedScale * 100);
   scaleValueLabel.textContent = `${Math.round(savedScale * 100)}%`;
   pet.setBaseScale(savedScale);
@@ -144,56 +119,54 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   updateHUD(petStats.getSnapshot());
 
-  // 6. 펫 마우스 드래그 이동 (어디든 부드럽게 끌어서 이동)
-  window.addEventListener('mousedown', (e) => {
-    // 좌클릭만 드래그 시작 (모달 및 메뉴 버튼 클릭 시는 제외)
+  // 5. 기계 본체 윈도우 드래그 이동 (상단 헤더 바를 잡고 이동)
+  let isWindowDragging = false;
+  let dragOffsetScreenX = 0;
+  let dragOffsetScreenY = 0;
+
+  headerEl.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.header-actions')) return;
     if (e.button !== 0) return;
-    if (e.target.closest('#radial-menu, #status-modal, #settings-modal')) return;
 
-    isDragging = true;
-    dragMouseOffsetX = e.clientX;
-    dragMouseOffsetY = e.clientY;
-
-    stateMachine.changeState(PetState.DRAGGED);
-    radialMenuEl.classList.add('hidden');
-    statusModalEl.classList.add('hidden');
-    settingsModalEl.classList.add('hidden');
-    showDialog('우와! 날 어디로 데려가는 거야? 😮');
+    isWindowDragging = true;
+    dragOffsetScreenX = e.clientX;
+    dragOffsetScreenY = e.clientY;
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      currentWinX = Math.round(e.screenX - dragMouseOffsetX);
-      currentWinY = Math.round(e.screenY - dragMouseOffsetY);
+    if (isWindowDragging) {
+      const newWinX = Math.round(e.screenX - dragOffsetScreenX);
+      const newWinY = Math.round(e.screenY - dragOffsetScreenY);
 
       if (window.electronAPI && window.electronAPI.setWindowPosition) {
-        window.electronAPI.setWindowPosition(currentWinX, currentWinY);
+        window.electronAPI.setWindowPosition(newWinX, newWinY);
       }
     }
   });
 
-  window.addEventListener('mouseup', (e) => {
-    if (isDragging && e.button === 0) {
-      isDragging = false;
-      velocityY = 0;
-      stateMachine.changeState(PetState.IDLE);
-      showDialog('후아~ 안착! 🐾');
-    }
+  window.addEventListener('mouseup', () => {
+    isWindowDragging = false;
   });
 
-  // 우클릭 메뉴
-  pet.onRightClick = () => {
+  // 6. 펫 내부 인터랙션 이벤트 바인딩
+  pet.onDragStart = () => {
+    stateMachine.changeState(PetState.DRAGGED);
     statusModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
-    radialMenuEl.classList.toggle('hidden');
+    showDialog('우와! 챔버 안에서 둥실둥실~ 😮');
   };
 
-  // 7. 래디얼 메뉴 동작
-  document.getElementById('btn-feed').addEventListener('click', (e) => {
-    e.stopPropagation();
-    radialMenuEl.classList.add('hidden');
+  pet.onDragEnd = () => {
+    stateMachine.changeState(PetState.IDLE);
+    showDialog('후아~ 챔버 바닥 안착! 🐾');
+  };
 
-    const food = new FoodItem(app, pet.x + (pet.walkDirection * 40), pet.y);
+  // 7. 하단 기계 조작 패널 (Control Deck) 동작
+  document.getElementById('btn-feed').addEventListener('click', () => {
+    statusModalEl.classList.add('hidden');
+    settingsModalEl.classList.add('hidden');
+
+    const food = new FoodItem(app, pet.x + (pet.walkDirection * 35), 220);
     app.stage.addChild(food);
     activeFoods.push(food);
 
@@ -206,41 +179,46 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }, 1500);
   });
 
-  document.getElementById('btn-play').addEventListener('click', (e) => {
-    e.stopPropagation();
-    radialMenuEl.classList.add('hidden');
+  document.getElementById('btn-play').addEventListener('click', () => {
+    statusModalEl.classList.add('hidden');
+    settingsModalEl.classList.add('hidden');
     petStats.play(25);
     stateMachine.changeState(PetState.HAPPY);
-    showDialog('신난다! 🎾 쓰다듬어줘서 고마워!');
+    showDialog('신난다! 🎾 기계 너머로 교감 중!');
   });
 
-  document.getElementById('btn-info').addEventListener('click', (e) => {
-    e.stopPropagation();
-    radialMenuEl.classList.add('hidden');
+  document.getElementById('btn-info').addEventListener('click', () => {
     settingsModalEl.classList.add('hidden');
-    statusModalEl.classList.remove('hidden');
+    statusModalEl.classList.toggle('hidden');
   });
 
-  document.getElementById('btn-settings').addEventListener('click', (e) => {
-    e.stopPropagation();
-    radialMenuEl.classList.add('hidden');
+  document.getElementById('btn-settings').addEventListener('click', () => {
     statusModalEl.classList.add('hidden');
-    settingsModalEl.classList.remove('hidden');
+    settingsModalEl.classList.toggle('hidden');
   });
 
-  document.getElementById('btn-close').addEventListener('click', (e) => {
-    e.stopPropagation();
-    radialMenuEl.classList.add('hidden');
-  });
-
-  document.getElementById('btn-modal-close').addEventListener('click', (e) => {
-    e.stopPropagation();
+  document.getElementById('btn-modal-close').addEventListener('click', () => {
     statusModalEl.classList.add('hidden');
   });
 
-  document.getElementById('btn-settings-close').addEventListener('click', (e) => {
-    e.stopPropagation();
+  document.getElementById('btn-settings-close').addEventListener('click', () => {
     settingsModalEl.classList.add('hidden');
+  });
+
+  // 헤더 닫기/숨기기 버튼
+  document.getElementById('btn-quit-app').addEventListener('click', () => {
+    if (window.electronAPI && window.electronAPI.quitApp) {
+      window.electronAPI.quitApp();
+    }
+  });
+
+  document.getElementById('btn-minimize-app').addEventListener('click', () => {
+    showDialog('트레이 아이콘에서 언제든 다시 열 수 있어! 🐾', 2000);
+    setTimeout(() => {
+      if (window.electronAPI && window.electronAPI.setWindowPosition) {
+        // 창 숨기기 또는 닫기
+      }
+    }, 1000);
   });
 
   // 8. 주기적 게임 자동 저장 (매 30초)
@@ -261,43 +239,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     stateMachine.update(delta);
     pet.update(delta, stateMachine.currentState);
 
-    // 공중 낙하 중력 물리 (화면 아래 바닥으로 자연스럽게 착지)
-    if (!isDragging && currentWinY < groundY) {
-      velocityY += 0.8 * delta;
-      currentWinY += velocityY;
-
-      if (currentWinY >= groundY) {
-        currentWinY = groundY;
-        velocityY = 0;
-      }
-
-      if (window.electronAPI && window.electronAPI.setWindowPosition) {
-        window.electronAPI.setWindowPosition(currentWinX, currentWinY);
-      }
-    }
-
-    // 걷기 점프 이동 물리 (바닥에 있을 때 & 공중 프레임일 때만 전진)
-    if (!isDragging && currentWinY >= groundY && stateMachine.currentState === PetState.WALK) {
-      if (!pet.isGroundedFrame) {
-        currentWinX += pet.walkDirection * pet.walkSpeed * delta;
-
-        const minX = workX;
-        const maxX = workX + screenW - WIN_W;
-
-        if (currentWinX <= minX) {
-          currentWinX = minX;
-          pet.walkDirection = 1;
-        } else if (currentWinX >= maxX) {
-          currentWinX = maxX;
-          pet.walkDirection = -1;
-        }
-
-        if (window.electronAPI && window.electronAPI.setWindowPosition) {
-          window.electronAPI.setWindowPosition(currentWinX, currentWinY);
-        }
-      }
-    }
-
     // 활성화된 음식 아이템 업데이트
     for (let i = activeFoods.length - 1; i >= 0; i--) {
       const food = activeFoods[i];
@@ -311,9 +252,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   // 로드된 사용자 에셋 상태 표시
   setTimeout(() => {
     if (pet.debugLog.length > 0) {
-      showDialog(`🎨 적용 성공: ${pet.debugLog.join(', ')}`, 4000);
+      showDialog(`🎨 챔버 가동 완료: ${pet.debugLog.join(', ')}`, 4000);
     } else {
-      showDialog(`안녕! 바탕화면 다마고치야 🐾`, 3500);
+      showDialog(`사이버 펫 챔버 유닛 가동 완료 🐾`, 3500);
     }
-  }, 800);
+  }, 600);
 })();
