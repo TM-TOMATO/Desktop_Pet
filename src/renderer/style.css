@@ -63,10 +63,10 @@ html, body {
 
 .screen-viewport {
   position: absolute;
-  left: 65px;
-  top: 25px;
-  width: 102px;
-  height: 142px;
+  left: 62px;
+  top: 22px;
+  width: 105px;
+  height: 143px;
   z-index: 2;
   border-radius: 4px;
   overflow: hidden;

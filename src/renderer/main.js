@@ -12,11 +12,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 }
 
 (async () => {
-  // 1. PixiJS App 초기화 (LCD 화면 102x142 px)
+  // 1. PixiJS App 초기화 (LCD 화면 105x143 px)
   const app = new PIXI.Application();
   await app.init({
-    width: 102,
-    height: 142,
+    width: 105,
+    height: 143,
     backgroundAlpha: 0,
     antialias: false,
     roundPixels: true
@@ -35,9 +35,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   // 3. 펫 객체 및 상태 머신 생성
   const pet = new PetContainer(app);
-  pet.setBounds(16, 86, 20, 136);
-  pet.x = 51;
-  pet.y = 136;
+  pet.setBounds(16, 89, 20, 137);
+  pet.x = 52;
+  pet.y = 137;
   pet.setBaseScale(1.0);
   app.stage.addChild(pet);
 
@@ -167,12 +167,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
     if (app.canvas && containerEl) {
       containerEl.appendChild(app.canvas);
-      app.renderer.resize(102, 142);
+      app.renderer.resize(105, 143);
     }
 
-    pet.setBounds(16, 86, 20, 136);
-    pet.x = 51;
-    pet.y = 136;
+    pet.setBounds(16, 89, 20, 137);
+    pet.x = 52;
+    pet.y = 137;
     pet.setBaseScale(1.0);
 
     if (window.electronAPI) window.electronAPI.setMiniMode(false);
