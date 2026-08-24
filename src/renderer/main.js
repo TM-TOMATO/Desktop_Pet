@@ -109,8 +109,15 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     setConsoleScale(pct / 100);
   });
 
+  const consoleCasing = document.getElementById('console-casing');
+
   hitboxToggle.addEventListener('change', () => {
     pet.setHitboxVisible(hitboxToggle.checked);
+    if (hitboxToggle.checked) {
+      consoleCasing.classList.add('hitbox-debug');
+    } else {
+      consoleCasing.classList.remove('hitbox-debug');
+    }
   });
 
   // ── 항상 위에 고정 토글 ──────────────────────────────────
