@@ -13,6 +13,13 @@ html, body {
   font-family: 'Consolas', 'Courier New', 'Segoe UI', monospace;
 }
 
+#app-scaler {
+  width: 440px;
+  height: 490px;
+  transform-origin: top left;
+  display: flex;
+}
+
 /* ========================================================
    1. 레트로 게임기 본체 케이스 (Console Outer Chassis)
    - 케이스 영역을 마우스로 잡고 바탕화면 어디든 드래그 이동 가능

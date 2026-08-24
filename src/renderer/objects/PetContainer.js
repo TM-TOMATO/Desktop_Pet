@@ -401,6 +401,11 @@ class PetContainer extends PIXI.Container {
         x: this.x - localMouseX,
         y: this.y - localMouseY
       };
+
+      if (this.onPetClick) {
+        this.onPetClick(localMouseX, localMouseY);
+      }
+
       if (this.onDragStart) this.onDragStart();
     });
 

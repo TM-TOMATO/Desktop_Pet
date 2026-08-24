@@ -42,6 +42,8 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const activeFoods = [];
 
   // 4. UI 및 OSD 메뉴 요소 참조
+  const appScalerEl = document.getElementById('app-scaler');
+  const screenGlassEl = document.getElementById('screen-glass');
   const displayClicksEl = document.getElementById('display-clicks');
   const displayGoldEl = document.getElementById('display-gold');
   const coinPopupLayer = document.getElementById('coin-popup-layer');
@@ -64,18 +66,33 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const scaleValueLabel = document.getElementById('scale-value');
   const hitboxToggle = document.getElementById('hitbox-toggle');
 
-  // 저장된 스케일 적용 (기본 1.5 = 150%)
-  const savedScale = petStats.scaleFactor || 1.5;
-  scaleRange.value = Math.round(savedScale * 100);
-  scaleValueLabel.textContent = `${Math.round(savedScale * 100)}%`;
-  pet.setBaseScale(savedScale);
+  // 🎮 게임기 전체 크기 조작 함수 (Scale Console Unit)
+  const BASE_CONSOLE_W = 440;
+  const BASE_CONSOLE_H = 490;
+
+  function setConsoleScale(scaleVal) {
+    scaleVal = Math.max(0.7, Math.min(1.6, scaleVal));
+    if (appScalerEl) {
+      appScalerEl.style.transform = `scale(${scaleVal})`;
+    }
+    const newW = Math.round(BASE_CONSOLE_W * scaleVal);
+    const newH = Math.round(BASE_CONSOLE_H * scaleVal);
+    if (window.electronAPI && window.electronAPI.setWindowSize) {
+      window.electronAPI.setWindowSize(newW, newH);
+    }
+    petStats.consoleScale = scaleVal;
+  }
+
+  // 저장된 게임기 전체 크기 적용
+  const savedConsoleScale = (saveData && saveData.petInfo && saveData.petInfo.consoleScale) || 1.0;
+  scaleRange.value = Math.round(savedConsoleScale * 100);
+  scaleValueLabel.textContent = `${Math.round(savedConsoleScale * 100)}%`;
+  setConsoleScale(savedConsoleScale);
 
   scaleRange.addEventListener('input', () => {
     const pct = parseInt(scaleRange.value, 10);
     scaleValueLabel.textContent = `${pct}%`;
-    const scaleVal = pct / 100;
-    pet.setBaseScale(scaleVal);
-    petStats.setScaleFactor(scaleVal);
+    setConsoleScale(pct / 100);
   });
 
   hitboxToggle.addEventListener('change', () => {
@@ -112,24 +129,36 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   updateHUD(petStats.getSnapshot());
 
-  // 5. 🖱️ 펫 클릭 시 골드 획득 & 플로팅 텍스트 이펙트 (클리커 시스템)
-  containerEl.addEventListener('click', (e) => {
-    // 메뉴가 열려 있을 때는 화면 클릭 방지
+  // 5. 🖱️ & ⌨️ 클릭 및 키보드 입력 시 코인 획득 & 플로팅 텍스트 이펙트 (클리커 엔진)
+  function triggerPetClick(posX, posY) {
     if (currentMenuMode !== 'NONE') return;
 
-    const result = petStats.clickPet(1);
-    createCoinPopup(e.clientX, e.clientY, '+1 G');
-  });
+    petStats.clickPet(1);
+
+    // 펫 리액션
+    pet.bouncePhase += 0.5;
+
+    // 플로팅 코인 이펙트
+    createCoinPopup(posX, posY, '+1 G');
+  }
 
   function createCoinPopup(clientX, clientY, text) {
-    const rect = containerEl.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    let x = 180;
+    let y = 100;
+
+    if (clientX !== undefined && clientY !== undefined) {
+      const rect = containerEl.getBoundingClientRect();
+      x = (clientX - rect.left) / (petStats.consoleScale || 1.0);
+      y = (clientY - rect.top) / (petStats.consoleScale || 1.0);
+    } else {
+      x = pet.x - 15;
+      y = pet.y - 50;
+    }
 
     const popup = document.createElement('div');
     popup.className = 'coin-popup';
     popup.innerText = text;
-    popup.style.left = `${Math.max(10, Math.min(320, x - 15))}px`;
+    popup.style.left = `${Math.max(10, Math.min(310, x - 15))}px`;
     popup.style.top = `${Math.max(10, Math.min(180, y - 20))}px`;
 
     coinPopupLayer.appendChild(popup);
@@ -137,6 +166,22 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       popup.remove();
     }, 700);
   }
+
+  // 1) 펫 직접 클릭 감지
+  pet.onPetClick = (localX, localY) => {
+    if (currentMenuMode === 'NONE') {
+      triggerPetClick(undefined, undefined);
+    }
+  };
+
+  // 2) LCD 화면 영역 클릭 감지
+  screenGlassEl.addEventListener('pointerdown', (e) => {
+    // 모달이나 메뉴를 클릭한 경우는 클리커 제외
+    if (e.target.closest('.osd-menu, .osd-modal')) return;
+    if (currentMenuMode === 'NONE') {
+      triggerPetClick(e.clientX, e.clientY);
+    }
+  });
 
   // 6. 🎮 레트로 OSD 메뉴 컨트롤러 (D-Pad & A/B 버튼 제어)
   let currentMenuMode = 'NONE'; // 'NONE' | 'MAIN' | 'FEED' | 'SHOP' | 'STATUS' | 'CONFIG'
@@ -215,7 +260,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function feedSelectedItem() {
-    const inv = petStats.inventory || {};
     const availableFoods = ['apple', 'meat', 'fish', 'candy'];
     const selectedKey = availableFoods[menuCursorIndex];
 
@@ -267,9 +311,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const item = shopItemsData[menuCursorIndex];
     if (item && petStats.spendGold(item.price)) {
       petStats.addItem(item.key, 1);
-      createCoinPopup(180, 80, `구매완료!`);
+      createCoinPopup(undefined, undefined, `구매완료!`);
     } else {
-      createCoinPopup(180, 80, `골드부족!`);
+      createCoinPopup(undefined, undefined, `골드부족!`);
     }
   }
 
@@ -326,25 +370,48 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       renderShopMenuCursor();
     } else if (currentMenuMode === 'CONFIG') {
       if (direction === 'LEFT') {
-        scaleRange.value = Math.max(50, parseInt(scaleRange.value, 10) - 10);
+        scaleRange.value = Math.max(70, parseInt(scaleRange.value, 10) - 5);
         scaleRange.dispatchEvent(new Event('input'));
       }
       if (direction === 'RIGHT') {
-        scaleRange.value = Math.min(250, parseInt(scaleRange.value, 10) + 10);
+        scaleRange.value = Math.min(160, parseInt(scaleRange.value, 10) + 5);
         scaleRange.dispatchEvent(new Event('input'));
       }
     }
   }
 
   // 물리/화면 D-Pad & A/B 버튼 클릭 바인딩
-  document.getElementById('btn-action-a').addEventListener('click', () => handleButtonActionA());
-  document.getElementById('btn-action-b').addEventListener('click', () => handleButtonActionB());
-  document.getElementById('btn-dpad-up').addEventListener('click', () => handleDpadNav('UP'));
-  document.getElementById('btn-dpad-down').addEventListener('click', () => handleDpadNav('DOWN'));
-  document.getElementById('btn-dpad-left').addEventListener('click', () => handleDpadNav('LEFT'));
-  document.getElementById('btn-dpad-right').addEventListener('click', () => handleDpadNav('RIGHT'));
+  document.getElementById('btn-action-a').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleButtonActionA();
+  });
 
-  // 8. ⌨️ 키보드 레트로 컨트롤러 단축키 지원 (방향키, Enter/Z 확인, Esc/X 취소)
+  document.getElementById('btn-action-b').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleButtonActionB();
+  });
+
+  document.getElementById('btn-dpad-up').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleDpadNav('UP');
+  });
+
+  document.getElementById('btn-dpad-down').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleDpadNav('DOWN');
+  });
+
+  document.getElementById('btn-dpad-left').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleDpadNav('LEFT');
+  });
+
+  document.getElementById('btn-dpad-right').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleDpadNav('RIGHT');
+  });
+
+  // 8. ⌨️ 키보드 레트로 컨트롤러 & 클리커 입력 완벽 지원
   window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
       handleDpadNav('UP');
@@ -354,15 +421,23 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       handleDpadNav('LEFT');
     } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
       handleDpadNav('RIGHT');
-    } else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z' || e.key === ' ') {
+    } else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
       handleButtonActionA();
     } else if (e.key === 'Escape' || e.key === 'x' || e.key === 'X' || e.key === 'Backspace') {
       handleButtonActionB();
+    } else if (e.key === ' ' || e.key === 'c' || e.key === 'C') {
+      // 스페이스바나 C키 입력 시: 메뉴 중이면 A버튼, 기본 화면이면 클리커 골드 획득!
+      if (currentMenuMode === 'NONE') {
+        triggerPetClick(undefined, undefined);
+      } else {
+        handleButtonActionA();
+      }
     }
   });
 
   // 9. 전원 끄기 버튼 (POWER)
-  document.getElementById('btn-power').addEventListener('click', () => {
+  document.getElementById('btn-power').addEventListener('click', (e) => {
+    e.stopPropagation();
     if (window.electronAPI && window.electronAPI.quitApp) {
       window.electronAPI.quitApp();
     }
@@ -445,9 +520,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   // 12. 주기적 게임 자동 저장 (매 30초)
   setInterval(() => {
     if (window.electronAPI && window.electronAPI.saveData) {
+      const snap = petStats.getSnapshot();
+      snap.consoleScale = petStats.consoleScale || 1.0;
       window.electronAPI.saveData({
         version: '1.0.0',
-        petInfo: petStats.getSnapshot()
+        petInfo: snap
       });
     }
   }, 30000);
