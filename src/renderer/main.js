@@ -80,12 +80,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const miniPanel = document.getElementById('mini-panel');
   const miniCanvasContainer = document.getElementById('mini-canvas-container');
 
-  // 🎮 게임기 전체 크기 조작 함수 (256x256 기준 스케일)
+  // 🎮 게임기 전체 크기 조작 함수 (256x256 기준 스케일, 기본 200% = 512x512 px)
   const BASE_CONSOLE_W = 256;
   const BASE_CONSOLE_H = 256;
 
   function setConsoleScale(scaleVal) {
-    scaleVal = Math.max(0.7, Math.min(2.0, scaleVal));
+    scaleVal = Math.max(1.0, Math.min(3.0, scaleVal));
     if (appScalerEl) {
       appScalerEl.style.transform = `scale(${scaleVal})`;
     }
@@ -97,8 +97,8 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     petStats.consoleScale = scaleVal;
   }
 
-  // 기본 1.5배 (384x384 px)
-  const savedConsoleScale = (saveData && saveData.petInfo && saveData.petInfo.consoleScale) || 1.5;
+  // 기본 2.0배 (512x512 px)
+  const savedConsoleScale = (saveData && saveData.petInfo && saveData.petInfo.consoleScale) || 2.0;
   scaleRange.value = Math.round(savedConsoleScale * 100);
   scaleValueLabel.textContent = `${Math.round(savedConsoleScale * 100)}%`;
   setConsoleScale(savedConsoleScale);
@@ -522,8 +522,8 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         renderConfigMenuCursor();
       } else if (direction === 'LEFT' || direction === 'RIGHT') {
         if (configCursorIndex === 0) {
-          const step = direction === 'LEFT' ? -5 : 5;
-          scaleRange.value = Math.max(70, Math.min(200, parseInt(scaleRange.value, 10) + step));
+          const step = direction === 'LEFT' ? -10 : 10;
+          scaleRange.value = Math.max(100, Math.min(300, parseInt(scaleRange.value, 10) + step));
           scaleRange.dispatchEvent(new Event('input'));
         }
       }
