@@ -1,8 +1,20 @@
+@font-face {
+  font-family: 'CustomRetroFont';
+  src: url("../../assets/fonts/pixel_font.ttf") format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   user-select: none;
+  font-family: 'CustomRetroFont', 'Consolas', 'Courier New', monospace;
+  -webkit-font-smoothing: none !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeSpeed !important;
 }
 
 html, body {
@@ -10,7 +22,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: transparent !important;
-  font-family: 'Consolas', 'Courier New', 'Segoe UI', monospace;
+  font-family: 'CustomRetroFont', 'Consolas', 'Courier New', monospace;
 }
 
 /* ========================================================
@@ -192,8 +204,7 @@ body.has-modal-sprite .osd-modal-box {
 }
 
 .osd-title {
-  font-size: 8px;
-  font-family: monospace;
+  font-size: 9px;
   font-weight: 900;
   text-align: center;
   border-bottom: 1px solid #0f380f;
@@ -202,12 +213,13 @@ body.has-modal-sprite .osd-modal-box {
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
+  -webkit-font-smoothing: none;
 }
 
 .osd-items, .osd-shop-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   margin: 2px 0;
   overflow-x: hidden;
   overflow-y: auto;
@@ -215,10 +227,9 @@ body.has-modal-sprite .osd-modal-box {
 }
 
 .osd-item, .osd-shop-row {
-  font-size: 7.5px;
-  font-family: monospace;
+  font-size: 9px;
   font-weight: 800;
-  padding: 2px 3px;
+  padding: 1.5px 2px;
   border-radius: 2px;
   cursor: pointer;
   display: block;
@@ -226,6 +237,7 @@ body.has-modal-sprite .osd-modal-box {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  -webkit-font-smoothing: none;
 }
 
 .osd-item.active, .osd-shop-row.active {
@@ -234,33 +246,35 @@ body.has-modal-sprite .osd-modal-box {
 }
 
 .osd-hint {
-  font-size: 7px;
-  font-family: monospace;
+  font-size: 9px;
   font-weight: 900;
   text-align: center;
   border-top: 1px solid #0f380f;
-  padding-top: 1.5px;
+  padding-top: 2px;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
+  -webkit-font-smoothing: none;
 }
 
 .osd-stat-row {
   display: flex;
   justify-content: space-between;
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 800;
-  margin-bottom: 1.5px;
+  margin-bottom: 2px;
   line-height: 1.2;
+  -webkit-font-smoothing: none;
 }
 
 .osd-stat-bar-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 800;
-  margin-bottom: 1.5px;
+  margin-bottom: 2px;
+  -webkit-font-smoothing: none;
 }
 
 .osd-bar-bg {
@@ -281,11 +295,12 @@ body.has-modal-sprite .osd-modal-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 800;
   margin: 1.5px 0;
   padding: 1.5px 2px;
   border-radius: 2px;
+  -webkit-font-smoothing: none;
 }
 
 .osd-setting-row.config-active {
