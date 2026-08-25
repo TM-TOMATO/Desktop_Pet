@@ -26,19 +26,19 @@
 ---
 
 ## 🕹️ 2. 통합 8방향 십자키 (8-Way Integrated D-Pad)
-*💡 기본 중립 상태 1장과, 각 8개 방향으로 기울어져 눌렸을 때의 90x90 스프라이트 8장입니다.*
+*💡 기본 중립 상태 1장과, 각 8개 방향으로 기울어져 눌렸을 때의 스프라이트 8장입니다. (256x256 레이어 권장)*
 
 | 제작 상태 | 방향 / 상태 | 권장 파일명 | 단일 대체 파일명 | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
-| [ ] | **중립 (기본/Neutral)** | `btn_dpad.png` | - | 90x90 px (투명 PNG) | 아무것도 누르지 않았을 때의 십자키 전체 외형 |
-| [ ] | **▲ 상 (Up)** | `btn_dpad_pressed_up.png` | `btn_dpad_up_pressed.png` | 90x90 px (투명 PNG) | 위쪽으로 기울어져 눌린 모습 |
-| [ ] | **▼ 하 (Down)** | `btn_dpad_pressed_down.png` | `btn_dpad_down_pressed.png` | 90x90 px (투명 PNG) | 아래쪽으로 기울어져 눌린 모습 |
-| [ ] | **◀ 좌 (Left)** | `btn_dpad_pressed_left.png` | `btn_dpad_left_pressed.png` | 90x90 px (투명 PNG) | 왼쪽으로 기울어져 눌린 모습 |
-| [ ] | **▶ 우 (Right)** | `btn_dpad_pressed_right.png` | `btn_dpad_right_pressed.png` | 90x90 px (투명 PNG) | 오른쪽으로 기울어져 눌린 모습 |
-| [ ] | **▲◀ 좌상 (Up-Left)** | `btn_dpad_pressed_up_left.png` | `btn_dpad_pressed_ul.png` | 90x90 px (투명 PNG) | 대각선 좌상단으로 기울어져 눌린 모습 |
-| [ ] | **▲▶ 우상 (Up-Right)** | `btn_dpad_pressed_up_right.png` | `btn_dpad_pressed_ur.png` | 90x90 px (투명 PNG) | 대각선 우상단으로 기울어져 눌린 모습 |
-| [ ] | **▼◀ 좌하 (Down-Left)** | `btn_dpad_pressed_down_left.png` | `btn_dpad_pressed_dl.png` | 90x90 px (투명 PNG) | 대각선 좌하단으로 기울어져 눌린 모습 |
-| [ ] | **▼▶ 우하 (Down-Right)**| `btn_dpad_pressed_down_right.png`| `btn_dpad_pressed_dr.png` | 90x90 px (투명 PNG) | 대각선 우하단으로 기울어져 눌린 모습 |
+| [x] | **중립 (기본/Neutral)** | `btn_dpad.png` | - | 256x256 px (투명 PNG) | 아무것도 누르지 않았을 때의 십자키 전체 외형 |
+| [x] | **▲ 상 (Up)** | `btn_dpad_pressed_up.png` | `btn_dpad_up_pressed.png` | 256x256 px (투명 PNG) | 위쪽으로 기울어져 눌린 모습 |
+| [x] | **▼ 하 (Down)** | `btn_dpad_pressed_down.png` | `btn_dpad_down_pressed.png` | 256x256 px (투명 PNG) | 아래쪽으로 기울어져 눌린 모습 |
+| [x] | **◀ 좌 (Left)** | `btn_dpad_pressed_left.png` | `btn_dpad_left_pressed.png` | 256x256 px (투명 PNG) | 왼쪽으로 기울어져 눌린 모습 |
+| [x] | **▶ 우 (Right)** | `btn_dpad_pressed_right.png` | `btn_dpad_right_pressed.png` | 256x256 px (투명 PNG) | 오른쪽으로 기울어져 눌린 모습 |
+| [ ] | **▲◀ 좌상 (Up-Left)** | `btn_dpad_pressed_up_left.png` | `btn_dpad_pressed_ul.png` | 256x256 px (투명 PNG) | 대각선 좌상단으로 기울어져 눌린 모습 |
+| [ ] | **▲▶ 우상 (Up-Right)** | `btn_dpad_pressed_up_right.png` | `btn_dpad_pressed_ur.png` | 256x256 px (투명 PNG) | 대각선 우상단으로 기울어져 눌린 모습 |
+| [ ] | **▼◀ 좌하 (Down-Left)** | `btn_dpad_pressed_down_left.png` | `btn_dpad_pressed_dl.png` | 256x256 px (투명 PNG) | 대각선 좌하단으로 기울어져 눌린 모습 |
+| [ ] | **▼▶ 우하 (Down-Right)**| `btn_dpad_pressed_down_right.png`| `btn_dpad_pressed_dr.png` | 256x256 px (투명 PNG) | 대각선 우하단으로 기울어져 눌린 모습 |
 
 ---
 
@@ -46,11 +46,11 @@
 
 | 제작 상태 | 요소명 | 일반 상태 파일명 (Normal) | 눌림 상태 파일명 (Pressed) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
-| [ ] | **게임기 본체 케이스** | `console_case_bg.png` | - | 420x470 px (투명 PNG) | 레트로 게임보이/다마고치 본체 외형 |
-| [ ] | **LCD 스크린 베젤/배경** | `screen_bg.png` | - | 360x220 px | 펫이 활동하는 레트로 도트 LCD 스크린 배경 |
-| [ ] | **A 버튼 (확인/OK)** | `btn_action_a.png` | `btn_action_a_pressed.png` | 44x44 px (투명 PNG) | 메뉴 선택 / 확인용 A 버튼 |
-| [ ] | **B 버튼 (취소/CANCEL)** | `btn_action_b.png` | `btn_action_b_pressed.png` | 44x44 px (투명 PNG) | 메뉴 뒤로가기 / 취소용 B 버튼 |
-| [ ] | **전원 버튼 (POWER)** | `btn_power.png` | `btn_power_pressed.png` | 22x22 px (투명 PNG) | 게임기 전원 끄기 버튼 |
+| [x] | **게임기 본체 케이스** | `console_case_bg.png` | - | 256x256 px (투명 PNG) | 레트로 다마고치 본체 외형 |
+| [x] | **LCD 스크린 베젤/배경** | `screen_bg.png` | - | 256x256 px | 펫이 활동하는 레트로 도트 LCD 스크린 배경 |
+| [ ] | **A 버튼 (확인/OK)** | `btn_action_a.png` | `btn_action_a_pressed.png` | 256x256 px (투명 PNG) | 메뉴 선택 / 확인용 A 버튼 |
+| [ ] | **B 버튼 (취소/CANCEL)** | `btn_action_b.png` | `btn_action_b_pressed.png` | 256x256 px (투명 PNG) | 메뉴 뒤로가기 / 취소용 B 버튼 |
+| [x] | **전원 버튼 (POWER)** | `btn_power.png` | `btn_power_pressed.png` | 256x256 px (투명 PNG) | 게임기 전원 끄기 버튼 |
 
 ---
 
@@ -80,5 +80,5 @@
 
 | 제작 상태 | 아이콘/요소명 | 권장 파일명 | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- |
-| [ ] | **설정/상점 창 배경** | `ui_modal_bg.png` | 320x200 px (투명 PNG) | 레트로 OSD 메뉴 배경 창 |
+| [x] | **설정/상점 창 배경** | `ui_modal_bg.png` | 256x256 px (투명 PNG) | 레트로 OSD 메뉴/모달 배경 창 스프라이트 |
 | [ ] | **트레이 아이콘** | `assets/ui/tray_icon.png` | 16x16 또는 32x32 px | Windows 시스템 트레이 메뉴 아이콘 |

@@ -53,6 +53,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   const layerCaseBg = document.getElementById('layer-case-bg');
   const layerScreenBg = document.getElementById('layer-screen-bg');
+  const layerModalBg = document.getElementById('layer-modal-bg');
   const layerDpad = document.getElementById('layer-dpad');
   const layerPower = document.getElementById('layer-power');
   const layerActionA = document.getElementById('layer-action-a');
@@ -313,13 +314,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   let currentMenuMode = 'NONE';
   let menuCursorIndex = 0;
   let configCursorIndex = 0;
+  let hasModalSprite = false;
 
   const mainMenuItems = [
-    { label: '🍎 FEED (음식주기)', action: () => openFeedMenu() },
-    { label: '🎾 PLAY (놀아주기)', action: () => doPlayAction() },
-    { label: '🛒 SHOP (상점)', action: () => openShopMenu() },
-    { label: '📊 STATUS (상태)', action: () => openStatusMenu() },
-    { label: '⚙️ CONFIG (설정)', action: () => openConfigMenu() }
+    { label: 'FEED  (음식)', action: () => openFeedMenu() },
+    { label: 'PLAY  (놀기)', action: () => doPlayAction() },
+    { label: 'SHOP  (상점)', action: () => openShopMenu() },
+    { label: 'STATUS(상태)', action: () => openStatusMenu() },
+    { label: 'CONFIG(설정)', action: () => openConfigMenu() }
   ];
 
   const shopItemsData = [
@@ -333,6 +335,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     currentMenuMode = 'NONE';
     menuCursorIndex = 0;
     configCursorIndex = 0;
+    if (layerModalBg) layerModalBg.classList.add('hidden');
     osdMenuEl.classList.add('hidden');
     osdFeedMenuEl.classList.add('hidden');
     statusModalEl.classList.add('hidden');
@@ -344,6 +347,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     closeAllMenus();
     currentMenuMode = 'MAIN';
     menuCursorIndex = 0;
+    if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     osdMenuEl.classList.remove('hidden');
     renderMainMenuCursor();
   }
@@ -365,6 +369,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     closeAllMenus();
     currentMenuMode = 'FEED';
     menuCursorIndex = 0;
+    if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     osdFeedMenuEl.classList.remove('hidden');
     renderFeedMenuItems();
   }
@@ -417,6 +422,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     closeAllMenus();
     currentMenuMode = 'SHOP';
     menuCursorIndex = 0;
+    if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     shopModalEl.classList.remove('hidden');
     renderShopMenuCursor();
   }
@@ -448,6 +454,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   function openStatusMenu() {
     closeAllMenus();
     currentMenuMode = 'STATUS';
+    if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     statusModalEl.classList.remove('hidden');
   }
 
@@ -455,6 +462,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     closeAllMenus();
     currentMenuMode = 'CONFIG';
     configCursorIndex = 0;
+    if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     settingsModalEl.classList.remove('hidden');
     renderConfigMenuCursor();
   }
@@ -580,6 +588,18 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       const buf = fs.readFileSync(screenBgPath);
       layerScreenBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
       console.log('📺 [ScreenLoader] screen_bg.png loaded.');
+    } catch (e) {}
+  }
+
+  // 2.5) OSD 모달/메뉴 스프라이트 배경 (ui_modal_bg.png)
+  const modalBgPath = findSpriteFile(['ui_modal_bg.png', 'modal_bg.png', 'menu_bg.png']);
+  if (modalBgPath && layerModalBg) {
+    try {
+      const buf = fs.readFileSync(modalBgPath);
+      layerModalBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+      document.body.classList.add('has-modal-sprite');
+      hasModalSprite = true;
+      console.log('🖼️ [ModalLoader] ui_modal_bg.png loaded.');
     } catch (e) {}
   }
 

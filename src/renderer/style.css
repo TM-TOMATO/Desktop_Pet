@@ -134,6 +134,14 @@ canvas {
   100% { opacity: 0; transform: translateY(-26px) scale(1); }
 }
 
+.layer-modal-bg {
+  z-index: 90;
+}
+
+.layer-modal-bg.hidden {
+  display: none !important;
+}
+
 /* ========================================================
    3. OSD 메뉴 & 모달 창 (화면 비율 맞춤)
    ======================================================== */
@@ -168,6 +176,19 @@ canvas {
   color: #0f380f;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+/* ui_modal_bg.png 스프라이트 적용 시 기본 박스 배경/테두리 투명화 */
+body.has-modal-sprite .osd-menu,
+body.has-modal-sprite .osd-modal {
+  background: transparent !important;
+}
+
+body.has-modal-sprite .osd-menu-box,
+body.has-modal-sprite .osd-modal-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .osd-title {
