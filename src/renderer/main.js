@@ -748,11 +748,15 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
           src: url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}") format('${fontFormat}');
           font-weight: normal;
           font-style: normal;
+          font-display: swap;
         }
         *, html, body, button, input, select, textarea,
         .osd-title, .osd-items, .osd-item, .osd-hint, .osd-stat-row, .osd-setting-row,
         .lcd-counter-display, .coin-popup, .osd-shop-row, .osd-shop-gold, .osd-bar-bg {
-          font-family: 'CustomRetroFont', 'Consolas', monospace !important;
+          font-family: 'CustomRetroFont', 'Consolas', 'Courier New', monospace !important;
+          -webkit-font-smoothing: none !important;
+          -moz-osx-font-smoothing: grayscale !important;
+          text-rendering: optimizeSpeed !important;
         }
       `;
       document.head.appendChild(fontStyleEl);
