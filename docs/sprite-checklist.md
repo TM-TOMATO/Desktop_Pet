@@ -76,9 +76,34 @@
 
 ---
 
-## ⚙️ 6. UI & 시스템 에셋
+## ⚙️ 6. UI 메뉴 라벨 & 커서 스프라이트 (Menu Labels & Cursor)
+*💡 텍스트 대신 직접 그린 도트 글씨/아이콘 라벨을 넣으면 프로그램이 자동 교체합니다.*
 
-| 제작 상태 | 아이콘/요소명 | 권장 파일명 | 추천 규격 | 설명 |
+| 제작 상태 | 요소명 | 권장 파일명 (Normal) | 활성/선택 파일명 (Active) | 추천 규격 | 설명 |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| [ ] | **메뉴 선택 커서** | `ui_cursor.png` | - | 12x12 px (투명 PNG) | 현재 가리키는 손가락/화살표(▶) 아이콘 |
+| [ ] | **FEED (음식) 라벨** | `menu_label_feed.png` | `menu_label_feed_active.png` | 80x14 px (투명 PNG) | 메인 메뉴 'FEED (음식)' 도트 라벨 |
+| [ ] | **PLAY (놀기) 라벨** | `menu_label_play.png` | `menu_label_play_active.png` | 80x14 px (투명 PNG) | 메인 메뉴 'PLAY (놀기)' 도트 라벨 |
+| [ ] | **SHOP (상점) 라벨** | `menu_label_shop.png` | `menu_label_shop_active.png` | 80x14 px (투명 PNG) | 메인 메뉴 'SHOP (상점)' 도트 라벨 |
+| [ ] | **STATUS (상태) 라벨**| `menu_label_status.png` | `menu_label_status_active.png`| 80x14 px (투명 PNG) | 메인 메뉴 'STATUS (상태)' 도트 라벨 |
+| [ ] | **CONFIG (설정) 라벨**| `menu_label_config.png` | `menu_label_config_active.png`| 80x14 px (투명 PNG) | 메인 메뉴 'CONFIG (설정)' 도트 라벨 |
+| [ ] | **메뉴 헤더 타이틀** | `ui_title_main.png` | - | 90x16 px (투명 PNG) | 메인 메뉴 상단 '= MAIN MENU =' 타이틀 |
+
+---
+
+## 📟 7. 상단 디지털 LCD 카운터 HUD & 숫자 폰트 (HUD & Numbers)
+
+| 제작 상태 | 요소명 | 권장 파일명 | 대체 파일명 | 추천 규격 | 설명 |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| [ ] | **상단 HUD 배경 바** | `hud_strip_bg.png` | `ui_top_strip.png` | 256x256 또는 100x16 px | 클릭/골드 표시 영역 전용 배경 프레임 |
+| [ ] | **디지털 숫자 시트** | `font_digits.png` | `digits_0_9.png` | 가로 10칸 시트 (예: 80x12 px) | `0 1 2 3 4 5 6 7 8 9` 순서의 비트맵 숫자 폰트 |
+| [ ] | **개별 숫자 스프라이트**| `digit_0.png` ~ `digit_9.png`| - | 8x12 px 각 10장 | 개별 PNG 파일로 저장할 경우 |
+
+---
+
+## 🔤 8. 커스텀 픽셀 폰트 (Custom Font)
+
+| 제작 상태 | 요소명 | 권장 파일명 | 지원 확장자 | 설명 |
 | :---: | :--- | :--- | :--- | :--- |
-| [x] | **설정/상점 창 배경** | `ui_modal_bg.png` | 256x256 px (투명 PNG) | 레트로 OSD 메뉴/모달 배경 창 스프라이트 |
-| [ ] | **트레이 아이콘** | `assets/ui/tray_icon.png` | 16x16 또는 32x32 px | Windows 시스템 트레이 메뉴 아이콘 |
+| [ ] | **커스텀 픽셀 폰트 파일** | `custom_font.ttf` | `.ttf`, `.woff2`, `.otf` | `assets/sprites/` 또는 `assets/fonts/`에 넣으면 UI 전체 폰트로 자동 적용 |
+| [ ] | **트레이 아이콘** | `assets/ui/tray_icon.png` | 16x16 / 32x32 px | Windows 시스템 트레이 메뉴 아이콘 |

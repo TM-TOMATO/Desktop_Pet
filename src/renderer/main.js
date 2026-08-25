@@ -352,15 +352,34 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     renderMainMenuCursor();
   }
 
+  const customMenuSprites = {
+    cursor: null,
+    labels: {}
+  };
+
   function renderMainMenuCursor() {
     const itemEls = osdMenuEl.querySelectorAll('.osd-item');
+    const itemKeys = ['feed', 'play', 'shop', 'status', 'config'];
     itemEls.forEach((el, idx) => {
-      if (idx === menuCursorIndex) {
+      const key = itemKeys[idx];
+      const isSel = idx === menuCursorIndex;
+      if (isSel) {
         el.classList.add('active');
-        el.innerText = `▶ ${mainMenuItems[idx].label}`;
       } else {
         el.classList.remove('active');
-        el.innerText = `  ${mainMenuItems[idx].label}`;
+      }
+
+      const customImg = isSel
+        ? (customMenuSprites.labels[key + '_active'] || customMenuSprites.labels[key])
+        : customMenuSprites.labels[key];
+      const cursorHtml = customMenuSprites.cursor
+        ? `<img src="${customMenuSprites.cursor}" class="ui-cursor-icon" style="width:8px;height:8px;vertical-align:middle;margin-right:2px;image-rendering:pixelated;" />`
+        : '▶ ';
+
+      if (customImg) {
+        el.innerHTML = `${isSel ? cursorHtml : '&nbsp;&nbsp;'}<img src="${customImg}" class="ui-label-img" style="max-height:12px;vertical-align:middle;image-rendering:pixelated;" />`;
+      } else {
+        el.innerText = `${isSel ? '▶ ' : '  '}${mainMenuItems[idx].label}`;
       }
     });
   }
@@ -679,6 +698,61 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
   if (bPress) {
     actionBTextures.pressed = `data:image/png;base64,${fs.readFileSync(bPress).toString('base64')}`;
+  }
+
+  // 6) 🔤 커스텀 폰트 자동 감지 및 로드
+  const fontCandidates = [
+    'custom_font.ttf', 'custom_font.woff2', 'custom_font.otf',
+    'retro_font.ttf', 'pixel_font.ttf', 'Galmuri11.ttf', 'DungGeunMo.ttf'
+  ];
+  for (const fontName of fontCandidates) {
+    const fontPath = findSpriteFile(fontName);
+    if (fontPath) {
+      try {
+        const fontData = fs.readFileSync(fontPath);
+        const fontBase64 = fontData.toString('base64');
+        const fontExt = path.extname(fontPath).slice(1);
+        const fontFace = new FontFace('CustomRetroFont', `url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}")`);
+        await fontFace.load();
+        document.fonts.add(fontFace);
+        document.documentElement.style.fontFamily = "'CustomRetroFont', monospace";
+        console.log('🔤 [FontLoader] Custom pixel font loaded:', fontName);
+        break;
+      } catch (e) {
+        console.warn('Font load error:', e);
+      }
+    }
+  }
+
+  // 7) 📟 상단 HUD 배경 바 (hud_strip_bg.png / ui_top_strip.png)
+  const hudBgPath = findSpriteFile(['hud_strip_bg.png', 'ui_top_strip.png', 'top_strip_bg.png']);
+  const topStripEl = document.querySelector('.console-top-strip');
+  if (hudBgPath && topStripEl) {
+    try {
+      const buf = fs.readFileSync(hudBgPath);
+      topStripEl.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+      topStripEl.style.backgroundSize = 'contain';
+      topStripEl.style.backgroundRepeat = 'no-repeat';
+      console.log('📟 [HUDLoader] hud_strip_bg.png loaded.');
+    } catch (e) {}
+  }
+
+  // 8) 🎯 커스텀 메뉴 커서 & 라벨 스프라이트
+  const cursorPath = findSpriteFile(['ui_cursor.png', 'menu_cursor.png', 'cursor.png']);
+  if (cursorPath) {
+    customMenuSprites.cursor = `data:image/png;base64,${fs.readFileSync(cursorPath).toString('base64')}`;
+  }
+
+  const labelKeys = ['feed', 'play', 'shop', 'status', 'config'];
+  for (const key of labelKeys) {
+    const normP = findSpriteFile([`menu_label_${key}.png`, `label_${key}.png`]);
+    if (normP) {
+      customMenuSprites.labels[key] = `data:image/png;base64,${fs.readFileSync(normP).toString('base64')}`;
+    }
+    const actP = findSpriteFile([`menu_label_${key}_active.png`, `label_${key}_active.png`]);
+    if (actP) {
+      customMenuSprites.labels[key + '_active'] = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
+    }
   }
 
   // 9. 🔘 히트존 마우스 이벤트 바인딩
