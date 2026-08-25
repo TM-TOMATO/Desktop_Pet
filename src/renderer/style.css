@@ -63,8 +63,8 @@ html, body {
 
 .screen-viewport {
   position: absolute;
-  left: 62px;
-  top: 22px;
+  left: 62.5px;
+  top: 22.5px;
   width: 105px;
   height: 143px;
   z-index: 2;
