@@ -573,18 +573,21 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function findSpriteFile(fileNames) {
     const names = Array.isArray(fileNames) ? fileNames : [fileNames];
+    const subDirs = ['assets/sprites', 'assets/fonts', 'assets/ui', 'assets'];
     for (const fileName of names) {
-      const candidates = [
-        path.join(process.cwd(), 'assets/sprites', fileName),
-        path.join(process.cwd(), 'resources/assets/sprites', fileName),
-        path.join(process.cwd(), 'resources/app.asar/assets/sprites', fileName),
-        path.join(process.resourcesPath || '', 'assets/sprites', fileName),
-        path.join(__dirname, '../../assets/sprites', fileName),
-        path.join(__dirname, '../../../assets/sprites', fileName),
-        'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites/' + fileName
-      ];
-      for (const p of candidates) {
-        if (fs.existsSync(p)) return p;
+      for (const sub of subDirs) {
+        const candidates = [
+          path.join(process.cwd(), sub, fileName),
+          path.join(process.cwd(), 'resources', sub, fileName),
+          path.join(process.cwd(), 'resources/app.asar', sub, fileName),
+          path.join(process.resourcesPath || '', sub, fileName),
+          path.join(__dirname, '../../', sub, fileName),
+          path.join(__dirname, '../../../', sub, fileName),
+          'C:/Users/user/OneDrive/Desktop/Desktop_Pet/' + sub + '/' + fileName
+        ];
+        for (const p of candidates) {
+          if (fs.existsSync(p)) return p;
+        }
       }
     }
     return null;
@@ -701,26 +704,65 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   // 6) 🔤 커스텀 폰트 자동 감지 및 로드
-  const fontCandidates = [
-    'custom_font.ttf', 'custom_font.woff2', 'custom_font.otf',
-    'retro_font.ttf', 'pixel_font.ttf', 'Galmuri11.ttf', 'DungGeunMo.ttf'
-  ];
-  for (const fontName of fontCandidates) {
-    const fontPath = findSpriteFile(fontName);
-    if (fontPath) {
-      try {
-        const fontData = fs.readFileSync(fontPath);
-        const fontBase64 = fontData.toString('base64');
-        const fontExt = path.extname(fontPath).slice(1);
-        const fontFace = new FontFace('CustomRetroFont', `url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}")`);
-        await fontFace.load();
-        document.fonts.add(fontFace);
-        document.documentElement.style.fontFamily = "'CustomRetroFont', monospace";
-        console.log('🔤 [FontLoader] Custom pixel font loaded:', fontName);
-        break;
-      } catch (e) {
-        console.warn('Font load error:', e);
+  function findAnyFontFile() {
+    const fontNames = [
+      'pixel_font.ttf', 'custom_font.ttf', 'retro_font.ttf',
+      'custom_font.woff2', 'custom_font.otf', 'Galmuri11.ttf', 'DungGeunMo.ttf'
+    ];
+    for (const name of fontNames) {
+      const p = findSpriteFile(name);
+      if (p) return p;
+    }
+    // 디렉토리 내 임의의 폰트 파일 탐색
+    const searchDirs = [
+      path.join(process.cwd(), 'assets/fonts'),
+      path.join(process.cwd(), 'assets/sprites'),
+      path.join(process.cwd(), 'resources/assets/fonts'),
+      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/fonts',
+      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites'
+    ];
+    for (const d of searchDirs) {
+      if (fs.existsSync(d)) {
+        const files = fs.readdirSync(d);
+        for (const f of files) {
+          if (/\.(ttf|woff2|otf)$/i.test(f)) return path.join(d, f);
+        }
       }
+    }
+    return null;
+  }
+
+  const detectedFontPath = findAnyFontFile();
+  if (detectedFontPath) {
+    try {
+      const fontData = fs.readFileSync(detectedFontPath);
+      const fontBase64 = fontData.toString('base64');
+      const fontExt = path.extname(detectedFontPath).toLowerCase().replace('.', '');
+      const fontFormat = fontExt === 'woff2' ? 'woff2' : (fontExt === 'otf' ? 'opentype' : 'truetype');
+
+      const fontStyleEl = document.createElement('style');
+      fontStyleEl.id = 'dynamic-custom-font';
+      fontStyleEl.textContent = `
+        @font-face {
+          font-family: 'CustomRetroFont';
+          src: url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}") format('${fontFormat}');
+          font-weight: normal;
+          font-style: normal;
+        }
+        *, html, body, button, input, select, textarea,
+        .osd-title, .osd-items, .osd-item, .osd-hint, .osd-stat-row, .osd-setting-row,
+        .lcd-counter-display, .coin-popup, .osd-shop-row, .osd-shop-gold, .osd-bar-bg {
+          font-family: 'CustomRetroFont', 'Consolas', monospace !important;
+        }
+      `;
+      document.head.appendChild(fontStyleEl);
+
+      const fontFace = new FontFace('CustomRetroFont', `url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}")`);
+      await fontFace.load();
+      document.fonts.add(fontFace);
+      console.log('🔤 [FontLoader] Custom pixel font loaded & applied globally:', detectedFontPath);
+    } catch (e) {
+      console.warn('Font load error:', e);
     }
   }
 
