@@ -595,6 +595,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     settingsModalEl.classList.add('hidden');
   }
 
+  // 초기 상태에서 메뉴 완전 닫힘 보장
+  closeAllMenus();
+
   function openMainMenu() {
     closeAllMenus();
     currentMenuMode = 'MAIN';

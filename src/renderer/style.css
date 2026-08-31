@@ -160,7 +160,15 @@ canvas {
   z-index: 92;
 }
 
-.layer-modal-bg.hidden {
+.hidden,
+.layer-sprite.hidden,
+.layer-modal-bg.hidden,
+.layer-menu-title.hidden,
+.layer-menu-item-0.hidden,
+.layer-menu-item-1.hidden,
+.layer-menu-item-2.hidden,
+.layer-menu-item-3.hidden,
+.layer-menu-item-4.hidden {
   display: none !important;
 }
 
