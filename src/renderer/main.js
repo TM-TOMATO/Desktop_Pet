@@ -12,39 +12,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 }
 
 (async () => {
-  // 1. PixiJS App 초기화 (LCD 화면 105x143 px, center=(115,94) 확정)
-  const app = new PIXI.Application();
-  await app.init({
-    width: 105,
-    height: 143,
-    backgroundAlpha: 0,
-    antialias: false,
-    roundPixels: true
-  });
-
-  const containerEl = document.getElementById('canvas-container');
-  containerEl.appendChild(app.canvas);
-
-  // 2. 세이브 데이터 로드 및 PetStats 초기화
-  let saveData = null;
-  if (window.electronAPI && window.electronAPI.loadData) {
-    saveData = await window.electronAPI.loadData();
-  }
-
-  const petStats = new PetStats(saveData ? saveData.petInfo : {});
-
-  // 3. 펫 객체 및 상태 머신 생성
-  const pet = new PetContainer(app);
-  pet.setBounds(16, 89, 20, 137);
-  pet.x = 52;
-  pet.y = 137;
-  pet.setBaseScale(1.0);
-  app.stage.addChild(pet);
-
-  const stateMachine = new StateMachine(pet);
-  const activeFoods = [];
-
-  // 4. UI 및 레이어 참조
+  // 1. UI 및 레이어 참조
   const appScalerEl = document.getElementById('app-scaler');
   const screenGlassEl = document.getElementById('screen-glass');
   const displayClicksEl = document.getElementById('display-clicks');
@@ -81,6 +49,282 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const miniPanel = document.getElementById('mini-panel');
   const miniCanvasContainer = document.getElementById('mini-canvas-container');
 
+  // 2. 🖼️ 통합 256x256 레이어 스프라이트 로더 & 상태 스왑
+  const dpad8WayTextures = {};
+  const powerTextures = {};
+  const actionATextures = {};
+  const actionBTextures = {};
+  const dpadKeyState = { up: false, down: false, left: false, right: false };
+  let hasModalSprite = false;
+
+  const customMenuSprites = {
+    cursor: null,
+    labels: {}
+  };
+
+  function findSpriteFile(fileNames) {
+    const names = Array.isArray(fileNames) ? fileNames : [fileNames];
+    const subDirs = ['assets/sprites', 'assets/fonts', 'assets/ui', 'assets'];
+    for (const fileName of names) {
+      for (const sub of subDirs) {
+        const candidates = [
+          path.join(process.cwd(), sub, fileName),
+          path.join(process.cwd(), 'resources', sub, fileName),
+          path.join(process.cwd(), 'resources/app.asar', sub, fileName),
+          path.join(process.resourcesPath || '', sub, fileName),
+          path.join(__dirname, '../../', sub, fileName),
+          path.join(__dirname, '../../../', sub, fileName),
+          'C:/Users/user/OneDrive/Desktop/Desktop_Pet/' + sub + '/' + fileName
+        ];
+        for (const p of candidates) {
+          if (fs.existsSync(p)) return p;
+        }
+      }
+    }
+    return null;
+  }
+
+  function loadAllSpritesAndFonts() {
+    // 1) 케이스 배경 (console_case_bg.png)
+    const casePath = findSpriteFile('console_case_bg.png');
+    if (casePath && layerCaseBg) {
+      try {
+        const buf = fs.readFileSync(casePath);
+        layerCaseBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+        console.log('🎮 [CaseLoader] console_case_bg.png loaded.');
+      } catch (e) {}
+    }
+
+    // 2) LCD 스크린 배경 (screen_bg.png)
+    const screenBgPath = findSpriteFile('screen_bg.png');
+    if (screenBgPath && layerScreenBg) {
+      try {
+        const buf = fs.readFileSync(screenBgPath);
+        layerScreenBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+        console.log('📺 [ScreenLoader] screen_bg.png loaded.');
+      } catch (e) {}
+    }
+
+    // 2.5) OSD 모달/메뉴 스프라이트 배경 (ui_modal_bg.png)
+    const modalBgPath = findSpriteFile(['ui_modal_bg.png', 'modal_bg.png', 'menu_bg.png']);
+    if (modalBgPath && layerModalBg) {
+      try {
+        const buf = fs.readFileSync(modalBgPath);
+        layerModalBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+        document.body.classList.add('has-modal-sprite');
+        hasModalSprite = true;
+        console.log('🖼️ [ModalLoader] ui_modal_bg.png loaded.');
+      } catch (e) {}
+    }
+
+    // 3) 8방향 십자키 스프라이트 매핑
+    const dpad8WayFiles = {
+      neutral: ['btn_dpad.png'],
+      up: ['btn_dpad_pressed_up.png', 'btn_dpad_up_pressed.png'],
+      down: ['btn_dpad_pressed_down.png', 'btn_dpad_down_pressed.png'],
+      left: ['btn_dpad_pressed_left.png', 'btn_dpad_left_pressed.png'],
+      right: ['btn_dpad_pressed_right.png', 'btn_dpad_right_pressed.png'],
+      up_left: ['btn_dpad_pressed_up_left.png', 'btn_dpad_up_left_pressed.png', 'btn_dpad_pressed_ul.png'],
+      up_right: ['btn_dpad_pressed_up_right.png', 'btn_dpad_up_right_pressed.png', 'btn_dpad_pressed_ur.png'],
+      down_left: ['btn_dpad_pressed_down_left.png', 'btn_dpad_down_left_pressed.png', 'btn_dpad_pressed_dl.png'],
+      down_right: ['btn_dpad_pressed_down_right.png', 'btn_dpad_down_right_pressed.png', 'btn_dpad_pressed_dr.png']
+    };
+
+    for (const [dirKey, candidateFiles] of Object.entries(dpad8WayFiles)) {
+      const filePath = findSpriteFile(candidateFiles);
+      if (filePath) {
+        try {
+          const buf = fs.readFileSync(filePath);
+          dpad8WayTextures[dirKey] = `data:image/png;base64,${buf.toString('base64')}`;
+        } catch (e) {}
+      }
+    }
+
+    if (dpad8WayTextures.neutral && layerDpad) {
+      layerDpad.style.backgroundImage = `url("${dpad8WayTextures.neutral}")`;
+    }
+
+    // 4) 전원 버튼 스프라이트 매핑
+    const powerNorm = findSpriteFile('btn_power.png');
+    const powerPress = findSpriteFile('btn_power_pressed.png');
+    if (powerNorm) {
+      powerTextures.normal = `data:image/png;base64,${fs.readFileSync(powerNorm).toString('base64')}`;
+      if (layerPower) layerPower.style.backgroundImage = `url("${powerTextures.normal}")`;
+    }
+    if (powerPress) {
+      powerTextures.pressed = `data:image/png;base64,${fs.readFileSync(powerPress).toString('base64')}`;
+    }
+
+    // 5) A / B 버튼 스프라이트 매핑
+    const aNorm = findSpriteFile('btn_action_a.png');
+    const aPress = findSpriteFile('btn_action_a_pressed.png');
+    if (aNorm) {
+      actionATextures.normal = `data:image/png;base64,${fs.readFileSync(aNorm).toString('base64')}`;
+      if (layerActionA) layerActionA.style.backgroundImage = `url("${actionATextures.normal}")`;
+    }
+    if (aPress) {
+      actionATextures.pressed = `data:image/png;base64,${fs.readFileSync(aPress).toString('base64')}`;
+    }
+
+    const bNorm = findSpriteFile('btn_action_b.png');
+    const bPress = findSpriteFile('btn_action_b_pressed.png');
+    if (bNorm) {
+      actionBTextures.normal = `data:image/png;base64,${fs.readFileSync(bNorm).toString('base64')}`;
+      if (layerActionB) layerActionB.style.backgroundImage = `url("${actionBTextures.normal}")`;
+    }
+    if (bPress) {
+      actionBTextures.pressed = `data:image/png;base64,${fs.readFileSync(bPress).toString('base64')}`;
+    }
+
+    // 6) 🔤 커스텀 폰트 자동 감지 및 로드
+    function findAnyFontFile() {
+      const fontNames = [
+        'pixel_font.ttf', 'custom_font.ttf', 'retro_font.ttf',
+        'custom_font.woff2', 'custom_font.otf', 'Galmuri11.ttf', 'DungGeunMo.ttf'
+      ];
+      for (const name of fontNames) {
+        const p = findSpriteFile(name);
+        if (p) return p;
+      }
+      const searchDirs = [
+        path.join(process.cwd(), 'assets/fonts'),
+        path.join(process.cwd(), 'assets/sprites'),
+        path.join(process.cwd(), 'resources/assets/fonts'),
+        'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/fonts',
+        'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites'
+      ];
+      for (const d of searchDirs) {
+        if (fs.existsSync(d)) {
+          const files = fs.readdirSync(d);
+          for (const f of files) {
+            if (/\.(ttf|woff2|otf)$/i.test(f)) return path.join(d, f);
+          }
+        }
+      }
+      return null;
+    }
+
+    const detectedFontPath = findAnyFontFile();
+    if (detectedFontPath) {
+      try {
+        const fontData = fs.readFileSync(detectedFontPath);
+        const fontBase64 = fontData.toString('base64');
+        const fontExt = path.extname(detectedFontPath).toLowerCase().replace('.', '');
+        const fontFormat = fontExt === 'woff2' ? 'woff2' : (fontExt === 'otf' ? 'opentype' : 'truetype');
+
+        let fontStyleEl = document.getElementById('dynamic-custom-font');
+        if (!fontStyleEl) {
+          fontStyleEl = document.createElement('style');
+          fontStyleEl.id = 'dynamic-custom-font';
+          document.head.appendChild(fontStyleEl);
+        }
+        fontStyleEl.textContent = `
+          @font-face {
+            font-family: 'CustomRetroFont';
+            src: url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}") format('${fontFormat}');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+          }
+          *, html, body, button, input, select, textarea,
+          .osd-title, .osd-items, .osd-item, .osd-hint, .osd-stat-row, .osd-setting-row,
+          .screen-hud-strip, .coin-popup, .osd-shop-row, .osd-shop-gold, .osd-bar-bg {
+            font-family: 'CustomRetroFont', 'Consolas', 'Courier New', monospace !important;
+            -webkit-font-smoothing: none !important;
+            -moz-osx-font-smoothing: grayscale !important;
+            text-rendering: optimizeSpeed !important;
+          }
+        `;
+
+        try {
+          const fontFace = new FontFace('CustomRetroFont', `url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}")`);
+          fontFace.load().then(f => document.fonts.add(f)).catch(e => {});
+        } catch (e) {}
+
+        console.log('🔤 [FontLoader] Custom pixel font loaded & applied globally:', detectedFontPath);
+      } catch (e) {
+        console.warn('Font load error:', e);
+      }
+    }
+
+    // 8) 🎯 커스텀 메뉴 커서 & 라벨 스프라이트
+    const cursorPath = findSpriteFile(['ui_cursor.png', 'menu_cursor.png', 'cursor.png']);
+    if (cursorPath) {
+      customMenuSprites.cursor = `data:image/png;base64,${fs.readFileSync(cursorPath).toString('base64')}`;
+    }
+
+    const labelKeys = ['feed', 'play', 'shop', 'status', 'config'];
+    for (const key of labelKeys) {
+      const normP = findSpriteFile([`menu_label_${key}.png`, `label_${key}.png`]);
+      if (normP) {
+        customMenuSprites.labels[key] = `data:image/png;base64,${fs.readFileSync(normP).toString('base64')}`;
+      }
+      const actP = findSpriteFile([`menu_label_${key}_active.png`, `label_${key}_active.png`]);
+      if (actP) {
+        customMenuSprites.labels[key + '_active'] = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
+      }
+    }
+  }
+
+  // 앱 시작 즉시 배경/스프라이트/폰트 로드
+  loadAllSpritesAndFonts();
+
+  function reloadAllAssets() {
+    loadAllSpritesAndFonts();
+    createCoinPopup(undefined, undefined, '에셋 갱신!');
+  }
+
+  function update8WayDpadVisual() {
+    if (!layerDpad) return;
+    let dir = 'neutral';
+    if (dpadKeyState.up && dpadKeyState.left) dir = 'up_left';
+    else if (dpadKeyState.up && dpadKeyState.right) dir = 'up_right';
+    else if (dpadKeyState.down && dpadKeyState.left) dir = 'down_left';
+    else if (dpadKeyState.down && dpadKeyState.right) dir = 'down_right';
+    else if (dpadKeyState.up) dir = 'up';
+    else if (dpadKeyState.down) dir = 'down';
+    else if (dpadKeyState.left) dir = 'left';
+    else if (dpadKeyState.right) dir = 'right';
+
+    if (dpad8WayTextures[dir]) {
+      layerDpad.style.backgroundImage = `url("${dpad8WayTextures[dir]}")`;
+    } else if (dpad8WayTextures['neutral']) {
+      layerDpad.style.backgroundImage = `url("${dpad8WayTextures['neutral']}")`;
+    }
+  }
+
+  // 3. PixiJS App 초기화 (LCD 화면 105x143 px)
+  const app = new PIXI.Application();
+  await app.init({
+    width: 105,
+    height: 143,
+    backgroundAlpha: 0,
+    antialias: false,
+    roundPixels: true
+  });
+
+  const containerEl = document.getElementById('canvas-container');
+  containerEl.appendChild(app.canvas);
+
+  // 4. 세이브 데이터 로드 및 PetStats 초기화
+  let saveData = null;
+  if (window.electronAPI && window.electronAPI.loadData) {
+    saveData = await window.electronAPI.loadData();
+  }
+
+  const petStats = new PetStats(saveData ? saveData.petInfo : {});
+
+  // 5. 펫 객체 및 상태 머신 생성
+  const pet = new PetContainer(app);
+  pet.setBounds(16, 89, 20, 137);
+  pet.x = 52;
+  pet.y = 137;
+  pet.setBaseScale(1.0);
+  app.stage.addChild(pet);
+
+  const stateMachine = new StateMachine(pet);
+  const activeFoods = [];
+
   // 🎮 게임기 전체 크기 조작 함수 (256x256 기준 스케일, 기본 200% = 512x512 px)
   const BASE_CONSOLE_W = 256;
   const BASE_CONSOLE_H = 256;
@@ -98,124 +342,112 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     petStats.consoleScale = scaleVal;
   }
 
-  // 기본 2.0배 (512x512 px)
-  const savedConsoleScale = (saveData && saveData.petInfo && saveData.petInfo.consoleScale) || 2.0;
-  scaleRange.value = Math.round(savedConsoleScale * 100);
-  scaleValueLabel.textContent = `${Math.round(savedConsoleScale * 100)}%`;
-  setConsoleScale(savedConsoleScale);
-
-  scaleRange.addEventListener('input', () => {
-    const pct = parseInt(scaleRange.value, 10);
-    scaleValueLabel.textContent = `${pct}%`;
-    setConsoleScale(pct / 100);
-  });
-
-  const consoleCasing = document.getElementById('console-casing');
-
-  hitboxToggle.addEventListener('change', () => {
-    pet.setHitboxVisible(hitboxToggle.checked);
-    if (hitboxToggle.checked) {
-      consoleCasing.classList.add('hitbox-debug');
-    } else {
-      consoleCasing.classList.remove('hitbox-debug');
-    }
-  });
-
-  // ── 항상 위에 고정 토글 ──────────────────────────────────
-  const savedAlwaysOnTop = (saveData && saveData.petInfo && saveData.petInfo.alwaysOnTop !== undefined)
-    ? saveData.petInfo.alwaysOnTop : true;
-  alwaysOnTopToggle.checked = savedAlwaysOnTop;
-  if (window.electronAPI) window.electronAPI.setAlwaysOnTop(savedAlwaysOnTop);
-
-  alwaysOnTopToggle.addEventListener('change', () => {
-    if (window.electronAPI) window.electronAPI.setAlwaysOnTop(alwaysOnTopToggle.checked);
-    petStats.alwaysOnTop = alwaysOnTopToggle.checked;
-  });
-
-  if (window.electronAPI && window.electronAPI.onAlwaysOnTopChanged) {
-    window.electronAPI.onAlwaysOnTopChanged((val) => {
-      alwaysOnTopToggle.checked = val;
+  if (scaleRange) {
+    scaleRange.addEventListener('input', (e) => {
+      const scalePercent = parseInt(e.target.value, 10);
+      scaleValueLabel.innerText = `${scalePercent}%`;
+      setConsoleScale(scalePercent / 100);
     });
   }
 
-  // ── 📦 미니 모드 ──────────────────────────────────────────
+  const initScale = petStats.consoleScale || 2.0;
+  if (scaleRange) scaleRange.value = Math.round(initScale * 100);
+  if (scaleValueLabel) scaleValueLabel.innerText = `${Math.round(initScale * 100)}%`;
+  setConsoleScale(initScale);
+
+  if (hitboxToggle) {
+    hitboxToggle.addEventListener('change', (e) => {
+      pet.toggleHitbox(e.target.checked);
+      if (e.target.checked) {
+        document.body.classList.add('hitbox-debug');
+      } else {
+        document.body.classList.remove('hitbox-debug');
+      }
+    });
+  }
+
+  if (alwaysOnTopToggle) {
+    alwaysOnTopToggle.addEventListener('change', (e) => {
+      if (window.electronAPI && window.electronAPI.setAlwaysOnTop) {
+        window.electronAPI.setAlwaysOnTop(e.target.checked);
+      }
+    });
+  }
+
+  if (window.electronAPI && window.electronAPI.onAlwaysOnTopChanged) {
+    window.electronAPI.onAlwaysOnTopChanged((val) => {
+      if (alwaysOnTopToggle) alwaysOnTopToggle.checked = val;
+    });
+  }
+
   let isMiniMode = false;
+  let isMiniDragging = false;
+  let miniDragOffset = { x: 0, y: 0 };
+  let miniWinStart = { x: 0, y: 0 };
 
   function activateMiniMode() {
     isMiniMode = true;
-    document.body.classList.add('mini-mode');
+    if (miniModeToggle) miniModeToggle.checked = true;
+    appScalerEl.classList.add('hidden');
     miniPanel.classList.remove('hidden');
-    miniModeToggle.checked = true;
-
-    if (app.canvas && miniCanvasContainer) {
-      miniCanvasContainer.appendChild(app.canvas);
-      app.renderer.resize(128, 110);
+    miniCanvasContainer.appendChild(app.canvas);
+    app.renderer.resize(100, 100);
+    pet.setBounds(10, 80, 10, 95);
+    pet.x = 50;
+    pet.y = 95;
+    if (window.electronAPI && window.electronAPI.setMiniMode) {
+      window.electronAPI.setMiniMode(true);
     }
-
-    pet.setBounds(15, 113, 30, 105);
-    pet.x = 64;
-    pet.y = 105;
-    pet.setBaseScale(1.0);
-
-    if (window.electronAPI) window.electronAPI.setMiniMode(true);
   }
 
   function deactivateMiniMode() {
     isMiniMode = false;
-    document.body.classList.remove('mini-mode');
+    if (miniModeToggle) miniModeToggle.checked = false;
     miniPanel.classList.add('hidden');
-    miniModeToggle.checked = false;
-
-    if (app.canvas && containerEl) {
-      containerEl.appendChild(app.canvas);
-      app.renderer.resize(105, 143);
-    }
-
+    appScalerEl.classList.remove('hidden');
+    containerEl.appendChild(app.canvas);
+    app.renderer.resize(105, 143);
     pet.setBounds(16, 89, 20, 137);
     pet.x = 52;
     pet.y = 137;
-    pet.setBaseScale(1.0);
-
-    if (window.electronAPI) window.electronAPI.setMiniMode(false);
+    setConsoleScale(petStats.consoleScale || 2.0);
+    if (window.electronAPI && window.electronAPI.setMiniMode) {
+      window.electronAPI.setMiniMode(false);
+    }
   }
 
-  miniModeToggle.addEventListener('change', () => {
-    if (miniModeToggle.checked) activateMiniMode();
-    else deactivateMiniMode();
+  if (miniModeToggle) {
+    miniModeToggle.addEventListener('change', (e) => {
+      if (e.target.checked) activateMiniMode();
+      else deactivateMiniMode();
+    });
+  }
+
+  const miniExpandBtn = document.getElementById('mini-expand-btn');
+  const miniCloseBtn = document.getElementById('mini-close-btn');
+
+  if (miniExpandBtn) miniExpandBtn.addEventListener('click', () => deactivateMiniMode());
+  if (miniCloseBtn) miniCloseBtn.addEventListener('click', () => {
+    if (window.electronAPI && window.electronAPI.quitApp) window.electronAPI.quitApp();
   });
 
-  document.getElementById('mini-btn-power').addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (window.electronAPI) window.electronAPI.quitApp();
-  });
-
-  document.getElementById('mini-btn-expand').addEventListener('click', (e) => {
-    e.stopPropagation();
-    deactivateMiniMode();
-  });
-
-  // 미니 패널 드래그 이동
-  let isMiniDragging = false;
-  let miniDragStart = { x: 0, y: 0 };
-  let miniWinStart = { x: 0, y: 0 };
-
-  miniPanel.addEventListener('mousedown', async (e) => {
-    if (e.target.closest('button')) return;
-    if (e.button !== 0) return;
-    isMiniDragging = true;
-    miniDragStart = { x: e.screenX, y: e.screenY };
-    if (window.electronAPI) {
-      miniWinStart = await window.electronAPI.getWindowPosition();
-    }
-  });
+  const miniHeader = document.querySelector('.mini-header');
+  if (miniHeader) {
+    miniHeader.addEventListener('mousedown', async (e) => {
+      if (e.target.tagName === 'BUTTON') return;
+      isMiniDragging = true;
+      miniDragOffset = { x: e.screenX, y: e.screenY };
+      if (window.electronAPI && window.electronAPI.getWindowPosition) {
+        miniWinStart = await window.electronAPI.getWindowPosition();
+      }
+    });
+  }
 
   window.addEventListener('mousemove', (e) => {
-    if (isMiniDragging) {
-      const dx = e.screenX - miniDragStart.x;
-      const dy = e.screenY - miniDragStart.y;
-      if (window.electronAPI) {
-        window.electronAPI.setWindowPosition(miniWinStart.x + dx, miniWinStart.y + dy);
-      }
+    if (isMiniDragging && window.electronAPI && window.electronAPI.setWindowPosition) {
+      const dx = e.screenX - miniDragOffset.x;
+      const dy = e.screenY - miniDragOffset.y;
+      window.electronAPI.setWindowPosition(Math.round(miniWinStart.x + dx), Math.round(miniWinStart.y + dy));
     }
   });
 
@@ -251,12 +483,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   updateHUD(petStats.getSnapshot());
 
-  // 5. 🖱️ & ⌨️ 컴퓨터 화면 전체(글로벌) 클릭 & 키보드 타자 인식 클리커 엔진
+  // 6. 🖱️ & ⌨️ 컴퓨터 화면 전체(글로벌) 클릭 & 키보드 타자 인식 클리커 엔진
   let lastClickTime = 0;
   function triggerPetClick(posX, posY) {
     if (currentMenuMode !== 'NONE') return;
     const now = Date.now();
-    if (now - lastClickTime < 60) return; // 60ms 미만 연속 입력 방지 (꾹 누름 버그 해결)
+    if (now - lastClickTime < 60) return;
     lastClickTime = now;
 
     petStats.clickPet(1);
@@ -314,11 +546,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     });
   }
 
-  // 6. 🎮 레트로 OSD 메뉴 컨트롤러
+  // 7. 🎮 레트로 OSD 메뉴 컨트롤러
   let currentMenuMode = 'NONE';
   let menuCursorIndex = 0;
   let configCursorIndex = 0;
-  let hasModalSprite = false;
+  let isDevMode = false;
 
   const mainMenuItems = [
     { label: 'FEED  (음식)', action: () => openFeedMenu() },
@@ -355,11 +587,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     osdMenuEl.classList.remove('hidden');
     renderMainMenuCursor();
   }
-
-  const customMenuSprites = {
-    cursor: null,
-    labels: {}
-  };
 
   function renderMainMenuCursor() {
     const itemEls = osdMenuEl.querySelectorAll('.osd-item');
@@ -410,28 +637,38 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     availableFoods.forEach((food, idx) => {
       const row = document.createElement('div');
       row.className = `osd-item ${idx === menuCursorIndex ? 'active' : ''}`;
-      row.innerText = `${idx === menuCursorIndex ? '▶ ' : '  '}${food.label} [x${food.count}]`;
+      row.innerHTML = `${idx === menuCursorIndex ? '▶' : '&nbsp;&nbsp;'} ${food.label} <b style="float:right;">${food.count}개</b>`;
+      row.addEventListener('click', () => {
+        menuCursorIndex = idx;
+        feedSelectedItem();
+      });
       feedItemListEl.appendChild(row);
     });
   }
 
   function feedSelectedItem() {
-    const availableFoods = ['apple', 'meat', 'fish', 'candy'];
-    const selectedKey = availableFoods[menuCursorIndex];
+    const inv = petStats.inventory || {};
+    const availableFoods = [
+      { key: 'apple', fullness: 20, happiness: 5 },
+      { key: 'meat', fullness: 50, happiness: 10 },
+      { key: 'fish', fullness: 35, happiness: 15 },
+      { key: 'candy', fullness: 10, happiness: 40 }
+    ];
 
-    if (petStats.useItem(selectedKey)) {
-      const food = new FoodItem(app, pet.x + (pet.walkDirection * 20), 130);
-      app.stage.addChild(food);
-      activeFoods.push(food);
-
+    const targetFood = availableFoods[menuCursorIndex];
+    if (targetFood && inv[targetFood.key] > 0) {
+      petStats.useItem(targetFood.key);
+      petStats.feed(targetFood.fullness, targetFood.happiness);
       stateMachine.changeState(PetState.EATING);
-      const restoreMap = { apple: 20, meat: 50, fish: 35, candy: 10 };
-      setTimeout(() => {
-        food.consume();
-        petStats.feed(restoreMap[selectedKey] || 20);
-      }, 1400);
 
-      closeAllMenus();
+      const foodDrop = new FoodItem(app, targetFood.key, pet.x, 20);
+      activeFoods.push(foodDrop);
+      app.stage.addChild(foodDrop);
+
+      createCoinPopup(undefined, undefined, '냠냠!');
+      renderFeedMenuItems();
+    } else {
+      createCoinPopup(undefined, undefined, '음식 없음');
     }
   }
 
@@ -481,8 +718,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     statusModalEl.classList.remove('hidden');
   }
 
-  let isDevMode = false;
-
   function setDevMode(enabled, notify = true) {
     isDevMode = enabled;
     const devRows = settingsModalEl.querySelectorAll('.dev-only-row');
@@ -490,7 +725,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       if (isDevMode) r.classList.remove('hidden');
       else r.classList.add('hidden');
     });
-    if (!isDevMode && hitboxToggle.checked) {
+    if (!isDevMode && hitboxToggle && hitboxToggle.checked) {
       hitboxToggle.checked = false;
       hitboxToggle.dispatchEvent(new Event('change'));
     }
@@ -523,7 +758,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   }
 
-  // 7. 🔘 D-Pad & A/B 버튼 액션
+  // 8. 🔘 D-Pad & A/B 버튼 액션
   function handleButtonActionA() {
     if (currentMenuMode === 'NONE') {
       openMainMenu();
@@ -594,252 +829,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   }
 
-  // 8. 🖼️ 통합 256x256 레이어 스프라이트 로더 & 상태 스왑
-  const dpad8WayTextures = {};
-  const powerTextures = {};
-  const actionATextures = {};
-  const actionBTextures = {};
-  const dpadKeyState = { up: false, down: false, left: false, right: false };
-
-  async function reloadAllAssets() {
-    await loadAllSpritesAndFonts();
-    createCoinPopup(undefined, undefined, '에셋 갱신!');
-  }
-
-  async function loadAllSpritesAndFonts() {
-    function findSpriteFile(fileNames) {
-    const names = Array.isArray(fileNames) ? fileNames : [fileNames];
-    const subDirs = ['assets/sprites', 'assets/fonts', 'assets/ui', 'assets'];
-    for (const fileName of names) {
-      for (const sub of subDirs) {
-        const candidates = [
-          path.join(process.cwd(), sub, fileName),
-          path.join(process.cwd(), 'resources', sub, fileName),
-          path.join(process.cwd(), 'resources/app.asar', sub, fileName),
-          path.join(process.resourcesPath || '', sub, fileName),
-          path.join(__dirname, '../../', sub, fileName),
-          path.join(__dirname, '../../../', sub, fileName),
-          'C:/Users/user/OneDrive/Desktop/Desktop_Pet/' + sub + '/' + fileName
-        ];
-        for (const p of candidates) {
-          if (fs.existsSync(p)) return p;
-        }
-      }
-    }
-    return null;
-  }
-
-  // 1) 케이스 배경 (console_case_bg.png)
-  const casePath = findSpriteFile('console_case_bg.png');
-  if (casePath && layerCaseBg) {
-    try {
-      const buf = fs.readFileSync(casePath);
-      layerCaseBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
-      console.log('🎮 [CaseLoader] console_case_bg.png loaded.');
-    } catch (e) {}
-  }
-
-  // 2) LCD 스크린 배경 (screen_bg.png)
-  const screenBgPath = findSpriteFile('screen_bg.png');
-  if (screenBgPath && layerScreenBg) {
-    try {
-      const buf = fs.readFileSync(screenBgPath);
-      layerScreenBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
-      console.log('📺 [ScreenLoader] screen_bg.png loaded.');
-    } catch (e) {}
-  }
-
-  // 2.5) OSD 모달/메뉴 스프라이트 배경 (ui_modal_bg.png)
-  const modalBgPath = findSpriteFile(['ui_modal_bg.png', 'modal_bg.png', 'menu_bg.png']);
-  if (modalBgPath && layerModalBg) {
-    try {
-      const buf = fs.readFileSync(modalBgPath);
-      layerModalBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
-      document.body.classList.add('has-modal-sprite');
-      hasModalSprite = true;
-      console.log('🖼️ [ModalLoader] ui_modal_bg.png loaded.');
-    } catch (e) {}
-  }
-
-  // 3) 8방향 십자키 스프라이트 매핑
-  const dpad8WayFiles = {
-    neutral: ['btn_dpad.png'],
-    up: ['btn_dpad_pressed_up.png', 'btn_dpad_up_pressed.png'],
-    down: ['btn_dpad_pressed_down.png', 'btn_dpad_down_pressed.png'],
-    left: ['btn_dpad_pressed_left.png', 'btn_dpad_left_pressed.png'],
-    right: ['btn_dpad_pressed_right.png', 'btn_dpad_right_pressed.png'],
-    up_left: ['btn_dpad_pressed_up_left.png', 'btn_dpad_up_left_pressed.png', 'btn_dpad_pressed_ul.png'],
-    up_right: ['btn_dpad_pressed_up_right.png', 'btn_dpad_up_right_pressed.png', 'btn_dpad_pressed_ur.png'],
-    down_left: ['btn_dpad_pressed_down_left.png', 'btn_dpad_down_left_pressed.png', 'btn_dpad_pressed_dl.png'],
-    down_right: ['btn_dpad_pressed_down_right.png', 'btn_dpad_down_right_pressed.png', 'btn_dpad_pressed_dr.png']
-  };
-
-  for (const [dirKey, candidateFiles] of Object.entries(dpad8WayFiles)) {
-    const filePath = findSpriteFile(candidateFiles);
-    if (filePath) {
-      try {
-        const buf = fs.readFileSync(filePath);
-        dpad8WayTextures[dirKey] = `data:image/png;base64,${buf.toString('base64')}`;
-      } catch (e) {}
-    }
-  }
-
-  function update8WayDpadVisual() {
-    if (!layerDpad) return;
-    let dir = 'neutral';
-    if (dpadKeyState.up && dpadKeyState.left) dir = 'up_left';
-    else if (dpadKeyState.up && dpadKeyState.right) dir = 'up_right';
-    else if (dpadKeyState.down && dpadKeyState.left) dir = 'down_left';
-    else if (dpadKeyState.down && dpadKeyState.right) dir = 'down_right';
-    else if (dpadKeyState.up) dir = 'up';
-    else if (dpadKeyState.down) dir = 'down';
-    else if (dpadKeyState.left) dir = 'left';
-    else if (dpadKeyState.right) dir = 'right';
-
-    if (dpad8WayTextures[dir]) {
-      layerDpad.style.backgroundImage = `url("${dpad8WayTextures[dir]}")`;
-    } else if (dpad8WayTextures['neutral']) {
-      layerDpad.style.backgroundImage = `url("${dpad8WayTextures['neutral']}")`;
-    }
-  }
-
-  if (dpad8WayTextures.neutral && layerDpad) {
-    layerDpad.style.backgroundImage = `url("${dpad8WayTextures.neutral}")`;
-  }
-
-  // 4) 전원 버튼 스프라이트 매핑
-  const powerNorm = findSpriteFile('btn_power.png');
-  const powerPress = findSpriteFile('btn_power_pressed.png');
-  if (powerNorm) {
-    powerTextures.normal = `data:image/png;base64,${fs.readFileSync(powerNorm).toString('base64')}`;
-    if (layerPower) layerPower.style.backgroundImage = `url("${powerTextures.normal}")`;
-  }
-  if (powerPress) {
-    powerTextures.pressed = `data:image/png;base64,${fs.readFileSync(powerPress).toString('base64')}`;
-  }
-
-  // 5) A / B 버튼 스프라이트 매핑
-  const aNorm = findSpriteFile('btn_action_a.png');
-  const aPress = findSpriteFile('btn_action_a_pressed.png');
-  if (aNorm) {
-    actionATextures.normal = `data:image/png;base64,${fs.readFileSync(aNorm).toString('base64')}`;
-    if (layerActionA) layerActionA.style.backgroundImage = `url("${actionATextures.normal}")`;
-  }
-  if (aPress) {
-    actionATextures.pressed = `data:image/png;base64,${fs.readFileSync(aPress).toString('base64')}`;
-  }
-
-  const bNorm = findSpriteFile('btn_action_b.png');
-  const bPress = findSpriteFile('btn_action_b_pressed.png');
-  if (bNorm) {
-    actionBTextures.normal = `data:image/png;base64,${fs.readFileSync(bNorm).toString('base64')}`;
-    if (layerActionB) layerActionB.style.backgroundImage = `url("${actionBTextures.normal}")`;
-  }
-  if (bPress) {
-    actionBTextures.pressed = `data:image/png;base64,${fs.readFileSync(bPress).toString('base64')}`;
-  }
-
-  // 6) 🔤 커스텀 폰트 자동 감지 및 로드
-  function findAnyFontFile() {
-    const fontNames = [
-      'pixel_font.ttf', 'custom_font.ttf', 'retro_font.ttf',
-      'custom_font.woff2', 'custom_font.otf', 'Galmuri11.ttf', 'DungGeunMo.ttf'
-    ];
-    for (const name of fontNames) {
-      const p = findSpriteFile(name);
-      if (p) return p;
-    }
-    // 디렉토리 내 임의의 폰트 파일 탐색
-    const searchDirs = [
-      path.join(process.cwd(), 'assets/fonts'),
-      path.join(process.cwd(), 'assets/sprites'),
-      path.join(process.cwd(), 'resources/assets/fonts'),
-      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/fonts',
-      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites'
-    ];
-    for (const d of searchDirs) {
-      if (fs.existsSync(d)) {
-        const files = fs.readdirSync(d);
-        for (const f of files) {
-          if (/\.(ttf|woff2|otf)$/i.test(f)) return path.join(d, f);
-        }
-      }
-    }
-    return null;
-  }
-
-  const detectedFontPath = findAnyFontFile();
-  if (detectedFontPath) {
-    try {
-      const fontData = fs.readFileSync(detectedFontPath);
-      const fontBase64 = fontData.toString('base64');
-      const fontExt = path.extname(detectedFontPath).toLowerCase().replace('.', '');
-      const fontFormat = fontExt === 'woff2' ? 'woff2' : (fontExt === 'otf' ? 'opentype' : 'truetype');
-
-      const fontStyleEl = document.createElement('style');
-      fontStyleEl.id = 'dynamic-custom-font';
-      fontStyleEl.textContent = `
-        @font-face {
-          font-family: 'CustomRetroFont';
-          src: url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}") format('${fontFormat}');
-          font-weight: normal;
-          font-style: normal;
-          font-display: swap;
-        }
-        *, html, body, button, input, select, textarea,
-        .osd-title, .osd-items, .osd-item, .osd-hint, .osd-stat-row, .osd-setting-row,
-        .lcd-counter-display, .coin-popup, .osd-shop-row, .osd-shop-gold, .osd-bar-bg {
-          font-family: 'CustomRetroFont', 'Consolas', 'Courier New', monospace !important;
-          -webkit-font-smoothing: none !important;
-          -moz-osx-font-smoothing: grayscale !important;
-          text-rendering: optimizeSpeed !important;
-        }
-      `;
-      document.head.appendChild(fontStyleEl);
-
-      const fontFace = new FontFace('CustomRetroFont', `url("data:font/${fontExt};charset=utf-8;base64,${fontBase64}")`);
-      await fontFace.load();
-      document.fonts.add(fontFace);
-      console.log('🔤 [FontLoader] Custom pixel font loaded & applied globally:', detectedFontPath);
-    } catch (e) {
-      console.warn('Font load error:', e);
-    }
-  }
-
-  // 7) 📟 상단 HUD 배경 바 (hud_strip_bg.png / ui_top_strip.png)
-  const hudBgPath = findSpriteFile(['hud_strip_bg.png', 'ui_top_strip.png', 'top_strip_bg.png']);
-  const topStripEl = document.querySelector('.console-top-strip');
-  if (hudBgPath && topStripEl) {
-    try {
-      const buf = fs.readFileSync(hudBgPath);
-      topStripEl.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
-      topStripEl.style.backgroundSize = 'contain';
-      topStripEl.style.backgroundRepeat = 'no-repeat';
-      console.log('📟 [HUDLoader] hud_strip_bg.png loaded.');
-    } catch (e) {}
-  }
-
-  // 8) 🎯 커스텀 메뉴 커서 & 라벨 스프라이트
-  const cursorPath = findSpriteFile(['ui_cursor.png', 'menu_cursor.png', 'cursor.png']);
-  if (cursorPath) {
-    customMenuSprites.cursor = `data:image/png;base64,${fs.readFileSync(cursorPath).toString('base64')}`;
-  }
-
-  const labelKeys = ['feed', 'play', 'shop', 'status', 'config'];
-  for (const key of labelKeys) {
-    const normP = findSpriteFile([`menu_label_${key}.png`, `label_${key}.png`]);
-    if (normP) {
-      customMenuSprites.labels[key] = `data:image/png;base64,${fs.readFileSync(normP).toString('base64')}`;
-    }
-    const actP = findSpriteFile([`menu_label_${key}_active.png`, `label_${key}_active.png`]);
-    if (actP) {
-      customMenuSprites.labels[key + '_active'] = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
-    }
-  }
-  }
-
-  await loadAllSpritesAndFonts();
-
   // 9. 🔘 히트존 마우스 이벤트 바인딩
   function bindHitBtn(id, dirKey, actionFn, layerEl, textures) {
     const el = document.getElementById(id);
@@ -880,6 +869,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   bindHitBtn('btn-dpad-right', 'right', () => handleDpadNav('RIGHT'));
   bindHitBtn('btn-action-a', null, () => handleButtonActionA(), layerActionA, actionATextures);
   bindHitBtn('btn-action-b', null, () => handleButtonActionB(), layerActionB, actionBTextures);
+
   // 전원 버튼: 짧은 클릭 -> 전원 끄기 / 10초 꾹 누름 -> 개발자 모드 토글
   let powerLongPressTimer = null;
   let powerLongPressTriggered = false;
