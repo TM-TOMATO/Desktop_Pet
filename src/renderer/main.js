@@ -601,12 +601,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const actionBTextures = {};
   const dpadKeyState = { up: false, down: false, left: false, right: false };
 
-  function reloadAllAssets() {
-    loadAllSpritesAndFonts();
+  async function reloadAllAssets() {
+    await loadAllSpritesAndFonts();
     createCoinPopup(undefined, undefined, '에셋 갱신!');
   }
 
-  function loadAllSpritesAndFonts() {
+  async function loadAllSpritesAndFonts() {
     function findSpriteFile(fileNames) {
     const names = Array.isArray(fileNames) ? fileNames : [fileNames];
     const subDirs = ['assets/sprites', 'assets/fonts', 'assets/ui', 'assets'];
@@ -838,7 +838,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
   }
 
-  loadAllSpritesAndFonts();
+  await loadAllSpritesAndFonts();
 
   // 9. 🔘 히트존 마우스 이벤트 바인딩
   function bindHitBtn(id, dirKey, actionFn, layerEl, textures) {
