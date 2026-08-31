@@ -252,8 +252,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   updateHUD(petStats.getSnapshot());
 
   // 5. 🖱️ & ⌨️ 컴퓨터 화면 전체(글로벌) 클릭 & 키보드 타자 인식 클리커 엔진
+  let lastClickTime = 0;
   function triggerPetClick(posX, posY) {
     if (currentMenuMode !== 'NONE') return;
+    const now = Date.now();
+    if (now - lastClickTime < 60) return; // 60ms 미만 연속 입력 방지 (꾹 누름 버그 해결)
+    lastClickTime = now;
 
     petStats.clickPet(1);
     pet.bouncePhase += 0.4;
@@ -477,6 +481,29 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     statusModalEl.classList.remove('hidden');
   }
 
+  let isDevMode = false;
+
+  function setDevMode(enabled, notify = true) {
+    isDevMode = enabled;
+    const devRows = settingsModalEl.querySelectorAll('.dev-only-row');
+    devRows.forEach(r => {
+      if (isDevMode) r.classList.remove('hidden');
+      else r.classList.add('hidden');
+    });
+    if (!isDevMode && hitboxToggle.checked) {
+      hitboxToggle.checked = false;
+      hitboxToggle.dispatchEvent(new Event('change'));
+    }
+    if (notify) {
+      createCoinPopup(undefined, undefined, isDevMode ? 'DEV ON!' : 'DEV OFF');
+    }
+    renderConfigMenuCursor();
+  }
+
+  function getVisibleConfigRows() {
+    return Array.from(settingsModalEl.querySelectorAll('.osd-setting-row')).filter(r => !r.classList.contains('hidden'));
+  }
+
   function openConfigMenu() {
     closeAllMenus();
     currentMenuMode = 'CONFIG';
@@ -487,14 +514,13 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function renderConfigMenuCursor() {
-    const rows = settingsModalEl.querySelectorAll('.osd-setting-row');
-    rows.forEach((row, idx) => {
-      if (idx === configCursorIndex) {
-        row.classList.add('config-active');
-      } else {
-        row.classList.remove('config-active');
-      }
-    });
+    const rows = getVisibleConfigRows();
+    if (configCursorIndex >= rows.length) configCursorIndex = Math.max(0, rows.length - 1);
+    const allRows = settingsModalEl.querySelectorAll('.osd-setting-row');
+    allRows.forEach(r => r.classList.remove('config-active'));
+    if (rows[configCursorIndex]) {
+      rows[configCursorIndex].classList.add('config-active');
+    }
   }
 
   // 7. 🔘 D-Pad & A/B 버튼 액션
@@ -511,15 +537,18 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     } else if (currentMenuMode === 'STATUS') {
       closeAllMenus();
     } else if (currentMenuMode === 'CONFIG') {
-      if (configCursorIndex === 1) {
-        alwaysOnTopToggle.checked = !alwaysOnTopToggle.checked;
-        alwaysOnTopToggle.dispatchEvent(new Event('change'));
-      } else if (configCursorIndex === 2) {
-        hitboxToggle.checked = !hitboxToggle.checked;
-        hitboxToggle.dispatchEvent(new Event('change'));
-      } else if (configCursorIndex === 3) {
-        miniModeToggle.checked = !miniModeToggle.checked;
-        miniModeToggle.dispatchEvent(new Event('change'));
+      const rows = getVisibleConfigRows();
+      const activeRow = rows[configCursorIndex];
+      if (activeRow) {
+        const toggle = activeRow.querySelector('input[type="checkbox"]');
+        if (toggle) {
+          toggle.checked = !toggle.checked;
+          toggle.dispatchEvent(new Event('change'));
+        }
+        const reloadBtn = activeRow.querySelector('#btn-reload-assets');
+        if (reloadBtn) {
+          reloadAllAssets();
+        }
       }
     }
   }
@@ -548,11 +577,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       if (direction === 'DOWN') menuCursorIndex = (menuCursorIndex + 1) % shopItemsData.length;
       renderShopMenuCursor();
     } else if (currentMenuMode === 'CONFIG') {
+      const rowCount = getVisibleConfigRows().length;
       if (direction === 'UP') {
-        configCursorIndex = (configCursorIndex - 1 + 4) % 4;
+        configCursorIndex = (configCursorIndex - 1 + rowCount) % rowCount;
         renderConfigMenuCursor();
       } else if (direction === 'DOWN') {
-        configCursorIndex = (configCursorIndex + 1) % 4;
+        configCursorIndex = (configCursorIndex + 1) % rowCount;
         renderConfigMenuCursor();
       } else if (direction === 'LEFT' || direction === 'RIGHT') {
         if (configCursorIndex === 0) {
@@ -571,7 +601,13 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const actionBTextures = {};
   const dpadKeyState = { up: false, down: false, left: false, right: false };
 
-  function findSpriteFile(fileNames) {
+  function reloadAllAssets() {
+    loadAllSpritesAndFonts();
+    createCoinPopup(undefined, undefined, '에셋 갱신!');
+  }
+
+  function loadAllSpritesAndFonts() {
+    function findSpriteFile(fileNames) {
     const names = Array.isArray(fileNames) ? fileNames : [fileNames];
     const subDirs = ['assets/sprites', 'assets/fonts', 'assets/ui', 'assets'];
     for (const fileName of names) {
@@ -800,6 +836,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       customMenuSprites.labels[key + '_active'] = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
     }
   }
+  }
+
+  loadAllSpritesAndFonts();
 
   // 9. 🔘 히트존 마우스 이벤트 바인딩
   function bindHitBtn(id, dirKey, actionFn, layerEl, textures) {
@@ -841,9 +880,61 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   bindHitBtn('btn-dpad-right', 'right', () => handleDpadNav('RIGHT'));
   bindHitBtn('btn-action-a', null, () => handleButtonActionA(), layerActionA, actionATextures);
   bindHitBtn('btn-action-b', null, () => handleButtonActionB(), layerActionB, actionBTextures);
-  bindHitBtn('btn-power', null, () => {
-    if (window.electronAPI && window.electronAPI.quitApp) window.electronAPI.quitApp();
-  }, layerPower, powerTextures);
+  // 전원 버튼: 짧은 클릭 -> 전원 끄기 / 10초 꾹 누름 -> 개발자 모드 토글
+  let powerLongPressTimer = null;
+  let powerLongPressTriggered = false;
+
+  const powerBtnEl = document.getElementById('btn-power');
+  if (powerBtnEl) {
+    const startPowerPress = () => {
+      powerLongPressTriggered = false;
+      if (layerPower && powerTextures.pressed) {
+        layerPower.style.backgroundImage = `url("${powerTextures.pressed}")`;
+      }
+      powerLongPressTimer = setTimeout(() => {
+        powerLongPressTriggered = true;
+        setDevMode(!isDevMode, true);
+        if (layerPower && powerTextures.normal) {
+          layerPower.style.backgroundImage = `url("${powerTextures.normal}")`;
+        }
+      }, 10000); // 10초 꾹 누름 감지
+    };
+
+    const cancelPowerPress = () => {
+      if (powerLongPressTimer) {
+        clearTimeout(powerLongPressTimer);
+        powerLongPressTimer = null;
+      }
+      if (layerPower && powerTextures.normal) {
+        layerPower.style.backgroundImage = `url("${powerTextures.normal}")`;
+      }
+    };
+
+    powerBtnEl.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      startPowerPress();
+    });
+
+    powerBtnEl.addEventListener('mouseup', (e) => {
+      e.stopPropagation();
+      const wasTriggered = powerLongPressTriggered;
+      cancelPowerPress();
+      if (!wasTriggered) {
+        if (window.electronAPI && window.electronAPI.quitApp) window.electronAPI.quitApp();
+      }
+    });
+
+    powerBtnEl.addEventListener('mouseleave', cancelPowerPress);
+  }
+
+  // 에셋 새로고침 버튼 핸들러
+  const btnReloadAssets = document.getElementById('btn-reload-assets');
+  if (btnReloadAssets) {
+    btnReloadAssets.addEventListener('click', (e) => {
+      e.stopPropagation();
+      reloadAllAssets();
+    });
+  }
 
   // 10. ⌨️ 키보드 입력 바인딩
   window.addEventListener('keydown', (e) => {

@@ -328,34 +328,50 @@ body.has-modal-sprite .osd-modal-box {
   accent-color: #0f380f;
 }
 
+.dev-only-row.hidden {
+  display: none !important;
+}
+
+.osd-action-btn {
+  background: #0f380f;
+  color: #9bbc0f;
+  border: 1px solid #0f380f;
+  border-radius: 2px;
+  font-size: 8px;
+  padding: 1px 4px;
+  cursor: pointer;
+}
+
+.config-active .osd-action-btn {
+  background: #9bbc0f;
+  color: #0f380f;
+  border-color: #9bbc0f;
+}
+
 /* ========================================================
-   4. 상단 LCD 카운터 스트립 (HUD)
+   4. 메인 화면 상단 LCD 카운터 스트립 (HUD)
    ======================================================== */
-.console-top-strip {
+.screen-hud-strip {
   position: absolute;
-  top: 8px;
-  left: 64px;
-  width: 102px;
+  top: 3px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 900;
+  color: #0f380f;
   z-index: 20;
   pointer-events: none;
+  line-height: 1;
+  letter-spacing: -0.2px;
 }
 
-.lcd-counter-display {
-  background: rgba(135, 155, 105, 0.85);
-  border: 1.5px solid #546838;
-  border-radius: 3px;
-  padding: 1px 4px;
-  display: flex;
+.screen-hud-strip .hud-item {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 7px;
-  font-weight: 900;
-  color: #1a290a;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.counter-divider {
-  opacity: 0.4;
+  gap: 1px;
 }
 
 /* ========================================================

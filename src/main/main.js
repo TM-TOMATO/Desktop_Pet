@@ -54,16 +54,27 @@ function setupGlobalInputHook() {
     const { uIOhook } = require('uiohook-napi');
     uIOhookInstance = uIOhook;
 
+    const activePressedKeys = new Set();
+
     uIOhook.on('click', () => {
       if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
         mainWindow.webContents.send('global-input', { type: 'click' });
       }
     });
 
-    uIOhook.on('keydown', () => {
+    uIOhook.on('keydown', (e) => {
+      const keycode = e.keycode || e.rawcode || 0;
+      if (activePressedKeys.has(keycode)) return; // 꾹 누를 때 발생하는 연속 이벤트 무시
+      activePressedKeys.add(keycode);
+
       if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
         mainWindow.webContents.send('global-input', { type: 'keydown' });
       }
+    });
+
+    uIOhook.on('keyup', (e) => {
+      const keycode = e.keycode || e.rawcode || 0;
+      activePressedKeys.delete(keycode);
     });
 
     uIOhook.start();

@@ -3,23 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Desktop Pet - Retro Console</title>
+  <title>Desktop Pet Console</title>
+  <!-- PixiJS v8 CDN -->
+  <script src="https://pixijs.download/v8.4.1/pixi.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- App Scaler Container (게임기 전체 크기 조절용 래퍼) -->
+  <!-- 0. App Scaler (기본 200% 512x512 px) -->
   <div id="app-scaler">
-
-    <!-- ══════════════════════════════════════════════════
-         미니 모드 패널 (작은 화면 모드)
-    ══════════════════════════════════════════════════ -->
-    <div id="mini-panel" class="mini-panel hidden">
-      <div class="mini-screen" id="mini-canvas-container"></div>
-      <div class="mini-controls">
-        <button class="mini-btn mini-quit-btn" id="mini-btn-power" title="종료">⏻</button>
-        <button class="mini-btn mini-expand-btn" id="mini-btn-expand" title="전체 모드로 전환">⤢</button>
-      </div>
-    </div>
 
     <!-- ══════════════════════════════════════════════════
          통합 256x256 레트로 게임기 본체 (Retro Handheld Console)
@@ -35,6 +26,12 @@
       <!-- 3. LCD 화면 뷰포트 & 캔버스 영역 -->
       <div class="screen-viewport" id="screen-viewport">
         <div class="screen-glass" id="screen-glass">
+          <!-- 메인 화면 상단 LCD 카운터 스트립 (CLK & GOLD) -->
+          <div class="screen-hud-strip" id="screen-hud-strip">
+            <span class="hud-item">CLK:<b id="display-clicks">00000</b></span>
+            <span class="hud-item">GOLD:<b id="display-gold">00000G</b></span>
+          </div>
+
           <!-- PixiJS Canvas Viewport -->
           <div id="canvas-container"></div>
 
@@ -103,7 +100,7 @@
                   <span>&nbsp;&nbsp;🍬 캔디 (+40)</span> <b>40G</b>
                 </div>
               </div>
-              <div class="osd-hint">[A] 구매 | [B] 뒤로</div>
+              <div class="osd-hint">[A] 구매 | [B] 닫기</div>
             </div>
           </div>
 
@@ -123,20 +120,25 @@
                 </label>
               </div>
               <div class="osd-setting-row">
-                <span>히트박스 표시</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="hitbox-toggle" />
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div class="osd-setting-row">
                 <span>작은 화면 모드</span>
                 <label class="toggle-switch">
                   <input type="checkbox" id="mini-mode-toggle" />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
-              <div class="osd-hint">[◀/▶] 크기 | [B] 완료</div>
+              <!-- 개발자 모드 (전원버튼 10초) 시 표시되는 항목 -->
+              <div class="osd-setting-row dev-only-row hidden" id="row-hitbox-toggle">
+                <span>히트박스 표시</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="hitbox-toggle" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="osd-setting-row dev-only-row hidden" id="row-reload-assets">
+                <span>에셋 새로고침</span>
+                <button class="osd-action-btn" id="btn-reload-assets">🔄 실행</button>
+              </div>
+              <div class="osd-hint">[◀/▶] 조절 | [B] 완료</div>
             </div>
           </div>
         </div>
@@ -155,19 +157,10 @@
       <div class="layer-sprite layer-action-a" id="layer-action-a"></div>
       <div class="layer-sprite layer-action-b" id="layer-action-b"></div>
 
-      <!-- 7. 상단 디지털 LCD 스트립 (HUD) -->
-      <div class="console-top-strip">
-        <div class="lcd-counter-display">
-          <span>CLK:<b id="display-clicks">00000</b></span>
-          <span class="counter-divider">|</span>
-          <span>GOLD:<b id="display-gold">00000G</b></span>
-        </div>
-      </div>
-
       <!-- 8. 인터랙티브 클릭 영역 (위치 맞춤형 버튼 히트존) -->
       <div class="hitbox-layer">
         <!-- 전원 버튼 -->
-        <button class="hit-btn hit-power" id="btn-power" title="전원 끄기"></button>
+        <button class="hit-btn hit-power" id="btn-power" title="전원 끄기 (10초 꾹 누르면 개발자 모드)"></button>
         
         <!-- 십자키 4방향 -->
         <button class="hit-btn hit-dpad-up" id="btn-dpad-up" title="위 (Up)"></button>
