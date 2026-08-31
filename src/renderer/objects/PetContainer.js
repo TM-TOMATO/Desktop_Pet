@@ -494,9 +494,12 @@ class PetContainer extends PIXI.Container {
     const maxX = this.bounds ? this.bounds.maxX : 335;
     const groundY = this.bounds ? this.bounds.maxY : 220;
 
-    // 챔버 내부 걷기 이동 물리 (좌우 벽 반사)
+    // 챔버 내부 걷기 이동 물리 (공중에 있을 때만 좌우 이동, 착지하면 멈춤)
     if (currentState === PetState.WALK && !this.isDragging) {
-      this.x += this.walkDirection * this.walkSpeed * delta;
+      if (!this.isGroundedFrame) {
+        // 공중에 있는 동안만 수평 이동
+        this.x += this.walkDirection * this.walkSpeed * delta;
+      }
       this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
 
       if (this.x <= minX) {
