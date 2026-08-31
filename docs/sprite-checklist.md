@@ -43,6 +43,7 @@
 ---
 
 ## 📋 3. 메인 메뉴 (Main Menu) 화면 구성
+*💡 메뉴 라벨 스프라이트 자체에 선택(Active) 도트가 포함되어 있어 별도의 커서 아이콘은 필요 없습니다.*
 
 | 제작 상태 | 요소명 | 기본 파일명 (Normal) | 활성/선택 파일명 (Active) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
@@ -53,21 +54,20 @@
 | [x] | **SHOP (상점) 라벨** | `menu_label_shop.png` | `menu_label_shop_active.png` | 256x256 px | 메인 메뉴 3번 'SHOP' 라벨 레이어 |
 | [x] | **STATUS (상태) 라벨**| `menu_label_status.png` | `menu_label_status_active.png`| 256x256 px | 메인 메뉴 4번 'STATUS' 라벨 레이어 |
 | [x] | **CONFIG (설정) 라벨**| `menu_label_config.png` | `menu_label_config_active.png`| 256x256 px | 메인 메뉴 5번 'CONFIG' 라벨 레이어 |
-| [ ] | **메뉴 선택 커서** | `ui_cursor.png` | - | 12x12 px | 현재 가리키는 손가락/화살표(▶) 아이콘 |
 
 ---
 
 ## 🍎 4. 먹이 (Feed) 화면 & 음식 아이템 구성
+*💡 낙하 음식 애니메이션은 인벤토리 아이콘(`item_*.png`)을 그대로 재사용합니다.*
 
-| 제작 상태 | 요소명 | 권장 파일명 | 대체 파일명 | 추천 규격 | 설명 |
-| :---: | :--- | :--- | :--- | :--- | :--- |
-| [ ] | **먹이창 전용 배경** | `ui_modal_feed_bg.png` | `ui_modal_bg.png` | 256x256 px | 먹이 선택창 전용 팝업 배경 프레임 |
-| [ ] | **먹이창 헤더 타이틀** | `ui_title_feed.png` | - | 256x256 px | 상단 '=== SELECT FOOD ===' 도트 타이틀 |
-| [ ] | **🍎 사과 아이콘 (인벤)**| `item_apple.png` | `food_apple.png` | 16x16 / 24x24 px | 인벤토리/메뉴 목록용 사과 도트 |
-| [ ] | **🍗 고기 아이콘 (인벤)**| `item_meat.png` | `food_meat.png` | 16x16 / 24x24 px | 인벤토리/메뉴 목록용 고기 도트 |
-| [ ] | **🐟 생선 아이콘 (인벤)**| `item_fish.png` | `food_fish.png` | 16x16 / 24x24 px | 인벤토리/메뉴 목록용 생선 도트 |
-| [ ] | **🍬 캔디 아이콘 (인벤)**| `item_candy.png` | `food_candy.png` | 16x16 / 24x24 px | 인벤토리/메뉴 목록용 캔디 도트 |
-| [ ] | **낙하 음식 스프라이트**| `drop_food_sheet.png`| `drop_food.png` | 24x24 px | 펫에게 먹일 때 위에서 떨어지는 음식 |
+| 제작 상태 | 요소명 | 권장 파일명 | 추천 규격 | 설명 |
+| :---: | :--- | :--- | :--- | :--- |
+| [ ] | **먹이창 전용 배경** | `ui_modal_feed_bg.png` (또는 `ui_modal_bg.png`) | 256x256 px | 먹이 선택창 전용 팝업 배경 프레임 |
+| [ ] | **먹이창 헤더 타이틀** | `ui_title_feed.png` | 256x256 px | 상단 '=== SELECT FOOD ===' 도트 타이틀 |
+| [ ] | **🍎 사과 아이콘 & 낙하**| `item_apple.png` | 16x16 / 24x24 px | 사과 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [ ] | **🍗 고기 아이콘 & 낙하**| `item_meat.png` | 16x16 / 24x24 px | 고기 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [ ] | **🐟 생선 아이콘 & 낙하**| `item_fish.png` | 16x16 / 24x24 px | 생선 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [ ] | **🍬 캔디 아이콘 & 낙하**| `item_candy.png` | 16x16 / 24x24 px | 캔디 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
 
 ---
 
@@ -82,42 +82,53 @@
 ---
 
 ## 🛒 6. 상점 (Shop) 화면 구성
+*💡 상점 아이템 행도 메인 메뉴 라벨처럼 선택(Active) / 비선택(Normal) 2개 레이어로 구성됩니다.*
 
-| 제작 상태 | 요소명 | 권장 파일명 | 추천 규격 | 설명 |
-| :---: | :--- | :--- | :--- | :--- |
-| [ ] | **상점창 전용 배경** | `ui_modal_shop_bg.png` | 256x256 px | 사이버 샵 전용 팝업 배경 프레임 |
-| [ ] | **상점창 헤더 타이틀** | `ui_title_shop.png` | 256x256 px | 상단 '=== CYBER SHOP ===' 도트 타이틀 |
-| [ ] | **골드 코인 아이콘** | `icon_gold.png` | 10x10 / 16x16 px | 상점 골드 잔액 및 가격 옆에 표시되는 코인 |
-| [ ] | **상점 1번 (사과 10G)**| `shop_item_apple.png` | 256x256 또는 80x14 px | 사과 구매 행 도트 스프라이트 |
-| [ ] | **상점 2번 (고기 25G)**| `shop_item_meat.png` | 256x256 또는 80x14 px | 고기 구매 행 도트 스프라이트 |
-| [ ] | **상점 3번 (생선 20G)**| `shop_item_fish.png` | 256x256 또는 80x14 px | 생선 구매 행 도트 스프라이트 |
-| [ ] | **상점 4번 (캔디 40G)**| `shop_item_candy.png` | 256x256 또는 80x14 px | 캔디 구매 행 도트 스프라이트 |
+| 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| [ ] | **상점창 전용 배경** | `ui_modal_shop_bg.png` | - | 256x256 px | 사이버 샵 전용 팝업 배경 프레임 |
+| [ ] | **상점창 헤더 타이틀** | `ui_title_shop.png` | - | 256x256 px | 상단 '=== CYBER SHOP ===' 도트 타이틀 |
+| [ ] | **상점 1번 (사과 10G)**| `shop_item_apple.png` | `shop_item_apple_active.png` | 256x256 px | 🍎 사과 품목 행 레이어 (이름, 아이콘, 10G 포함) |
+| [ ] | **상점 2번 (고기 25G)**| `shop_item_meat.png` | `shop_item_meat_active.png` | 256x256 px | 🍗 고기 품목 행 레이어 (이름, 아이콘, 25G 포함) |
+| [ ] | **상점 3번 (생선 20G)**| `shop_item_fish.png` | `shop_item_fish_active.png` | 256x256 px | 🐟 생선 품목 행 레이어 (이름, 아이콘, 20G 포함) |
+| [ ] | **상점 4번 (캔디 40G)**| `shop_item_candy.png` | `shop_item_candy_active.png` | 256x256 px | 🍬 캔디 품목 행 레이어 (이름, 아이콘, 40G 포함) |
+| [ ] | **보유 골드 표시 프레임**| `shop_gold_panel.png` | - | 256x256 px | 상점 상단 'GOLD: 00000G' 영역 전용 도트 프레임 |
 
 ---
 
-## 📊 7. 스텟 / 상태 (Status) 화면 구성
+## 📊 7. 스텟 / 상태 (Status) 상세 화면 구성
+*💡 상세 스텟 정보(레벨, 클릭수, 골드, 허기, 행복도)를 각각 직관적인 도트 그래픽으로 커스텀할 수 있습니다.*
 
 | 제작 상태 | 요소명 | 권장 파일명 | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- |
-| [ ] | **상태창 전용 배경** | `ui_modal_status_bg.png`| 256x256 px | 펫 상태창 전용 팝업 배경 프레임 |
+| [ ] | **상태창 전용 배경** | `ui_modal_status_bg.png` | 256x256 px | 펫 상태창 전용 팝업 배경 프레임 |
 | [ ] | **상태창 헤더 타이틀** | `ui_title_status.png` | 256x256 px | 상단 '=== PET STATUS ===' 도트 타이틀 |
-| [ ] | **게이지 바 빈 배경** | `ui_bar_bg.png` | 60x8 px (투명 PNG) | 허기/행복도 게이지의 빈 바탕 프레임 |
-| [ ] | **허기 게이지 채움 도트**| `ui_bar_fill_hunger.png`| 60x8 px (투명 PNG) | 허기 수치에 따라 채워지는 도트 바 |
-| [ ] | **행복 게이지 채움 도트**| `ui_bar_fill_happy.png` | 60x8 px (투명 PNG) | 행복 수치에 따라 채워지는 도트 바 |
-| [ ] | **레벨/클릭/골드 라벨** | `ui_status_labels.png` | 256x256 px | '레벨:', '클릭:', '골드:' 텍스트 도트 레이어 |
+| [ ] | **스텟 전체 텍스트 레이어**| `status_labels_layer.png` | 256x256 px | '레벨', '클릭', '골드', '허기', '행복' 고정 도트 글씨 |
+| [ ] | **Lv 레벨 도트 아이콘** | `status_icon_level.png` | 12x12 px | 레벨 수치 옆에 붙는 도트 뱃지/아이콘 |
+| [ ] | **클릭수 도트 아이콘** | `status_icon_clicks.png` | 12x12 px | 누적 클릭수 옆에 붙는 마우스/손가락 도트 아이콘 |
+| [ ] | **보유 골드 도트 아이콘**| `status_icon_gold.png` | 12x12 px | 골드 잔액 옆에 붙는 금화 코인 아이콘 |
+| [ ] | **허기(밥) 도트 아이콘** | `status_icon_hunger.png` | 12x12 px | 허기 게이지 옆에 붙는 밥그릇/고기 아이콘 |
+| [ ] | **행복(하트) 도트 아이콘**| `status_icon_happy.png` | 12x12 px | 행복 게이지 옆에 붙는 하트/스마일 아이콘 |
+| [ ] | **게이지 바 빈 바탕틀** | `status_bar_bg.png` | 60x8 px (또는 256x256) | 허기/행복도 게이지의 빈 바탕 프레임 |
+| [ ] | **허기 게이지 채움 도트**| `status_bar_fill_hunger.png` | 60x8 px | 허기 수치에 따라 채워지는 비트맵 도트 바 |
+| [ ] | **행복 게이지 채움 도트**| `status_bar_fill_happy.png` | 60x8 px | 행복 수치에 따라 채워지는 비트맵 도트 바 |
 
 ---
 
 ## ⚙️ 8. 설정 (Config) 화면 구성
+*💡 크기 조정은 별도 슬라이더 없이 라벨 선택 후 **[◀/▶] 방향키**로 100%~300% 조절됩니다.*
 
-| 제작 상태 | 요소명 | 권장 파일명 | 추천 규격 | 설명 |
-| :---: | :--- | :--- | :--- | :--- |
-| [ ] | **설정창 전용 배경** | `ui_modal_config_bg.png`| 256x256 px | 설정창 전용 팝업 배경 프레임 |
-| [ ] | **설정창 헤더 타이틀** | `ui_title_config.png` | 256x256 px | 상단 '=== CONFIG ===' 도트 타이틀 |
-| [ ] | **토글 스위치 ON** | `ui_toggle_on.png` | 20x10 px (투명 PNG) | '항상 위에 고정' 등 ON 상태 스위치 |
-| [ ] | **토글 스위치 OFF** | `ui_toggle_off.png` | 20x10 px (투명 PNG) | '항상 위에 고정' 등 OFF 상태 스위치 |
-| [ ] | **크기 조절 슬라이더** | `ui_slider_track.png` | 50x6 px (투명 PNG) | 100%~300% 크기 조절 슬라이더 트랙 |
-| [ ] | **슬라이더 조절 손잡이**| `ui_slider_thumb.png` | 6x10 px (투명 PNG) | 슬라이더 위치를 나타내는 도트 노브 |
+| 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| [ ] | **설정창 전용 배경** | `ui_modal_config_bg.png` | - | 256x256 px | 설정창 전용 팝업 배경 프레임 |
+| [ ] | **설정창 헤더 타이틀** | `ui_title_config.png` | - | 256x256 px | 상단 '=== CONFIG ===' 도트 타이틀 |
+| [ ] | **1번 크기조절 라벨** | `config_label_scale.png` | `config_label_scale_active.png` | 256x256 px | '크기: 200%' (선택 후 [◀/▶]로 조절) |
+| [ ] | **2번 항상 위 고정 라벨**| `config_label_top.png` | `config_label_top_active.png` | 256x256 px | '항상 위에 고정' 설정 행 |
+| [ ] | **3번 작은 화면 모드 라벨**| `config_label_mini.png` | `config_label_mini_active.png` | 256x256 px | '작은 화면 모드' 설정 행 |
+| [ ] | **4번 히트박스 라벨(Dev)**| `config_label_hitbox.png`| `config_label_hitbox_active.png`| 256x256 px | [개발자 모드] '히트박스 표시' 설정 행 |
+| [ ] | **5번 에셋 갱신 라벨(Dev)**| `config_label_reload.png`| `config_label_reload_active.png`| 256x256 px | [개발자 모드] '에셋 새로고침' 실행 행 |
+| [ ] | **토글 스위치 ON** | `ui_toggle_on.png` | - | 20x10 px | '항상 위에 고정' 등 ON 상태 스위치 |
+| [ ] | **토글 스위치 OFF** | `ui_toggle_off.png` | - | 20x10 px | '항상 위에 고정' 등 OFF 상태 스위치 |
 
 ---
 

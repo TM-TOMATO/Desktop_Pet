@@ -598,10 +598,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   // 초기 상태에서 메뉴 완전 닫힘 보장
   closeAllMenus();
 
-  function openMainMenu() {
+  let lastMainMenuCursor = 0;
+
+  function openMainMenu(keepCursor = true) {
     closeAllMenus();
     currentMenuMode = 'MAIN';
-    menuCursorIndex = 0;
+    if (keepCursor) {
+      menuCursorIndex = lastMainMenuCursor;
+    }
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     if (layerMenuTitle && customMenuSprites.title) layerMenuTitle.classList.remove('hidden');
     osdMenuEl.classList.remove('hidden');
@@ -654,6 +658,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function openFeedMenu() {
+    lastMainMenuCursor = menuCursorIndex;
     closeAllMenus();
     currentMenuMode = 'FEED';
     menuCursorIndex = 0;
@@ -699,7 +704,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       petStats.feed(targetFood.fullness, targetFood.happiness);
       stateMachine.changeState(PetState.EATING);
 
-      const foodDrop = new FoodItem(app, targetFood.key, pet.x, 20);
+      const foodDrop = new FoodItem(app, targetFood.key, pet.x, pet.y - 10);
       activeFoods.push(foodDrop);
       app.stage.addChild(foodDrop);
 
@@ -717,6 +722,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function openShopMenu() {
+    lastMainMenuCursor = menuCursorIndex;
     closeAllMenus();
     currentMenuMode = 'SHOP';
     menuCursorIndex = 0;
@@ -750,6 +756,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function openStatusMenu() {
+    lastMainMenuCursor = menuCursorIndex;
     closeAllMenus();
     currentMenuMode = 'STATUS';
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
@@ -778,6 +785,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function openConfigMenu() {
+    lastMainMenuCursor = menuCursorIndex;
     closeAllMenus();
     currentMenuMode = 'CONFIG';
     configCursorIndex = 0;
@@ -830,7 +838,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (currentMenuMode === 'MAIN') {
       closeAllMenus();
     } else if (currentMenuMode === 'FEED' || currentMenuMode === 'SHOP' || currentMenuMode === 'STATUS' || currentMenuMode === 'CONFIG') {
-      openMainMenu();
+      openMainMenu(true);
     } else {
       closeAllMenus();
     }
@@ -840,6 +848,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (currentMenuMode === 'MAIN') {
       if (direction === 'UP') menuCursorIndex = (menuCursorIndex - 1 + mainMenuItems.length) % mainMenuItems.length;
       if (direction === 'DOWN') menuCursorIndex = (menuCursorIndex + 1) % mainMenuItems.length;
+      lastMainMenuCursor = menuCursorIndex;
       renderMainMenuCursor();
     } else if (currentMenuMode === 'FEED') {
       if (direction === 'UP') menuCursorIndex = (menuCursorIndex - 1 + 4) % 4;
