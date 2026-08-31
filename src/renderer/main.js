@@ -22,6 +22,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const layerCaseBg = document.getElementById('layer-case-bg');
   const layerScreenBg = document.getElementById('layer-screen-bg');
   const layerModalBg = document.getElementById('layer-modal-bg');
+  const layerMenuTitle = document.getElementById('layer-menu-title');
+  const layerMenuItems = [
+    document.getElementById('layer-menu-item-0'),
+    document.getElementById('layer-menu-item-1'),
+    document.getElementById('layer-menu-item-2'),
+    document.getElementById('layer-menu-item-3'),
+    document.getElementById('layer-menu-item-4')
+  ];
   const layerDpad = document.getElementById('layer-dpad');
   const layerPower = document.getElementById('layer-power');
   const layerActionA = document.getElementById('layer-action-a');
@@ -247,7 +255,13 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       }
     }
 
-    // 8) 🎯 커스텀 메뉴 커서 & 라벨 스프라이트
+    // 8) 🎯 커스텀 메뉴 제목, 커서 & 256x256 라벨 스프라이트
+    const titlePath = findSpriteFile(['ui_title_main.png', 'menu_title.png', 'title_main.png']);
+    if (titlePath) {
+      customMenuSprites.title = `data:image/png;base64,${fs.readFileSync(titlePath).toString('base64')}`;
+      if (layerMenuTitle) layerMenuTitle.style.backgroundImage = `url("${customMenuSprites.title}")`;
+    }
+
     const cursorPath = findSpriteFile(['ui_cursor.png', 'menu_cursor.png', 'cursor.png']);
     if (cursorPath) {
       customMenuSprites.cursor = `data:image/png;base64,${fs.readFileSync(cursorPath).toString('base64')}`;
@@ -572,6 +586,8 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     menuCursorIndex = 0;
     configCursorIndex = 0;
     if (layerModalBg) layerModalBg.classList.add('hidden');
+    if (layerMenuTitle) layerMenuTitle.classList.add('hidden');
+    layerMenuItems.forEach(el => el && el.classList.add('hidden'));
     osdMenuEl.classList.add('hidden');
     osdFeedMenuEl.classList.add('hidden');
     statusModalEl.classList.add('hidden');
@@ -584,6 +600,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     currentMenuMode = 'MAIN';
     menuCursorIndex = 0;
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
+    if (layerMenuTitle && customMenuSprites.title) layerMenuTitle.classList.remove('hidden');
     osdMenuEl.classList.remove('hidden');
     renderMainMenuCursor();
   }
@@ -591,6 +608,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   function renderMainMenuCursor() {
     const itemEls = osdMenuEl.querySelectorAll('.osd-item');
     const itemKeys = ['feed', 'play', 'shop', 'status', 'config'];
+    
+    // 메인 메뉴 타이틀 256x256 스프라이트가 있으면 텍스트 타이틀 숨김
+    const osdTitleEl = osdMenuEl.querySelector('.osd-title');
+    if (osdTitleEl) {
+      if (customMenuSprites.title) osdTitleEl.style.opacity = '0';
+      else osdTitleEl.style.opacity = '1';
+    }
+
     itemEls.forEach((el, idx) => {
       const key = itemKeys[idx];
       const isSel = idx === menuCursorIndex;
@@ -600,16 +625,26 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         el.classList.remove('active');
       }
 
-      const customImg = isSel
-        ? (customMenuSprites.labels[key + '_active'] || customMenuSprites.labels[key])
-        : customMenuSprites.labels[key];
-      const cursorHtml = customMenuSprites.cursor
-        ? `<img src="${customMenuSprites.cursor}" class="ui-cursor-icon" style="width:8px;height:8px;vertical-align:middle;margin-right:2px;image-rendering:pixelated;" />`
-        : '▶ ';
+      const normImg = customMenuSprites.labels[key];
+      const actImg = customMenuSprites.labels[key + '_active'] || normImg;
+      const targetImg = isSel ? actImg : normImg;
 
-      if (customImg) {
-        el.innerHTML = `${isSel ? cursorHtml : '&nbsp;&nbsp;'}<img src="${customImg}" class="ui-label-img" style="max-height:12px;vertical-align:middle;image-rendering:pixelated;" />`;
+      // 256x256 오버레이 레이어가 있으면 해당 레이어에 표시
+      const layerEl = layerMenuItems[idx];
+      if (layerEl) {
+        if (targetImg) {
+          layerEl.style.backgroundImage = `url("${targetImg}")`;
+          layerEl.classList.remove('hidden');
+        } else {
+          layerEl.classList.add('hidden');
+        }
+      }
+
+      // 만약 256x256 스프라이트 라벨이 있으면 텍스트는 보이지 않게 처리하고 히트존 유지
+      if (targetImg) {
+        el.style.opacity = '0';
       } else {
+        el.style.opacity = '1';
         el.innerText = `${isSel ? '▶ ' : '  '}${mainMenuItems[idx].label}`;
       }
     });
