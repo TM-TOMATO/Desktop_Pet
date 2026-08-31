@@ -14,7 +14,7 @@ class PetContainer extends PIXI.Container {
     this.y = 220;
 
     this.walkDirection = 1;
-    this.walkSpeed = 1.8;
+    this.walkSpeed = 0.6;
     this.baseScale = 1.5; // 기본 1.5배 (96x96)
     this.bouncePhase = 0;
     this.velocityY = 0;
@@ -473,6 +473,10 @@ class PetContainer extends PIXI.Container {
     this.updateHitbox();
   }
 
+  onStateChange(newState) {
+    this.setPetState(newState);
+  }
+
   setPetState(newState) {
     this.updateSpriteDisplay(newState);
   }
@@ -492,10 +496,7 @@ class PetContainer extends PIXI.Container {
 
     // 챔버 내부 걷기 이동 물리 (좌우 벽 반사)
     if (currentState === PetState.WALK && !this.isDragging) {
-      if (!this.isGroundedFrame) {
-        this.x += this.walkDirection * this.walkSpeed * delta;
-      }
-
+      this.x += this.walkDirection * this.walkSpeed * delta;
       this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
 
       if (this.x <= minX) {
@@ -506,7 +507,7 @@ class PetContainer extends PIXI.Container {
         this.walkDirection = -1;
       }
     } else if (currentState === PetState.IDLE) {
-      this.scale.set(1 * this.baseScale, this.baseScale);
+      this.scale.set(this.walkDirection * this.baseScale, this.baseScale);
     }
 
     // 챔버 내부 중력 낙하

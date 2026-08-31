@@ -50,15 +50,14 @@ class StateMachine {
 
     if (this.currentState === PetState.DRAGGED) return;
 
-    if (this.stateTimer > 300) {
+    if (this.stateTimer > 180) {
       if (this.currentState === PetState.IDLE) {
-        if (Math.random() < 0.6) {
+        if (Math.random() < 0.65) {
           this.changeState(PetState.WALK);
         } else {
-          this.stateTimer = 0;
+          this.stateTimer = 60;
         }
       } else if (this.currentState === PetState.WALK) {
-        // 착지 시점에만 안전하게 IDLE로 변경
         this.changeState(PetState.IDLE);
       } else if (this.currentState === PetState.HAPPY || this.currentState === PetState.EATING) {
         this.changeState(PetState.IDLE);
