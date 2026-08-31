@@ -44,6 +44,11 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
+  // 개발 모드에서 자동 DevTools 오픈
+  if (!app.isPackaged) {
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
+  }
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
