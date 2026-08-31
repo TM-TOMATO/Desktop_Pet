@@ -341,10 +341,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   // 5. 펫 객체 및 상태 머신 생성
   const pet = new PetContainer(app);
-  pet.setBounds(18, 128, 15, 102);
+  pet.setBounds(32, 114, 64, 104);
   pet.x = 73;
-  pet.y = 102;
-  pet.setBaseScale(0.55);
+  pet.y = 104;
+  pet.setBaseScale(1.0);
   app.stage.addChild(pet);
 
   const stateMachine = new StateMachine(pet);
@@ -432,10 +432,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     appScalerEl.classList.remove('hidden');
     containerEl.appendChild(app.canvas);
     app.renderer.resize(146, 106);
-    pet.setBounds(18, 128, 15, 102);
+    pet.setBounds(32, 114, 64, 104);
     pet.x = 73;
-    pet.y = 102;
-    pet.setBaseScale(0.55);
+    pet.y = 104;
+    pet.setBaseScale(1.0);
     setConsoleScale(petStats.consoleScale || 2.0);
     if (window.electronAPI && window.electronAPI.setMiniMode) {
       window.electronAPI.setMiniMode(false);
