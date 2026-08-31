@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Desktop Pet Console</title>
-  <!-- PixiJS v8 CDN -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,15 +21,19 @@
       <!-- 2. LCD 스크린 배경 레이어 (screen_bg.png) -->
       <div class="layer-sprite layer-screen-bg" id="layer-screen-bg"></div>
 
-      <!-- 3. LCD 화면 뷰포트 & 캔버스 영역 -->
+      <!-- 2.5. 카운터 HUD 전용 배경 레이어 (counter_bg.png) -->
+      <div class="layer-sprite layer-counter-bg" id="layer-counter-bg"></div>
+
+      <!-- 카운터 HUD 텍스트 컨테이너 (counter_bg 위 정확한 좌표) -->
+      <div class="counter-hud-container" id="counter-hud-container">
+        <span class="hud-item">CLK:<b id="display-clicks">00000</b></span>
+        <span class="counter-divider">|</span>
+        <span class="hud-item">GOLD:<b id="display-gold">00000G</b></span>
+      </div>
+
+      <!-- 3. LCD 화면 뷰포트 & 캔버스 영역 (146x106 px) -->
       <div class="screen-viewport" id="screen-viewport">
         <div class="screen-glass" id="screen-glass">
-          <!-- 메인 화면 상단 LCD 카운터 스트립 (CLK & GOLD) -->
-          <div class="screen-hud-strip" id="screen-hud-strip">
-            <span class="hud-item">CLK:<b id="display-clicks">00000</b></span>
-            <span class="hud-item">GOLD:<b id="display-gold">00000G</b></span>
-          </div>
-
           <!-- PixiJS Canvas Viewport -->
           <div id="canvas-container"></div>
 
@@ -164,18 +167,18 @@
 
       <!-- 8. 인터랙티브 클릭 영역 (위치 맞춤형 버튼 히트존) -->
       <div class="hitbox-layer">
-        <!-- 전원 버튼 -->
+        <!-- 전원 버튼 (X: 216~236, Y: 52~66) -->
         <button class="hit-btn hit-power" id="btn-power" title="전원 끄기 (10초 꾹 누르면 개발자 모드)"></button>
         
-        <!-- 십자키 4방향 -->
+        <!-- 십자키 4방향 (X: 181~232, Y: 139~189, Center: 206.5, 164) -->
         <button class="hit-btn hit-dpad-up" id="btn-dpad-up" title="위 (Up)"></button>
         <button class="hit-btn hit-dpad-down" id="btn-dpad-down" title="아래 (Down)"></button>
         <button class="hit-btn hit-dpad-left" id="btn-dpad-left" title="왼쪽 (Left)"></button>
         <button class="hit-btn hit-dpad-right" id="btn-dpad-right" title="오른쪽 (Right)"></button>
 
         <!-- A / B 액션 버튼 -->
-        <button class="hit-btn hit-action-b" id="btn-action-b" title="취소 [B / Esc]"></button>
         <button class="hit-btn hit-action-a" id="btn-action-a" title="확인 [A / Enter]"></button>
+        <button class="hit-btn hit-action-b" id="btn-action-b" title="취소 [B / Esc]"></button>
       </div>
 
     </div><!-- /.console-casing -->

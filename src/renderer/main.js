@@ -21,6 +21,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   const layerCaseBg = document.getElementById('layer-case-bg');
   const layerScreenBg = document.getElementById('layer-screen-bg');
+  const layerCounterBg = document.getElementById('layer-counter-bg');
   const layerModalBg = document.getElementById('layer-modal-bg');
   const layerMenuTitle = document.getElementById('layer-menu-title');
   const layerMenuItems = [
@@ -110,6 +111,16 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         const buf = fs.readFileSync(screenBgPath);
         layerScreenBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
         console.log('📺 [ScreenLoader] screen_bg.png loaded.');
+      } catch (e) {}
+    }
+
+    // 2.2) 카운터 배경 (counter_bg.png)
+    const counterBgPath = findSpriteFile(['counter_bg.png', 'hud_strip_bg.png']);
+    if (counterBgPath && layerCounterBg) {
+      try {
+        const buf = fs.readFileSync(counterBgPath);
+        layerCounterBg.style.backgroundImage = `url("data:image/png;base64,${buf.toString('base64')}")`;
+        console.log('📟 [CounterLoader] counter_bg.png loaded.');
       } catch (e) {}
     }
 
@@ -307,11 +318,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   }
 
-  // 3. PixiJS App 초기화 (LCD 화면 105x143 px)
+  // 3. PixiJS App 초기화 (LCD 화면 146x106 px)
   const app = new PIXI.Application();
   await app.init({
-    width: 105,
-    height: 143,
+    width: 146,
+    height: 106,
     backgroundAlpha: 0,
     antialias: false,
     roundPixels: true
@@ -330,9 +341,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   // 5. 펫 객체 및 상태 머신 생성
   const pet = new PetContainer(app);
-  pet.setBounds(20, 85, 20, 137);
-  pet.x = 52;
-  pet.y = 137;
+  pet.setBounds(18, 128, 15, 102);
+  pet.x = 73;
+  pet.y = 102;
   pet.setBaseScale(0.55);
   app.stage.addChild(pet);
 
@@ -420,10 +431,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     miniPanel.classList.add('hidden');
     appScalerEl.classList.remove('hidden');
     containerEl.appendChild(app.canvas);
-    app.renderer.resize(105, 143);
-    pet.setBounds(20, 85, 20, 137);
-    pet.x = 52;
-    pet.y = 137;
+    app.renderer.resize(146, 106);
+    pet.setBounds(18, 128, 15, 102);
+    pet.x = 73;
+    pet.y = 102;
     pet.setBaseScale(0.55);
     setConsoleScale(petStats.consoleScale || 2.0);
     if (window.electronAPI && window.electronAPI.setMiniMode) {
@@ -847,8 +858,26 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function handleDpadNav(direction) {
     if (currentMenuMode === 'MAIN') {
-      if (direction === 'UP') menuCursorIndex = (menuCursorIndex - 1 + mainMenuItems.length) % mainMenuItems.length;
-      if (direction === 'DOWN') menuCursorIndex = (menuCursorIndex + 1) % mainMenuItems.length;
+      if (direction === 'UP') {
+        if (menuCursorIndex === 0) menuCursorIndex = 2;
+        else if (menuCursorIndex === 1) menuCursorIndex = 0;
+        else if (menuCursorIndex === 2) menuCursorIndex = 1;
+        else if (menuCursorIndex === 3) menuCursorIndex = 4;
+        else if (menuCursorIndex === 4) menuCursorIndex = 3;
+      } else if (direction === 'DOWN') {
+        if (menuCursorIndex === 0) menuCursorIndex = 1;
+        else if (menuCursorIndex === 1) menuCursorIndex = 2;
+        else if (menuCursorIndex === 2) menuCursorIndex = 0;
+        else if (menuCursorIndex === 3) menuCursorIndex = 4;
+        else if (menuCursorIndex === 4) menuCursorIndex = 3;
+      } else if (direction === 'RIGHT') {
+        if (menuCursorIndex === 0) menuCursorIndex = 3;
+        else if (menuCursorIndex === 1) menuCursorIndex = 4;
+        else if (menuCursorIndex === 2) menuCursorIndex = 4;
+      } else if (direction === 'LEFT') {
+        if (menuCursorIndex === 3) menuCursorIndex = 0;
+        else if (menuCursorIndex === 4) menuCursorIndex = 1;
+      }
       lastMainMenuCursor = menuCursorIndex;
       renderMainMenuCursor();
     } else if (currentMenuMode === 'FEED') {
