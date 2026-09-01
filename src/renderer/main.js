@@ -791,23 +791,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       action: () => {
         reloadAllAssets();
       }
-    },
-    {
-      key: 'cheat-gold',
-      action: () => {
-        petStats.addGold(100);
-        createCoinPopup(undefined, undefined, '+100G!');
-        updateHUD(petStats.getSnapshot());
-      }
-    },
-    {
-      key: 'cheat-stats',
-      action: () => {
-        petStats.feed(100);
-        petStats.play(100);
-        createCoinPopup(undefined, undefined, '완전회복!');
-        updateHUD(petStats.getSnapshot());
-      }
     }
   ];
 
@@ -861,22 +844,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     rows.forEach((r, idx) => {
       if (idx === devCursorIndex) r.classList.add('config-active');
       else r.classList.remove('config-active');
-    });
-  }
-
-  // 개발자 창 내 버튼 직접 클릭 이벤트 바인딩
-  const btnCheatGold = document.getElementById('btn-cheat-gold');
-  if (btnCheatGold) {
-    btnCheatGold.addEventListener('click', (e) => {
-      e.stopPropagation();
-      devMenuRows[2].action();
-    });
-  }
-  const btnCheatStats = document.getElementById('btn-cheat-stats');
-  if (btnCheatStats) {
-    btnCheatStats.addEventListener('click', (e) => {
-      e.stopPropagation();
-      devMenuRows[3].action();
     });
   }
 
@@ -967,9 +934,19 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         renderConfigMenuCursor();
       } else if (direction === 'LEFT' || direction === 'RIGHT') {
         if (configCursorIndex === 0) {
+          // 크기 조절 (◀ -10%, ▶ +10%)
           const step = direction === 'LEFT' ? -10 : 10;
           scaleRange.value = Math.max(100, Math.min(300, parseInt(scaleRange.value, 10) + step));
           scaleRange.dispatchEvent(new Event('input'));
+        } else if (configCursorIndex === 1) {
+          // 항상 위에 고정 토글 (◀ OFF, ▶ ON)
+          if (alwaysOnTopToggle) {
+            const nextState = direction === 'RIGHT';
+            if (alwaysOnTopToggle.checked !== nextState) {
+              alwaysOnTopToggle.checked = nextState;
+              alwaysOnTopToggle.dispatchEvent(new Event('change'));
+            }
+          }
         }
       }
     } else if (currentMenuMode === 'DEV') {
@@ -980,6 +957,17 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       } else if (direction === 'DOWN') {
         devCursorIndex = (devCursorIndex + 1) % rowCount;
         renderDevMenuCursor();
+      } else if (direction === 'LEFT' || direction === 'RIGHT') {
+        if (devCursorIndex === 0) {
+          // 히트박스 토글 (◀ OFF, ▶ ON)
+          if (hitboxToggle) {
+            const nextState = direction === 'RIGHT';
+            if (hitboxToggle.checked !== nextState) {
+              hitboxToggle.checked = nextState;
+              hitboxToggle.dispatchEvent(new Event('change'));
+            }
+          }
+        }
       }
     }
   }
