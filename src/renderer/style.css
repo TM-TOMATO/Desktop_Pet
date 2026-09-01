@@ -490,6 +490,31 @@ body.has-modal-sprite .osd-modal-box {
   border-radius: 2px;
 }
 
+/* 미니 모드 전환 버튼 (X: 194~210, Y: 52~66) */
+.hit-mini-mode {
+  position: absolute;
+  left: 194px;
+  top: 52px;
+  width: 17px;
+  height: 15px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 900;
+  color: #0f380f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 56, 15, 0.08);
+  border: 1px solid rgba(15, 56, 15, 0.3);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.console-casing.hitbox-debug .hit-mini-mode {
+  background: rgba(255, 150, 0, 0.5) !important;
+  border: 1.5px solid rgba(230, 120, 0, 0.9) !important;
+}
+
 /* 십자키 4방향 (Center: 206, 164) */
 .hit-dpad-up {
   position: absolute;
@@ -543,6 +568,16 @@ body.has-modal-sprite .osd-modal-box {
   border-radius: 50%;
 }
 
+.dev-arrow {
+  font-size: 9px;
+  font-weight: 900;
+  color: #0f380f;
+}
+
+.config-active .dev-arrow {
+  color: #9bbc0f;
+}
+
 /* ========================================================
    6. 미니 모드 패널 (140x160 px)
    ======================================================== */
@@ -551,19 +586,39 @@ body.has-modal-sprite .osd-modal-box {
   height: 160px;
   background: linear-gradient(180deg, #d8d6cf 0%, #b8b4a8 100%);
   border: 3px solid #8e8a7d;
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 2px 0 rgba(255,255,255,0.6);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  cursor: grab;
   position: absolute;
   top: 0; left: 0;
   z-index: 9999;
 }
 
-.mini-panel:active {
+.mini-header {
+  height: 20px;
+  background: #3e3b32;
+  color: #e5e3dc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  font-size: 8px;
+  font-weight: 900;
+  cursor: grab;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.mini-header:active {
   cursor: grabbing;
+}
+
+.mini-header-btns {
+  display: flex;
+  gap: 3px;
+  -webkit-app-region: no-drag;
 }
 
 .mini-panel.hidden {
@@ -583,40 +638,32 @@ body.mini-mode #app-scaler {
   flex: 1;
   background: #9bbc0f;
   border: 2px solid #8bac0f;
-  border-radius: 6px 6px 0 0;
-  margin: 6px 6px 0 6px;
+  border-radius: 4px;
+  margin: 4px 6px 6px 6px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
 }
 
-.mini-controls {
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 2px 10px;
-  background: #c8c5ba;
-  border-top: 1px solid #a29e92;
-}
-
 .mini-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid #5a5a5a;
-  background: #2b2b2b;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid #1a1a1a;
+  background: #555;
   color: #fff;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 900;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+  padding: 0;
 }
 
-.mini-quit-btn { background: #e63946; border-color: #9d0208; }
-.mini-expand-btn { background: #3a86ff; border-color: #1a56cc; font-size: 14px; }
+.mini-close-btn { background: #d90429; border-color: #7b0014; }
+.mini-expand-btn { background: #0077b6; border-color: #023e8a; }
 
 /* 토글 스위치 */
 .toggle-switch {

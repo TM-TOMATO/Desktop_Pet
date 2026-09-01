@@ -42,6 +42,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const statusModalEl = document.getElementById('status-modal');
   const shopModalEl = document.getElementById('shop-modal');
   const settingsModalEl = document.getElementById('settings-modal');
+  const devModalEl = document.getElementById('dev-modal');
 
   const statLevelEl = document.getElementById('stat-level');
   const statClicksEl = document.getElementById('stat-clicks');
@@ -54,7 +55,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const scaleValueLabel = document.getElementById('scale-value');
   const hitboxToggle = document.getElementById('hitbox-toggle');
   const alwaysOnTopToggle = document.getElementById('always-on-top-toggle');
-  const miniModeToggle = document.getElementById('mini-mode-toggle');
+  const btnMiniMode = document.getElementById('btn-mini-mode');
   const miniPanel = document.getElementById('mini-panel');
   const miniCanvasContainer = document.getElementById('mini-canvas-container');
 
@@ -412,7 +413,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function activateMiniMode() {
     isMiniMode = true;
-    if (miniModeToggle) miniModeToggle.checked = true;
     appScalerEl.classList.add('hidden');
     miniPanel.classList.remove('hidden');
     miniCanvasContainer.appendChild(app.canvas);
@@ -427,7 +427,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function deactivateMiniMode() {
     isMiniMode = false;
-    if (miniModeToggle) miniModeToggle.checked = false;
     miniPanel.classList.add('hidden');
     appScalerEl.classList.remove('hidden');
     containerEl.appendChild(app.canvas);
@@ -442,10 +441,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   }
 
-  if (miniModeToggle) {
-    miniModeToggle.addEventListener('change', (e) => {
-      if (e.target.checked) activateMiniMode();
-      else deactivateMiniMode();
+  if (btnMiniMode) {
+    btnMiniMode.addEventListener('click', (e) => {
+      e.stopPropagation();
+      activateMiniMode();
     });
   }
 
@@ -605,6 +604,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     statusModalEl.classList.add('hidden');
     shopModalEl.classList.add('hidden');
     settingsModalEl.classList.add('hidden');
+    if (devModalEl) devModalEl.classList.add('hidden');
   }
 
   // 초기 상태에서 메뉴 완전 닫힘 보장
@@ -775,13 +775,44 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     statusModalEl.classList.remove('hidden');
   }
 
+  let devCursorIndex = 0;
+  const devMenuRows = [
+    {
+      key: 'hitbox',
+      action: () => {
+        if (hitboxToggle) {
+          hitboxToggle.checked = !hitboxToggle.checked;
+          hitboxToggle.dispatchEvent(new Event('change'));
+        }
+      }
+    },
+    {
+      key: 'reload',
+      action: () => {
+        reloadAllAssets();
+      }
+    },
+    {
+      key: 'cheat-gold',
+      action: () => {
+        petStats.addGold(100);
+        createCoinPopup(undefined, undefined, '+100G!');
+        updateHUD(petStats.getSnapshot());
+      }
+    },
+    {
+      key: 'cheat-stats',
+      action: () => {
+        petStats.feed(100);
+        petStats.play(100);
+        createCoinPopup(undefined, undefined, '완전회복!');
+        updateHUD(petStats.getSnapshot());
+      }
+    }
+  ];
+
   function setDevMode(enabled, notify = true) {
     isDevMode = enabled;
-    const devRows = settingsModalEl.querySelectorAll('.dev-only-row');
-    devRows.forEach(r => {
-      if (isDevMode) r.classList.remove('hidden');
-      else r.classList.add('hidden');
-    });
     if (!isDevMode && hitboxToggle && hitboxToggle.checked) {
       hitboxToggle.checked = false;
       hitboxToggle.dispatchEvent(new Event('change'));
@@ -793,7 +824,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function getVisibleConfigRows() {
-    return Array.from(settingsModalEl.querySelectorAll('.osd-setting-row')).filter(r => !r.classList.contains('hidden'));
+    return Array.from(settingsModalEl.querySelectorAll('.osd-setting-row'));
   }
 
   function openConfigMenu() {
@@ -809,11 +840,44 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   function renderConfigMenuCursor() {
     const rows = getVisibleConfigRows();
     if (configCursorIndex >= rows.length) configCursorIndex = Math.max(0, rows.length - 1);
-    const allRows = settingsModalEl.querySelectorAll('.osd-setting-row');
-    allRows.forEach(r => r.classList.remove('config-active'));
-    if (rows[configCursorIndex]) {
-      rows[configCursorIndex].classList.add('config-active');
-    }
+    rows.forEach((r, idx) => {
+      if (idx === configCursorIndex) r.classList.add('config-active');
+      else r.classList.remove('config-active');
+    });
+  }
+
+  function openDevMenu() {
+    closeAllMenus();
+    currentMenuMode = 'DEV';
+    devCursorIndex = 0;
+    if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
+    if (devModalEl) devModalEl.classList.remove('hidden');
+    renderDevMenuCursor();
+  }
+
+  function renderDevMenuCursor() {
+    if (!devModalEl) return;
+    const rows = Array.from(devModalEl.querySelectorAll('.osd-setting-row'));
+    rows.forEach((r, idx) => {
+      if (idx === devCursorIndex) r.classList.add('config-active');
+      else r.classList.remove('config-active');
+    });
+  }
+
+  // 개발자 창 내 버튼 직접 클릭 이벤트 바인딩
+  const btnCheatGold = document.getElementById('btn-cheat-gold');
+  if (btnCheatGold) {
+    btnCheatGold.addEventListener('click', (e) => {
+      e.stopPropagation();
+      devMenuRows[2].action();
+    });
+  }
+  const btnCheatStats = document.getElementById('btn-cheat-stats');
+  if (btnCheatStats) {
+    btnCheatStats.addEventListener('click', (e) => {
+      e.stopPropagation();
+      devMenuRows[3].action();
+    });
   }
 
   // 8. 🔘 D-Pad & A/B 버튼 액션
@@ -833,22 +897,27 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       const rows = getVisibleConfigRows();
       const activeRow = rows[configCursorIndex];
       if (activeRow) {
-        const toggle = activeRow.querySelector('input[type="checkbox"]');
-        if (toggle) {
-          toggle.checked = !toggle.checked;
-          toggle.dispatchEvent(new Event('change'));
-        }
-        const reloadBtn = activeRow.querySelector('#btn-reload-assets');
-        if (reloadBtn) {
-          reloadAllAssets();
+        if (activeRow.id === 'row-open-dev' || activeRow.dataset.row === 'dev-menu') {
+          openDevMenu();
+        } else {
+          const toggle = activeRow.querySelector('input[type="checkbox"]');
+          if (toggle) {
+            toggle.checked = !toggle.checked;
+            toggle.dispatchEvent(new Event('change'));
+          }
         }
       }
+    } else if (currentMenuMode === 'DEV') {
+      const item = devMenuRows[devCursorIndex];
+      if (item && item.action) item.action();
     }
   }
 
   function handleButtonActionB() {
     if (currentMenuMode === 'MAIN') {
       closeAllMenus();
+    } else if (currentMenuMode === 'DEV') {
+      openConfigMenu();
     } else if (currentMenuMode === 'FEED' || currentMenuMode === 'SHOP' || currentMenuMode === 'STATUS' || currentMenuMode === 'CONFIG') {
       openMainMenu(true);
     } else {
@@ -902,6 +971,15 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
           scaleRange.value = Math.max(100, Math.min(300, parseInt(scaleRange.value, 10) + step));
           scaleRange.dispatchEvent(new Event('input'));
         }
+      }
+    } else if (currentMenuMode === 'DEV') {
+      const rowCount = devMenuRows.length;
+      if (direction === 'UP') {
+        devCursorIndex = (devCursorIndex - 1 + rowCount) % rowCount;
+        renderDevMenuCursor();
+      } else if (direction === 'DOWN') {
+        devCursorIndex = (devCursorIndex + 1) % rowCount;
+        renderDevMenuCursor();
       }
     }
   }

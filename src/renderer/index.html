@@ -7,6 +7,18 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- 0. 미니 모드 패널 (140x160 px) -->
+  <div id="mini-panel" class="mini-panel hidden">
+    <div class="mini-header">
+      <span class="mini-title">PET BOY</span>
+      <div class="mini-header-btns">
+        <button class="mini-btn mini-expand-btn" id="mini-expand-btn" title="전체 모드로 전환">⤢</button>
+        <button class="mini-btn mini-close-btn" id="mini-close-btn" title="종료">✕</button>
+      </div>
+    </div>
+    <div class="mini-screen" id="mini-canvas-container"></div>
+  </div>
+
   <!-- 0. App Scaler (기본 200% 512x512 px) -->
   <div id="app-scaler">
 
@@ -119,44 +131,55 @@
         </div>
       </div>
 
-      <!-- OSD Settings Modal -->
+      <!-- OSD Settings Modal (설정) -->
       <div id="settings-modal" class="osd-modal hidden">
         <div class="osd-modal-box">
           <div class="osd-title">=== CONFIG ===</div>
-          <div class="osd-setting-row">
+          <div class="osd-setting-row" data-row="scale">
             <span>크기: <b id="scale-value">200%</b></span>
             <input type="range" id="scale-range" min="100" max="300" step="10" value="200" />
           </div>
-          <div class="osd-setting-row">
+          <div class="osd-setting-row" data-row="always-on-top">
             <span>항상 위에 고정</span>
             <label class="toggle-switch">
               <input type="checkbox" id="always-on-top-toggle" checked />
               <span class="toggle-slider"></span>
             </label>
           </div>
-          <div class="osd-setting-row">
-            <span>작은 화면 모드</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="mini-mode-toggle" />
-              <span class="toggle-slider"></span>
-            </label>
+          <div class="osd-setting-row" data-row="dev-menu" id="row-open-dev">
+            <span>🛠️ 개발자 모드</span>
+            <b class="dev-arrow">&gt;</b>
           </div>
-          <!-- 개발자 모드 (전원버튼 10초) 시 표시되는 항목 -->
-          <div class="osd-setting-row dev-only-row hidden" id="row-hitbox-toggle">
+          <div class="osd-hint">[A] 선택 | [◀/▶] 조절 | [B] 뒤로</div>
+        </div>
+      </div>
+
+      <!-- OSD Developer Mode Modal (개발자 도구 창) -->
+      <div id="dev-modal" class="osd-modal hidden">
+        <div class="osd-modal-box">
+          <div class="osd-title">=== DEV TOOLS ===</div>
+          <div class="osd-setting-row" data-dev-row="hitbox">
             <span>히트박스 표시</span>
             <label class="toggle-switch">
               <input type="checkbox" id="hitbox-toggle" />
               <span class="toggle-slider"></span>
             </label>
           </div>
-          <div class="osd-setting-row dev-only-row hidden" id="row-reload-assets">
+          <div class="osd-setting-row" data-dev-row="reload">
             <span>에셋 새로고침</span>
             <button class="osd-action-btn" id="btn-reload-assets">🔄 실행</button>
           </div>
-          <div class="osd-hint">[◀/▶] 조절 | [B] 완료</div>
+          <div class="osd-setting-row" data-dev-row="cheat-gold">
+            <span>골드 치트 (+100G)</span>
+            <button class="osd-action-btn" id="btn-cheat-gold">💰 획득</button>
+          </div>
+          <div class="osd-setting-row" data-dev-row="cheat-stats">
+            <span>허기/행복 완충</span>
+            <button class="osd-action-btn" id="btn-cheat-stats">✨ 회복</button>
+          </div>
+          <div class="osd-hint">[A] 실행 | [B] 설정으로</div>
         </div>
       </div>
-
 
       <!-- 4. 십자키 스프라이트 레이어 (btn_dpad.png / _pressed.png) -->
       <div class="layer-sprite layer-dpad" id="layer-dpad"></div>
@@ -172,6 +195,9 @@
       <div class="hitbox-layer">
         <!-- 전원 버튼 (X: 216~236, Y: 52~66) -->
         <button class="hit-btn hit-power" id="btn-power" title="전원 끄기 (10초 꾹 누르면 개발자 모드)"></button>
+
+        <!-- 작은 화면 모드 전환 버튼 (X: 194~210, Y: 52~66) -->
+        <button class="hit-btn hit-mini-mode" id="btn-mini-mode" title="작은 화면 모드 (Mini Mode)">🗗</button>
         
         <!-- 십자키 4방향 (X: 181~232, Y: 139~189, Center: 206.5, 164) -->
         <button class="hit-btn hit-dpad-up" id="btn-dpad-up" title="위 (Up)"></button>

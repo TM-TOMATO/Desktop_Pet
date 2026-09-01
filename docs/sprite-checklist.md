@@ -124,9 +124,8 @@
 | [ ] | **설정창 헤더 타이틀** | `ui_title_config.png` | - | 256x256 px | 상단 '=== CONFIG ===' 도트 타이틀 |
 | [ ] | **1번 크기조절 라벨** | `config_label_scale.png` | `config_label_scale_active.png` | 256x256 px | '크기: 200%' (선택 후 [◀/▶]로 조절) |
 | [ ] | **2번 항상 위 고정 라벨**| `config_label_top.png` | `config_label_top_active.png` | 256x256 px | '항상 위에 고정' 설정 행 |
-| [ ] | **3번 작은 화면 모드 라벨**| `config_label_mini.png` | `config_label_mini_active.png` | 256x256 px | '작은 화면 모드' 설정 행 |
-| [ ] | **4번 히트박스 라벨(Dev)**| `config_label_hitbox.png`| `config_label_hitbox_active.png`| 256x256 px | [개발자 모드] '히트박스 표시' 설정 행 |
-| [ ] | **5번 에셋 갱신 라벨(Dev)**| `config_label_reload.png`| `config_label_reload_active.png`| 256x256 px | [개발자 모드] '에셋 새로고침' 실행 행 |
+| [ ] | **3번 개발자 모드 라벨**| `config_label_dev.png` | `config_label_dev_active.png` | 256x256 px | '🛠️ 개발자 도구 >' 서브메뉴 진입 라벨 |
+| [ ] | **개발자 도구 헤더 타이틀**| `ui_title_dev.png` | - | 256x256 px | 상단 '=== DEV TOOLS ===' 도트 타이틀 |
 | [ ] | **토글 스위치 ON** | `ui_toggle_on.png` | - | 20x10 px | '항상 위에 고정' 등 ON 상태 스위치 |
 | [ ] | **토글 스위치 OFF** | `ui_toggle_off.png` | - | 20x10 px | '항상 위에 고정' 등 OFF 상태 스위치 |
 
