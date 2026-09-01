@@ -362,24 +362,36 @@ body.has-modal-sprite .osd-modal-box {
   color: #9bbc0f;
 }
 
-.osd-setting-row input[type="range"] {
-  width: 38px;
-  height: 8px;
-  accent-color: #0f380f;
+.osd-scale-bar-wrapper {
+  display: flex;
+  align-items: center;
+  pointer-events: none;
 }
 
-.osd-setting-row.config-active input[type="range"] {
-  accent-color: #9bbc0f;
+.osd-scale-bar-bg {
+  width: 44px;
+  height: 6px;
+  background: #9bbc0f;
+  border: 1px solid #0f380f;
+  border-radius: 1.5px;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.osd-setting-row.config-active {
+.osd-scale-bar-bg .osd-bar-fill {
+  height: 100%;
   background: #0f380f;
-  color: #9bbc0f;
+  transition: width 0.1s ease;
+  pointer-events: none;
 }
 
-.osd-setting-row input[type="range"] {
-  width: 48px;
-  accent-color: #0f380f;
+.osd-setting-row.config-active .osd-scale-bar-bg {
+  background: #0f380f;
+  border-color: #9bbc0f;
+}
+
+.osd-setting-row.config-active .osd-scale-bar-bg .osd-bar-fill {
+  background: #9bbc0f;
 }
 
 .dev-only-row.hidden {

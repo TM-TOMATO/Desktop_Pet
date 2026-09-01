@@ -137,7 +137,11 @@
           <div class="osd-title">=== CONFIG ===</div>
           <div class="osd-setting-row" data-row="scale">
             <span>크기: <b id="scale-value">200%</b></span>
-            <input type="range" id="scale-range" min="100" max="300" step="10" value="200" />
+            <div class="osd-scale-bar-wrapper">
+              <div class="osd-bar-bg osd-scale-bar-bg">
+                <div id="bar-scale-fill" class="osd-bar-fill" style="width: 50%;"></div>
+              </div>
+            </div>
           </div>
           <div class="osd-setting-row" data-row="always-on-top">
             <span>항상 위에 고정</span>

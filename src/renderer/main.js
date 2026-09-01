@@ -51,7 +51,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   const barFullness = document.getElementById('bar-fullness');
   const barHappiness = document.getElementById('bar-happiness');
-  const scaleRange = document.getElementById('scale-range');
+  const barScaleFill = document.getElementById('bar-scale-fill');
   const scaleValueLabel = document.getElementById('scale-value');
   const hitboxToggle = document.getElementById('hitbox-toggle');
   const alwaysOnTopToggle = document.getElementById('always-on-top-toggle');
@@ -368,18 +368,19 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     petStats.consoleScale = scaleVal;
   }
 
-  if (scaleRange) {
-    scaleRange.addEventListener('input', (e) => {
-      const scalePercent = parseInt(e.target.value, 10);
-      scaleValueLabel.innerText = `${scalePercent}%`;
-      setConsoleScale(scalePercent / 100);
-    });
+  let currentConsoleScalePercent = Math.round((petStats.consoleScale || 2.0) * 100);
+
+  function updateScaleDisplay(percent) {
+    currentConsoleScalePercent = Math.max(100, Math.min(300, percent));
+    if (scaleValueLabel) scaleValueLabel.innerText = `${currentConsoleScalePercent}%`;
+    if (barScaleFill) {
+      const fillPct = Math.max(0, Math.min(100, ((currentConsoleScalePercent - 100) / 200) * 100));
+      barScaleFill.style.width = `${fillPct}%`;
+    }
+    setConsoleScale(currentConsoleScalePercent / 100);
   }
 
-  const initScale = petStats.consoleScale || 2.0;
-  if (scaleRange) scaleRange.value = Math.round(initScale * 100);
-  if (scaleValueLabel) scaleValueLabel.innerText = `${Math.round(initScale * 100)}%`;
-  setConsoleScale(initScale);
+  updateScaleDisplay(currentConsoleScalePercent);
 
   if (hitboxToggle) {
     hitboxToggle.addEventListener('change', (e) => {
@@ -936,8 +937,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         if (configCursorIndex === 0) {
           // 크기 조절 (◀ -10%, ▶ +10%)
           const step = direction === 'LEFT' ? -10 : 10;
-          scaleRange.value = Math.max(100, Math.min(300, parseInt(scaleRange.value, 10) + step));
-          scaleRange.dispatchEvent(new Event('input'));
+          updateScaleDisplay(currentConsoleScalePercent + step);
         } else if (configCursorIndex === 1) {
           // 항상 위에 고정 토글 (◀ OFF, ▶ ON)
           if (alwaysOnTopToggle) {
@@ -1071,7 +1071,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   // 10. ⌨️ 키보드 입력 바인딩
   window.addEventListener('keydown', (e) => {
-    if (e.repeat) return;
+    // 방향키는 꾹 누르고 있어도 연속 조작(스케일/이동) 허용
+    const isNavKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 's', 'a', 'd', 'W', 'S', 'A', 'D'].includes(e.key);
+    if (e.repeat && !isNavKey) return;
 
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
       dpadKeyState.up = true;
