@@ -18,7 +18,10 @@
 
 - **스프라이트는 사용자가 직접 제작**, 파일명은 개발자가 지정 후 사용자가 그 이름으로 저장
 - **제작할 스프라이트 목록은 `docs/sprite-checklist.md`에 최신 상태 유지**
+- **폴더별 분할 관리**: `assets/sprites/` 하위에 카테고리별 폴더(`pet`, `console`, `menu_main`, `menu_feed`, `menu_play`, `menu_shop`, `menu_status`, `menu_config`, `menu_dev`)로 정리하여 파일 관리
 - **모든 스프라이트는 256x256 PNG** (레이어 오버레이 방식, 투명 배경)
+- **크기 조절 스프라이트**: 100%~300% (10% 단위) 수치별로 Normal / Active 분할 제작 지원 (`config_scale_*.png`)
+- **항상 위에 고정 스프라이트**: 4종(비선택_꺼짐 `config_top_off`, 선택_꺼짐 `config_top_off_active`, 비선택_켜짐 `config_top_on`, 선택_켜짐 `config_top_on_active`) 분할 제작 지원
 - **폰트**: Galmuri9 (`pixel_font.ttf`) — 반드시 **9px 정수 크기**로만 렌더링해야 도트 깨짐 없음 (`-webkit-font-smoothing: none`)
 - **메뉴 라벨 커서**: 별도 커서 아이콘 없음 — Active 스프라이트 자체에 선택 표시 포함
 - **창 배경**: 메인 메뉴, 먹이, 상점, 스텟, 설정 등 모든 팝업창 배경은 `ui_modal_bg.png`를 공통으로 재활용

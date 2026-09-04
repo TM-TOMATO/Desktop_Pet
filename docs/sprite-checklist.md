@@ -4,10 +4,18 @@
 
 ---
 
-## 📌 파일 배치 경로
-모든 이미지 에셋(PNG)과 폰트(TTF)는 아래 폴더에 지정된 파일명으로 넣어주시면 프로그램이 **자동 감지하여 즉시 반영**합니다:
-> 📂 `Desktop_Pet/assets/sprites/`  
-> 📂 `Desktop_Pet/assets/fonts/` (폰트 전용)
+## 📌 파일 배치 경로 (폴더별 구조화)
+모든 이미지 에셋(PNG)은 아래와 같이 **카테고리별 하위 폴더**에 지정된 파일명으로 넣어주시면 프로그램이 **자동 감지하여 즉시 반영**합니다:
+- 📂 `Desktop_Pet/assets/sprites/pet/` — 펫 모션 시트 (`pet_idle_sheet.png`, `pet_walk_sheet.png` 등)
+- 📂 `Desktop_Pet/assets/sprites/console/` — 게임기 본체/스크린/카운터/버튼 (`console_case_bg.png`, `screen_bg.png`, `counter_bg.png`, `btn_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_main/` — 메인 메뉴 및 팝업창 (`ui_modal_bg.png`, `ui_title_main.png`, `menu_label_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_feed/` — 먹이 선택창 및 아이템 (`item_*.png`, `ui_title_feed.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_play/` — 놀이 화면 및 이펙트 (`pet_happy_sheet.png`, `effect_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_shop/` — 상점 품목 및 골드 패널 (`shop_item_*.png`, `ui_title_shop.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_status/` — 상태창 및 스텟 아이콘 (`status_*.png`, `ui_title_status.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_config/` — 설정창 (각 수치별 크기 라벨, 항상 위 고정 4종, 개발자 진입 라벨)
+- 📂 `Desktop_Pet/assets/sprites/menu_dev/` — 개발자 도구 (히트박스/새로고침 라벨, 타이틀)
+- 📂 `Desktop_Pet/assets/fonts/` — 폰트 전용 (`pixel_font.ttf`)
 
 ---
 
@@ -115,18 +123,39 @@
 
 ---
 
-## ⚙️ 8. 설정 (Config) 화면 구성
-*💡 **크기 조절 라벨**: 수치마다 따로 만들 필요 없이 `"크기:"` 글씨만 그리시면 수치(100%~300%)는 프로그램이 픽셀 폰트로 실시간 표시합니다.*
+## ⚙️ 8. 설정 (Config) 화면 구성 (`assets/sprites/menu_config/`)
+*💡 크기 조절은 100%~300% (10% 단위) 각 수치마다 Normal/Active 2장씩 제작하며, 항상 위에 고정도 4상태로 분할 제작합니다.*
 
 | 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
-| [x] | **설정창 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 설정창 팝업 배경 프레임 (공통 모달 배경 재사용) |
+| [x] | **설정창 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 설정창 팝업 배경 프레임 (`menu_main` 공통 배경 재사용) |
 | [ ] | **설정창 헤더 타이틀** | `ui_title_config.png` | - | 256x256 px | 상단 '=== CONFIG ===' 도트 타이틀 |
-| [ ] | **1번 크기조절 라벨** | `config_label_scale.png` | `config_label_scale_active.png` | 256x256 px | '크기:' 기본 라벨 (수치는 동적 텍스트로 자동 렌더링) |
-| [ ] | **2번 항상 위 고정 라벨**| `config_label_top.png` | `config_label_top_active.png` | 256x256 px | '항상 위에 고정' 설정 행 |
-| [ ] | **3번 개발자 모드 라벨**| `config_label_dev.png` | `config_label_dev_active.png` | 256x256 px | '🛠️ 개발자 도구 >' 서브메뉴 진입 라벨 |
-| [ ] | **토글 스위치 ON** | `ui_toggle_on.png` | - | 20x10 px | '항상 위에 고정' 등 ON 상태 스위치 |
-| [ ] | **토글 스위치 OFF** | `ui_toggle_off.png` | - | 20x10 px | '항상 위에 고정' 등 OFF 상태 스위치 |
+| [ ] | **크기 100% 라벨** | `config_scale_100.png` | `config_scale_100_active.png` | 256x256 px | 100% 크기 라벨 (게이지/수치 도트 포함) |
+| [ ] | **크기 110% 라벨** | `config_scale_110.png` | `config_scale_110_active.png` | 256x256 px | 110% 크기 라벨 |
+| [ ] | **크기 120% 라벨** | `config_scale_120.png` | `config_scale_120_active.png` | 256x256 px | 120% 크기 라벨 |
+| [ ] | **크기 130% 라벨** | `config_scale_130.png` | `config_scale_130_active.png` | 256x256 px | 130% 크기 라벨 |
+| [ ] | **크기 140% 라벨** | `config_scale_140.png` | `config_scale_140_active.png` | 256x256 px | 140% 크기 라벨 |
+| [ ] | **크기 150% 라벨** | `config_scale_150.png` | `config_scale_150_active.png` | 256x256 px | 150% 크기 라벨 |
+| [ ] | **크기 160% 라벨** | `config_scale_160.png` | `config_scale_160_active.png` | 256x256 px | 160% 크기 라벨 |
+| [ ] | **크기 170% 라벨** | `config_scale_170.png` | `config_scale_170_active.png` | 256x256 px | 170% 크기 라벨 |
+| [ ] | **크기 180% 라벨** | `config_scale_180.png` | `config_scale_180_active.png` | 256x256 px | 180% 크기 라벨 |
+| [ ] | **크기 190% 라벨** | `config_scale_190.png` | `config_scale_190_active.png` | 256x256 px | 190% 크기 라벨 |
+| [ ] | **크기 200% 라벨** | `config_scale_200.png` | `config_scale_200_active.png` | 256x256 px | 200% 크기 라벨 |
+| [ ] | **크기 210% 라벨** | `config_scale_210.png` | `config_scale_210_active.png` | 256x256 px | 210% 크기 라벨 |
+| [ ] | **크기 220% 라벨** | `config_scale_220.png` | `config_scale_220_active.png` | 256x256 px | 220% 크기 라벨 |
+| [ ] | **크기 230% 라벨** | `config_scale_230.png` | `config_scale_230_active.png` | 256x256 px | 230% 크기 라벨 |
+| [ ] | **크기 240% 라벨** | `config_scale_240.png` | `config_scale_240_active.png` | 256x256 px | 240% 크기 라벨 |
+| [ ] | **크기 250% 라벨** | `config_scale_250.png` | `config_scale_250_active.png` | 256x256 px | 250% 크기 라벨 |
+| [ ] | **크기 260% 라벨** | `config_scale_260.png` | `config_scale_260_active.png` | 256x256 px | 260% 크기 라벨 |
+| [ ] | **크기 270% 라벨** | `config_scale_270.png` | `config_scale_270_active.png` | 256x256 px | 270% 크기 라벨 |
+| [ ] | **크기 280% 라벨** | `config_scale_280.png` | `config_scale_280_active.png` | 256x256 px | 280% 크기 라벨 |
+| [ ] | **크기 290% 라벨** | `config_scale_290.png` | `config_scale_290_active.png` | 256x256 px | 290% 크기 라벨 |
+| [ ] | **크기 300% 라벨** | `config_scale_300.png` | `config_scale_300_active.png` | 256x256 px | 300% 크기 라벨 |
+| [ ] | **항상 위 OFF (비선택)**| `config_top_off.png` | - | 256x256 px | 항상 위에 고정: 꺼짐 상태 (비선택) |
+| [ ] | **항상 위 OFF (선택)**  | - | `config_top_off_active.png` | 256x256 px | 항상 위에 고정: 꺼짐 상태 (선택 중) |
+| [ ] | **항상 위 ON (비선택)** | `config_top_on.png` | - | 256x256 px | 항상 위에 고정: 켜짐 상태 (비선택) |
+| [ ] | **항상 위 ON (선택)**   | - | `config_top_on_active.png` | 256x256 px | 항상 위에 고정: 켜짐 상태 (선택 중) |
+| [ ] | **개발자 모드 진입 라벨**| `config_label_dev.png` | `config_label_dev_active.png` | 256x256 px | '🛠️ 개발자 도구 >' 서브메뉴 진입 행 |
 
 ---
 

@@ -72,15 +72,57 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     labels: {}
   };
 
+  const customConfigSprites = {
+    title: null,
+    scales: {},
+    top: {},
+    dev: {}
+  };
+
+  let assetFileCache = {};
+
+  function scanAssetDirectory(dir) {
+    if (!fs.existsSync(dir)) return;
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          scanAssetDirectory(fullPath);
+        } else if (entry.isFile()) {
+          assetFileCache[entry.name.toLowerCase()] = fullPath;
+        }
+      }
+    } catch (e) {}
+  }
+
+  function rebuildAssetCache() {
+    assetFileCache = {};
+    const baseRoots = [
+      path.join(process.cwd(), 'assets'),
+      path.join(process.cwd(), 'resources', 'assets'),
+      path.join(process.resourcesPath || '', 'assets'),
+      path.join(__dirname, '../../assets'),
+      path.join(__dirname, '../../../assets'),
+      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets'
+    ];
+    for (const r of baseRoots) {
+      scanAssetDirectory(r);
+    }
+  }
+
   function findSpriteFile(fileNames) {
     const names = Array.isArray(fileNames) ? fileNames : [fileNames];
-    const subDirs = ['assets/sprites', 'assets/fonts', 'assets/ui', 'assets'];
     for (const fileName of names) {
+      const lower = fileName.toLowerCase();
+      if (assetFileCache[lower]) return assetFileCache[lower];
+
+      // 캐시에 없으면 기존 후보 경로도 백업 탐색
+      const subDirs = ['assets/sprites', 'assets/fonts', 'assets/ui', 'assets'];
       for (const sub of subDirs) {
         const candidates = [
           path.join(process.cwd(), sub, fileName),
           path.join(process.cwd(), 'resources', sub, fileName),
-          path.join(process.cwd(), 'resources/app.asar', sub, fileName),
           path.join(process.resourcesPath || '', sub, fileName),
           path.join(__dirname, '../../', sub, fileName),
           path.join(__dirname, '../../../', sub, fileName),
@@ -95,6 +137,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function loadAllSpritesAndFonts() {
+    rebuildAssetCache();
     // 1) 케이스 배경 (console_case_bg.png)
     const casePath = findSpriteFile('console_case_bg.png');
     if (casePath && layerCaseBg) {
@@ -290,6 +333,39 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         customMenuSprites.labels[key + '_active'] = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
       }
     }
+
+    // 9) ⚙️ 설정(CONFIG) 전용 256x256 스프라이트 로드
+    const configTitleP = findSpriteFile(['ui_title_config.png', 'config_title.png']);
+    if (configTitleP) {
+      customConfigSprites.title = `data:image/png;base64,${fs.readFileSync(configTitleP).toString('base64')}`;
+    }
+
+    // 9-1. 크기 조절 (100% ~ 300% 10% 단위별 Normal & Active)
+    for (let s = 100; s <= 300; s += 10) {
+      const normP = findSpriteFile([`config_scale_${s}.png`, `scale_${s}.png`]);
+      if (normP) {
+        customConfigSprites.scales[String(s)] = `data:image/png;base64,${fs.readFileSync(normP).toString('base64')}`;
+      }
+      const actP = findSpriteFile([`config_scale_${s}_active.png`, `scale_${s}_active.png`]);
+      if (actP) {
+        customConfigSprites.scales[`${s}_active`] = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
+      }
+    }
+
+    // 9-2. 항상 위에 고정 4종 (off, off_active, on, on_active)
+    const topKeys = ['off', 'off_active', 'on', 'on_active'];
+    for (const k of topKeys) {
+      const p = findSpriteFile([`config_top_${k}.png`, `config_always_top_${k}.png`, `top_${k}.png`]);
+      if (p) {
+        customConfigSprites.top[k] = `data:image/png;base64,${fs.readFileSync(p).toString('base64')}`;
+      }
+    }
+
+    // 9-3. 개발자 도구 진입 라벨
+    const devNormP = findSpriteFile(['config_label_dev.png', 'config_dev.png']);
+    if (devNormP) customConfigSprites.dev.normal = `data:image/png;base64,${fs.readFileSync(devNormP).toString('base64')}`;
+    const devActP = findSpriteFile(['config_label_dev_active.png', 'config_dev_active.png']);
+    if (devActP) customConfigSprites.dev.active = `data:image/png;base64,${fs.readFileSync(devActP).toString('base64')}`;
   }
 
   // 앱 시작 즉시 배경/스프라이트/폰트 로드
@@ -378,6 +454,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       barScaleFill.style.width = `${fillPct}%`;
     }
     setConsoleScale(currentConsoleScalePercent / 100);
+    if (currentMenuMode === 'CONFIG') {
+      renderConfigMenuCursor();
+    }
   }
 
   updateScaleDisplay(currentConsoleScalePercent);
@@ -397,6 +476,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     alwaysOnTopToggle.addEventListener('change', (e) => {
       if (window.electronAPI && window.electronAPI.setAlwaysOnTop) {
         window.electronAPI.setAlwaysOnTop(e.target.checked);
+      }
+      if (currentMenuMode === 'CONFIG') {
+        renderConfigMenuCursor();
       }
     });
   }
@@ -817,6 +899,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     currentMenuMode = 'CONFIG';
     configCursorIndex = 0;
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
+    if (layerMenuTitle && customConfigSprites.title) {
+      layerMenuTitle.style.backgroundImage = `url("${customConfigSprites.title}")`;
+      layerMenuTitle.classList.remove('hidden');
+    }
     settingsModalEl.classList.remove('hidden');
     renderConfigMenuCursor();
   }
@@ -824,6 +910,77 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   function renderConfigMenuCursor() {
     const rows = getVisibleConfigRows();
     if (configCursorIndex >= rows.length) configCursorIndex = Math.max(0, rows.length - 1);
+
+    // 설정창 타이틀 스프라이트 처리
+    const osdTitleEl = settingsModalEl.querySelector('.osd-title');
+    if (osdTitleEl) {
+      if (customConfigSprites.title) {
+        osdTitleEl.style.opacity = '0';
+        if (layerMenuTitle) layerMenuTitle.classList.remove('hidden');
+      } else {
+        osdTitleEl.style.opacity = '1';
+        if (layerMenuTitle) layerMenuTitle.classList.add('hidden');
+      }
+    }
+
+    // 1번 행: 크기 조절 (100% ~ 300% 10% 단위별 Normal & Active)
+    const isScaleSel = configCursorIndex === 0;
+    const scaleKey = String(currentConsoleScalePercent);
+    const scaleActImg = customConfigSprites.scales[`${scaleKey}_active`];
+    const scaleNormImg = customConfigSprites.scales[scaleKey];
+    const targetScaleImg = isScaleSel ? (scaleActImg || scaleNormImg) : scaleNormImg;
+
+    if (layerMenuItems[0]) {
+      if (targetScaleImg) {
+        layerMenuItems[0].style.backgroundImage = `url("${targetScaleImg}")`;
+        layerMenuItems[0].classList.remove('hidden');
+        if (rows[0]) rows[0].style.opacity = '0';
+      } else {
+        layerMenuItems[0].classList.add('hidden');
+        if (rows[0]) rows[0].style.opacity = '1';
+      }
+    }
+
+    // 2번 행: 항상 위에 고정 4종 (off, off_active, on, on_active)
+    const isTopSel = configCursorIndex === 1;
+    const isTopOn = alwaysOnTopToggle ? alwaysOnTopToggle.checked : true;
+    const topStateKey = isTopOn ? 'on' : 'off';
+    const topActImg = customConfigSprites.top[`${topStateKey}_active`];
+    const topNormImg = customConfigSprites.top[topStateKey];
+    const targetTopImg = isTopSel ? (topActImg || topNormImg) : topNormImg;
+
+    if (layerMenuItems[1]) {
+      if (targetTopImg) {
+        layerMenuItems[1].style.backgroundImage = `url("${targetTopImg}")`;
+        layerMenuItems[1].classList.remove('hidden');
+        if (rows[1]) rows[1].style.opacity = '0';
+      } else {
+        layerMenuItems[1].classList.add('hidden');
+        if (rows[1]) rows[1].style.opacity = '1';
+      }
+    }
+
+    // 3번 행: 개발자 모드 진입 라벨 (Normal & Active)
+    const isDevSel = configCursorIndex === 2;
+    const devActImg = customConfigSprites.dev.active;
+    const devNormImg = customConfigSprites.dev.normal;
+    const targetDevImg = isDevSel ? (devActImg || devNormImg) : devNormImg;
+
+    if (layerMenuItems[2]) {
+      if (targetDevImg) {
+        layerMenuItems[2].style.backgroundImage = `url("${targetDevImg}")`;
+        layerMenuItems[2].classList.remove('hidden');
+        if (rows[2]) rows[2].style.opacity = '0';
+      } else {
+        layerMenuItems[2].classList.add('hidden');
+        if (rows[2]) rows[2].style.opacity = '1';
+      }
+    }
+
+    // 나머지 미사용 메뉴 레이어는 숨김
+    if (layerMenuItems[3]) layerMenuItems[3].classList.add('hidden');
+    if (layerMenuItems[4]) layerMenuItems[4].classList.add('hidden');
+
     rows.forEach((r, idx) => {
       if (idx === configCursorIndex) r.classList.add('config-active');
       else r.classList.remove('config-active');
