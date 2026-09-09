@@ -105,18 +105,31 @@ html, body {
   color: #0f380f;
   pointer-events: none;
   box-sizing: border-box;
-  padding: 0 6px;
+  padding: 0 4px;
   line-height: 1;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .counter-hud-container .hud-item {
   display: inline-flex;
   align-items: center;
-  gap: 1px;
+  gap: 0px;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.counter-hud-container .hud-item b {
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .counter-divider {
   opacity: 0.3;
+  flex-shrink: 0;
+  padding: 0 2px;
 }
 
 .layer-case-bg {

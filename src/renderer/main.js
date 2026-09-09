@@ -444,6 +444,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   pet.x = 73;
   pet.y = 104;
   pet.setBaseScale(1.0);
+  pet.toggleHitbox(false); // 시작 시 히트박스 항상 꺼짐
   app.stage.addChild(pet);
 
   const stateMachine = new StateMachine(pet);
@@ -483,7 +484,10 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   updateScaleDisplay(currentConsoleScalePercent);
 
+  // 히트박스 토글은 항상 꺼진 상태로 시작 (개발자 모드 초기값 보장)
   if (hitboxToggle) {
+    hitboxToggle.checked = false;
+    document.body.classList.remove('hitbox-debug');
     hitboxToggle.addEventListener('change', (e) => {
       pet.toggleHitbox(e.target.checked);
       if (e.target.checked) {
@@ -585,16 +589,20 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   // 상단 LCD 카운터 스트립 및 상태 HUD 갱신
   function updateHUD(snapshot) {
-    const paddedClicks = String(snapshot.clicks || 0).padStart(5, '0');
-    const paddedGold = String(snapshot.gold || 0).padStart(5, '0');
+    const clicks = snapshot.clicks || 0;
+    const gold = snapshot.gold || 0;
 
-    if (displayClicksEl) displayClicksEl.innerText = paddedClicks;
-    if (displayGoldEl) displayGoldEl.innerText = `${paddedGold}G`;
+    // 카운터: 쉼표 구분 (1,234 형태)
+    const clicksStr = clicks.toLocaleString('ko-KR');
+    const goldStr = gold.toLocaleString('ko-KR');
+
+    if (displayClicksEl) displayClicksEl.innerText = clicksStr;
+    if (displayGoldEl) displayGoldEl.innerText = `${goldStr}G`;
 
     if (statLevelEl) statLevelEl.innerText = `Lv.${snapshot.level}`;
-    if (statClicksEl) statClicksEl.innerText = `${snapshot.clicks}회`;
-    if (statGoldEl) statGoldEl.innerText = `${snapshot.gold}G`;
-    if (shopGoldDisplayEl) shopGoldDisplayEl.innerText = `${snapshot.gold}G`;
+    if (statClicksEl) statClicksEl.innerText = `${clicks.toLocaleString('ko-KR')}회`;
+    if (statGoldEl) statGoldEl.innerText = `${goldStr}G`;
+    if (shopGoldDisplayEl) shopGoldDisplayEl.innerText = `${goldStr}G`;
 
     if (barFullness) barFullness.style.width = `${snapshot.fullness}%`;
     if (barHappiness) barHappiness.style.width = `${snapshot.happiness}%`;
