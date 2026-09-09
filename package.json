@@ -13,7 +13,7 @@
     "appId": "com.tmtomato.desktoppet",
     "productName": "DesktopPet",
     "directories": {
-      "output": "dist"
+      "output": "C:\\DesktopPet_dist"
     },
     "win": {
       "target": "dir"
@@ -55,5 +55,8 @@
     "electron-store": "^11.0.2",
     "pixi.js": "^8.19.0",
     "uiohook-napi": "^1.5.5"
+  },
+  "overrides": {
+    "earcut": "2.2.4"
   }
 }
