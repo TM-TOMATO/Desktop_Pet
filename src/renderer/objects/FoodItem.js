@@ -17,6 +17,23 @@ class FoodItem extends PIXI.Container {
     this.initGraphics();
   }
 
+  findFileRecursively(dir, targetName) {
+    if (!fs.existsSync(dir)) return null;
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          const res = this.findFileRecursively(full, targetName);
+          if (res) return res;
+        } else if (entry.isFile() && entry.name.toLowerCase() === targetName.toLowerCase()) {
+          return full;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
   initGraphics() {
     // 1) Find item sprite if present (item_apple.png, food_apple.png, etc.)
     const candidates = [
@@ -24,11 +41,16 @@ class FoodItem extends PIXI.Container {
       `food_${this.foodType}.png`
     ];
     let foundPath = null;
-    const subDirs = ['assets/sprites', 'resources/assets/sprites'];
+    const baseRoots = [
+      path.join(process.cwd(), 'assets'),
+      path.join(process.cwd(), 'resources/assets'),
+      path.join(__dirname, '../../assets'),
+      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets'
+    ];
     for (const name of candidates) {
-      for (const sub of subDirs) {
-        const p = path.join(process.cwd(), sub, name);
-        if (fs.existsSync(p)) { foundPath = p; break; }
+      for (const root of baseRoots) {
+        foundPath = this.findFileRecursively(root, name);
+        if (foundPath) break;
       }
       if (foundPath) break;
     }

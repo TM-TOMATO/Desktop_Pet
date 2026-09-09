@@ -102,23 +102,38 @@ class PetContainer extends PIXI.Container {
     }
   }
 
+  findFileRecursively(dir, targetName) {
+    if (!fs.existsSync(dir)) return null;
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          const res = this.findFileRecursively(full, targetName);
+          if (res) return res;
+        } else if (entry.isFile() && entry.name.toLowerCase() === targetName.toLowerCase()) {
+          return full;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
   async loadTextureViaDataUrl(filename) {
-    const candidates = [
-      path.join(process.cwd(), 'assets/sprites', filename),
-      path.join(process.cwd(), 'resources/assets/sprites', filename),
-      path.join(process.cwd(), 'resources/app.asar/assets/sprites', filename),
-      path.join(process.resourcesPath || '', 'assets/sprites', filename),
-      path.join(__dirname, '../../assets/sprites', filename),
-      path.join(__dirname, '../../../assets/sprites', filename),
-      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets/sprites/' + filename
+    const baseRoots = [
+      path.join(process.cwd(), 'assets'),
+      path.join(process.cwd(), 'resources/assets'),
+      path.join(process.cwd(), 'resources/app.asar/assets'),
+      path.join(process.resourcesPath || '', 'assets'),
+      path.join(__dirname, '../../assets'),
+      path.join(__dirname, '../../../assets'),
+      'C:/Users/user/OneDrive/Desktop/Desktop_Pet/assets'
     ];
 
     let foundPath = null;
-    for (const p of candidates) {
-      if (fs.existsSync(p)) {
-        foundPath = p;
-        break;
-      }
+    for (const root of baseRoots) {
+      foundPath = this.findFileRecursively(root, filename);
+      if (foundPath) break;
     }
 
     if (!foundPath) return null;

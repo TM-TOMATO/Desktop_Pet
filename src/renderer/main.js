@@ -57,9 +57,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const alwaysOnTopToggle = document.getElementById('always-on-top-toggle');
   const btnMiniMode = document.getElementById('btn-mini-mode');
   const miniPanel = document.getElementById('mini-panel');
-  const miniCanvasContainer = document.getElementById('mini-canvas-container');
+  // 2. 🖼️ 메뉴 및 상태 변수 초기화
+  let currentMenuMode = 'NONE';
+  let menuCursorIndex = 0;
+  let configCursorIndex = 0;
+  let isDevMode = false;
 
-  // 2. 🖼️ 통합 256x256 레이어 스프라이트 로더 & 상태 스왑
   const dpad8WayTextures = {};
   const powerTextures = {};
   const actionATextures = {};
@@ -655,11 +658,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   // 7. 🎮 레트로 OSD 메뉴 컨트롤러
-  let currentMenuMode = 'NONE';
-  let menuCursorIndex = 0;
-  let configCursorIndex = 0;
-  let isDevMode = false;
-
   const mainMenuItems = [
     { label: 'FEED  (음식)', action: () => openFeedMenu() },
     { label: 'PLAY  (놀기)', action: () => doPlayAction() },
