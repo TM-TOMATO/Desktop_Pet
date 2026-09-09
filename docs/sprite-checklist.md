@@ -51,12 +51,14 @@
 ---
 
 ## 📋 3. 메인 메뉴 (Main Menu) 화면 구성
-*💡 메뉴 라벨 스프라이트 자체에 선택(Active) 도트가 포함되어 있어 별도의 커서 아이콘은 필요 없습니다.*
+*💡 **참고 사항**:*
+*- 메뉴 라벨 스프라이트 자체에 선택(Active) 도트가 포함되어 있어 별도의 커서 아이콘은 필요 없습니다.*
+*- 헤더 타이틀 스프라이트(`ui_title_main.png`)에는 상단 타이틀과 **하단 A/B 키 조작 설명**이 함께 포함되어 있습니다. 스프라이트 감지 시 프로그램의 텍스트 타이틀과 하단 힌트 텍스트(`osd-hint`)가 모두 자동 숨김 처리되어 겹치지 않습니다.*
 
 | 제작 상태 | 요소명 | 기본 파일명 (Normal) | 활성/선택 파일명 (Active) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | [x] | **공통 모달/메뉴 팝업창** | `ui_modal_bg.png` | - | 256x256 px | 메뉴 및 팝업창 공통 배경 프레임 |
-| [x] | **메인 메뉴 헤더 타이틀** | `ui_title_main.png` | - | 256x256 px | 메인 메뉴 상단 '= MAIN MENU =' 타이틀 |
+| [x] | **메인 메뉴 헤더 타이틀** | `ui_title_main.png` | - | 256x256 px | 상단 타이틀 + 하단 [A][B] 키 설명 일체형 스프라이트 |
 | [x] | **FEED (음식) 라벨** | `menu_label_feed.png` | `menu_label_feed_active.png` | 256x256 px | 메인 메뉴 1번 'FEED' 라벨 레이어 |
 | [x] | **PLAY (놀기) 라벨** | `menu_label_play.png` | `menu_label_play_active.png` | 256x256 px | 메인 메뉴 2번 'PLAY' 라벨 레이어 |
 | [x] | **SHOP (상점) 라벨** | `menu_label_shop.png` | `menu_label_shop_active.png` | 256x256 px | 메인 메뉴 3번 'SHOP' 라벨 레이어 |

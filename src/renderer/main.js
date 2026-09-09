@@ -75,6 +75,15 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     labels: {}
   };
 
+  const customMenuTitles = {
+    main: null,
+    feed: null,
+    shop: null,
+    status: null,
+    config: null,
+    dev: null
+  };
+
   const customConfigSprites = {
     title: null,
     scales: {},
@@ -313,12 +322,26 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       }
     }
 
-    // 8) 🎯 커스텀 메뉴 제목, 커서 & 256x256 라벨 스프라이트
-    const titlePath = findSpriteFile(['ui_title_main.png', 'menu_title.png', 'title_main.png']);
-    if (titlePath) {
-      customMenuSprites.title = `data:image/png;base64,${fs.readFileSync(titlePath).toString('base64')}`;
-      if (layerMenuTitle) layerMenuTitle.style.backgroundImage = `url("${customMenuSprites.title}")`;
+    // 8) 🎯 각 메뉴별 256x256 헤더 타이틀 스프라이트 로드 (상단 타이틀 + 하단 A/B 키 조작 설명 일체형)
+    const titleCandidates = {
+      main: ['ui_title_main.png', 'menu_title.png', 'title_main.png'],
+      feed: ['ui_title_feed.png', 'feed_title.png', 'title_feed.png'],
+      shop: ['ui_title_shop.png', 'shop_title.png', 'title_shop.png'],
+      status: ['ui_title_status.png', 'status_title.png', 'title_status.png'],
+      config: ['ui_title_config.png', 'config_title.png', 'title_config.png'],
+      dev: ['ui_title_dev.png', 'dev_title.png', 'title_dev.png']
+    };
+
+    for (const [key, files] of Object.entries(titleCandidates)) {
+      const p = findSpriteFile(files);
+      if (p) {
+        customMenuTitles[key] = `data:image/png;base64,${fs.readFileSync(p).toString('base64')}`;
+      } else {
+        customMenuTitles[key] = null;
+      }
     }
+    customMenuSprites.title = customMenuTitles.main;
+    customConfigSprites.title = customMenuTitles.config;
 
     const cursorPath = findSpriteFile(['ui_cursor.png', 'menu_cursor.png', 'cursor.png']);
     if (cursorPath) {
@@ -338,10 +361,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
 
     // 9) ⚙️ 설정(CONFIG) 전용 256x256 스프라이트 로드
-    const configTitleP = findSpriteFile(['ui_title_config.png', 'config_title.png']);
-    if (configTitleP) {
-      customConfigSprites.title = `data:image/png;base64,${fs.readFileSync(configTitleP).toString('base64')}`;
-    }
 
     // 9-1. 크기 조절 (100% ~ 300% 10% 단위별 Normal & Active)
     for (let s = 100; s <= 300; s += 10) {
@@ -688,6 +707,29 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (devModalEl) devModalEl.classList.add('hidden');
   }
 
+  function updateMenuHeaderAndHint(containerEl, menuKey) {
+    if (!containerEl) return;
+    const titleEl = containerEl.querySelector('.osd-title');
+    const hintEl = containerEl.querySelector('.osd-hint');
+    const spriteUrl = customMenuTitles[menuKey];
+
+    if (spriteUrl) {
+      // 256x256 스프라이트에 상단 타이틀과 하단 A/B 키 조작 설명이 함께 그려져 있으므로 텍스트 모두 숨김
+      if (titleEl) titleEl.style.opacity = '0';
+      if (hintEl) hintEl.style.opacity = '0';
+      if (layerMenuTitle) {
+        layerMenuTitle.style.backgroundImage = `url("${spriteUrl}")`;
+        layerMenuTitle.classList.remove('hidden');
+      }
+    } else {
+      if (titleEl) titleEl.style.opacity = '1';
+      if (hintEl) hintEl.style.opacity = '1';
+      if (layerMenuTitle) {
+        layerMenuTitle.classList.add('hidden');
+      }
+    }
+  }
+
   // 초기 상태에서 메뉴 완전 닫힘 보장
   closeAllMenus();
 
@@ -700,21 +742,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       menuCursorIndex = lastMainMenuCursor;
     }
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
-    if (layerMenuTitle && customMenuSprites.title) layerMenuTitle.classList.remove('hidden');
     osdMenuEl.classList.remove('hidden');
     renderMainMenuCursor();
   }
 
   function renderMainMenuCursor() {
+    updateMenuHeaderAndHint(osdMenuEl, 'main');
     const itemEls = osdMenuEl.querySelectorAll('.osd-item');
     const itemKeys = ['feed', 'play', 'shop', 'status', 'config'];
-    
-    // 메인 메뉴 타이틀 256x256 스프라이트가 있으면 텍스트 타이틀 숨김
-    const osdTitleEl = osdMenuEl.querySelector('.osd-title');
-    if (osdTitleEl) {
-      if (customMenuSprites.title) osdTitleEl.style.opacity = '0';
-      else osdTitleEl.style.opacity = '1';
-    }
 
     itemEls.forEach((el, idx) => {
       const key = itemKeys[idx];
@@ -756,6 +791,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     currentMenuMode = 'FEED';
     menuCursorIndex = 0;
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
+    updateMenuHeaderAndHint(osdFeedMenuEl, 'feed');
     osdFeedMenuEl.classList.remove('hidden');
     renderFeedMenuItems();
   }
@@ -820,6 +856,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     currentMenuMode = 'SHOP';
     menuCursorIndex = 0;
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
+    updateMenuHeaderAndHint(shopModalEl, 'shop');
     shopModalEl.classList.remove('hidden');
     renderShopMenuCursor();
   }
@@ -853,6 +890,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     closeAllMenus();
     currentMenuMode = 'STATUS';
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
+    updateMenuHeaderAndHint(statusModalEl, 'status');
     statusModalEl.classList.remove('hidden');
   }
 
@@ -897,10 +935,6 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     currentMenuMode = 'CONFIG';
     configCursorIndex = 0;
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
-    if (layerMenuTitle && customConfigSprites.title) {
-      layerMenuTitle.style.backgroundImage = `url("${customConfigSprites.title}")`;
-      layerMenuTitle.classList.remove('hidden');
-    }
     settingsModalEl.classList.remove('hidden');
     renderConfigMenuCursor();
   }
@@ -909,17 +943,8 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const rows = getVisibleConfigRows();
     if (configCursorIndex >= rows.length) configCursorIndex = Math.max(0, rows.length - 1);
 
-    // 설정창 타이틀 스프라이트 처리
-    const osdTitleEl = settingsModalEl.querySelector('.osd-title');
-    if (osdTitleEl) {
-      if (customConfigSprites.title) {
-        osdTitleEl.style.opacity = '0';
-        if (layerMenuTitle) layerMenuTitle.classList.remove('hidden');
-      } else {
-        osdTitleEl.style.opacity = '1';
-        if (layerMenuTitle) layerMenuTitle.classList.add('hidden');
-      }
-    }
+    // 설정창 타이틀 및 하단 A/B 키 설명 처리 (스프라이트가 있으면 둘 다 숨김)
+    updateMenuHeaderAndHint(settingsModalEl, 'config');
 
     // 1번 행: 크기 조절 (100% ~ 300% 10% 단위별 Normal & Active)
     const isScaleSel = configCursorIndex === 0;
@@ -996,6 +1021,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function renderDevMenuCursor() {
     if (!devModalEl) return;
+    updateMenuHeaderAndHint(devModalEl, 'dev');
     const rows = Array.from(devModalEl.querySelectorAll('.osd-setting-row'));
     rows.forEach((r, idx) => {
       if (idx === devCursorIndex) r.classList.add('config-active');
