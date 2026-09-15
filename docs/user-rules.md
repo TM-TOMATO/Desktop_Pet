@@ -22,6 +22,7 @@
 - **모든 스프라이트는 256x256 PNG** (레이어 오버레이 방식, 투명 배경)
 - **크기 조절 스프라이트**: 100%~300% (10% 단위) 수치별로 Normal / Active 분할 제작 지원 (`config_scale_*.png`)
 - **항상 위에 고정 스프라이트**: 4종(비선택_꺼짐 `config_top_off`, 선택_꺼짐 `config_top_off_active`, 비선택_켜짐 `config_top_on`, 선택_켜짐 `config_top_on_active`) 분할 제작 지원
+- **히트박스 표시 스프라이트**: 4종(비선택_꺼짐 `dev_hitbox_off`, 선택_꺼짐 `dev_hitbox_off_active`, 비선택_켜짐 `dev_hitbox_on`, 선택_켜짐 `dev_hitbox_on_active`) 분할 제작 지원
 - **폰트**: Galmuri9 (`pixel_font.ttf`) — 반드시 **9px 정수 크기**로만 렌더링해야 도트 깨짐 없음 (`-webkit-font-smoothing: none`)
 - **메뉴 라벨 커서**: 별도 커서 아이콘 없음 — Active 스프라이트 자체에 선택 표시 포함
 - **창 배경**: 메인 메뉴, 먹이, 상점, 스텟, 설정 등 모든 팝업창 배경은 `ui_modal_bg.png`를 공통으로 재활용

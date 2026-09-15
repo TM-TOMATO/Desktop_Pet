@@ -91,6 +91,12 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     dev: {}
   };
 
+  const customDevSprites = {
+    title: null,
+    hitbox: {},
+    reload: {}
+  };
+
   let assetFileCache = {};
 
   function scanAssetDirectory(dir) {
@@ -388,6 +394,22 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (devNormP) customConfigSprites.dev.normal = `data:image/png;base64,${fs.readFileSync(devNormP).toString('base64')}`;
     const devActP = findSpriteFile(['config_label_dev_active.png', 'config_dev_active.png']);
     if (devActP) customConfigSprites.dev.active = `data:image/png;base64,${fs.readFileSync(devActP).toString('base64')}`;
+
+    // 10) 🛠️ 개발자 도구(DEV) 전용 256x256 스프라이트 로드
+    // 10-1. 히트박스 표시 4종 (off, off_active, on, on_active)
+    const hitboxKeys = ['off', 'off_active', 'on', 'on_active'];
+    for (const k of hitboxKeys) {
+      const p = findSpriteFile([`dev_hitbox_${k}.png`, `hitbox_${k}.png`]);
+      if (p) {
+        customDevSprites.hitbox[k] = `data:image/png;base64,${fs.readFileSync(p).toString('base64')}`;
+      }
+    }
+
+    // 10-2. 에셋 새로고침 라벨
+    const reloadNormP = findSpriteFile(['dev_label_reload.png', 'dev_reload.png']);
+    if (reloadNormP) customDevSprites.reload.normal = `data:image/png;base64,${fs.readFileSync(reloadNormP).toString('base64')}`;
+    const reloadActP = findSpriteFile(['dev_label_reload_active.png', 'dev_reload_active.png']);
+    if (reloadActP) customDevSprites.reload.active = `data:image/png;base64,${fs.readFileSync(reloadActP).toString('base64')}`;
   }
 
   // 앱 시작 즉시 배경/스프라이트/폰트 로드
@@ -494,6 +516,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         document.body.classList.add('hitbox-debug');
       } else {
         document.body.classList.remove('hitbox-debug');
+      }
+      if (currentMenuMode === 'DEV') {
+        renderDevMenuCursor();
       }
     });
   }
@@ -1031,6 +1056,48 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (!devModalEl) return;
     updateMenuHeaderAndHint(devModalEl, 'dev');
     const rows = Array.from(devModalEl.querySelectorAll('.osd-setting-row'));
+
+    // 1번 행: 히트박스 표시 4종 (off, off_active, on, on_active)
+    const isHitboxSel = devCursorIndex === 0;
+    const isHitboxOn = hitboxToggle ? hitboxToggle.checked : false;
+    const hitboxStateKey = isHitboxOn ? 'on' : 'off';
+    const hitboxActImg = customDevSprites.hitbox[`${hitboxStateKey}_active`];
+    const hitboxNormImg = customDevSprites.hitbox[hitboxStateKey];
+    const targetHitboxImg = isHitboxSel ? (hitboxActImg || hitboxNormImg) : hitboxNormImg;
+
+    if (layerMenuItems[0]) {
+      if (targetHitboxImg) {
+        layerMenuItems[0].style.backgroundImage = `url("${targetHitboxImg}")`;
+        layerMenuItems[0].classList.remove('hidden');
+        if (rows[0]) rows[0].style.opacity = '0';
+      } else {
+        layerMenuItems[0].classList.add('hidden');
+        if (rows[0]) rows[0].style.opacity = '1';
+      }
+    }
+
+    // 2번 행: 에셋 새로고침 라벨 (Normal & Active)
+    const isReloadSel = devCursorIndex === 1;
+    const reloadActImg = customDevSprites.reload.active;
+    const reloadNormImg = customDevSprites.reload.normal;
+    const targetReloadImg = isReloadSel ? (reloadActImg || reloadNormImg) : reloadNormImg;
+
+    if (layerMenuItems[1]) {
+      if (targetReloadImg) {
+        layerMenuItems[1].style.backgroundImage = `url("${targetReloadImg}")`;
+        layerMenuItems[1].classList.remove('hidden');
+        if (rows[1]) rows[1].style.opacity = '0';
+      } else {
+        layerMenuItems[1].classList.add('hidden');
+        if (rows[1]) rows[1].style.opacity = '1';
+      }
+    }
+
+    // 나머지 미사용 레이어 숨김
+    if (layerMenuItems[2]) layerMenuItems[2].classList.add('hidden');
+    if (layerMenuItems[3]) layerMenuItems[3].classList.add('hidden');
+    if (layerMenuItems[4]) layerMenuItems[4].classList.add('hidden');
+
     rows.forEach((r, idx) => {
       if (idx === devCursorIndex) r.classList.add('config-active');
       else r.classList.remove('config-active');

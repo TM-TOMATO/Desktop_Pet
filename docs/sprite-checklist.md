@@ -168,7 +168,10 @@
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | [x] | **개발자 도구 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 개발자창 팝업 배경 프레임 (공통 모달 배경 재사용) |
 | [ ] | **개발자 도구 헤더 타이틀**| `ui_title_dev.png` | - | 256x256 px | 상단 '=== DEV TOOLS ===' 도트 타이틀 |
-| [ ] | **1번 히트박스 표시 라벨** | `dev_label_hitbox.png` | `dev_label_hitbox_active.png` | 256x256 px | '히트박스 표시' 설정 행 (선택 후 [◀/▶]로 ON/OFF) |
+| [ ] | **히트박스 OFF (비선택)** | `dev_hitbox_off.png` | - | 256x256 px | 히트박스 표시: 꺼짐 상태 (비선택) |
+| [ ] | **히트박스 OFF (선택)**   | - | `dev_hitbox_off_active.png` | 256x256 px | 히트박스 표시: 꺼짐 상태 (선택 중) |
+| [ ] | **히트박스 ON (비선택)**  | `dev_hitbox_on.png` | - | 256x256 px | 히트박스 표시: 켜짐 상태 (비선택) |
+| [ ] | **히트박스 ON (선택)**    | - | `dev_hitbox_on_active.png` | 256x256 px | 히트박스 표시: 켜짐 상태 (선택 중) |
 | [ ] | **2번 에셋 새로고침 라벨** | `dev_label_reload.png` | `dev_label_reload_active.png` | 256x256 px | '에셋 새로고침' 실행 행 (선택 후 [A]로 실행) |
 
 ---
