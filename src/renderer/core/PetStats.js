@@ -11,6 +11,7 @@ class PetStats {
     this.clicks = initialData.clicks || 0;
     this.scaleFactor = initialData.scaleFactor || 1.5;
     this.consoleScale = initialData.consoleScale !== undefined ? initialData.consoleScale : 2.0;
+    this.playTime = initialData.playTime || 0; // 초 단위 누적 플레이 시간
     this.inventory = initialData.inventory || {
       apple: 2,
       meat: 1,
@@ -62,6 +63,8 @@ class PetStats {
   }
 
   update(delta) {
+    // 60FPS 기준 약 60프레임마다 1초 증가
+    this.playTime += delta / 60;
     this.tickTimer += delta;
     if (this.tickTimer >= 600) {
       this.tickTimer = 0;
@@ -130,6 +133,7 @@ class PetStats {
       clicks: this.clicks,
       scaleFactor: this.scaleFactor,
       consoleScale: this.consoleScale,
+      playTime: Math.floor(this.playTime),
       inventory: { ...this.inventory }
     };
   }

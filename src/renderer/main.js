@@ -45,6 +45,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   const devModalEl = document.getElementById('dev-modal');
 
   const statLevelEl = document.getElementById('stat-level');
+  const statTimeEl = document.getElementById('stat-time');
   const statClicksEl = document.getElementById('stat-clicks');
   const statGoldEl = document.getElementById('stat-gold');
   const shopGoldDisplayEl = document.getElementById('shop-gold-display');
@@ -657,6 +658,13 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (displayGoldEl) displayGoldEl.innerText = `${goldStr}G`;
 
     if (statLevelEl) statLevelEl.innerText = `Lv.${snapshot.level}`;
+    if (statTimeEl) {
+      const totalSec = Math.floor(snapshot.playTime || 0);
+      const hrs = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(totalSec % 60).padStart(2, '0');
+      statTimeEl.innerText = `${hrs}:${mins}:${secs}`;
+    }
     if (statClicksEl) statClicksEl.innerText = `${clicks.toLocaleString('ko-KR')}회`;
     if (statGoldEl) statGoldEl.innerText = `${goldStr}G`;
     if (shopGoldDisplayEl) shopGoldDisplayEl.innerText = `${goldStr}G`;
@@ -959,6 +967,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const snap = petStats.getSnapshot();
     const fullness = snap.fullness !== undefined ? snap.fullness : 0;
     const happiness = snap.happiness !== undefined ? snap.happiness : 0;
+
+    if (statTimeEl) {
+      const totalSec = Math.floor(snap.playTime || 0);
+      const hrs = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(totalSec % 60).padStart(2, '0');
+      statTimeEl.innerText = `${hrs}:${mins}:${secs}`;
+    }
 
     // 0~100% 수치를 0~25 (총 26단계)로 계산
     const hungerStep = Math.max(0, Math.min(25, Math.round((fullness / 100) * 25)));
@@ -1535,6 +1551,13 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     const delta = ticker.deltaTime;
 
     petStats.update(delta);
+    if (currentMenuMode === 'STATUS' && statTimeEl) {
+      const totalSec = Math.floor(petStats.playTime || 0);
+      const hrs = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(totalSec % 60).padStart(2, '0');
+      statTimeEl.innerText = `${hrs}:${mins}:${secs}`;
+    }
     stateMachine.update(delta);
     pet.update(delta, stateMachine.currentState);
 

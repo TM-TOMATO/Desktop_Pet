@@ -24,7 +24,7 @@
 - **항상 위에 고정 스프라이트**: 4종(비선택_꺼짐 `config_top_off`, 선택_꺼짐 `config_top_off_active`, 비선택_켜짐 `config_top_on`, 선택_켜짐 `config_top_on_active`) 분할 제작 지원
 - **히트박스 표시 스프라이트**: 4종(비선택_꺼짐 `dev_hitbox_off`, 선택_꺼짐 `dev_hitbox_off_active`, 비선택_켜짐 `dev_hitbox_on`, 선택_켜짐 `dev_hitbox_on_active`) 분할 제작 지원
 - **스텟 게이지 스프라이트**: 허기(`status_hunger_0.png` ~ `status_hunger_25.png`) 및 행복(`status_happy_0.png` ~ `status_happy_25.png`) 각각 0~100% 구간을 26단계 번호형 256x256 오버레이 스프라이트로 분할 제작 지원
-- **스텟창 정보 간소화**: 골드와 클릭수는 상단 헤더 카운터에 상시 표시되므로 스텟창에서는 제거하고 레벨, 허기, 행복만 표시
+- **스텟창 정보**: 스텟창에는 레벨, 플레이시간(HH:MM:SS 형식, 실시간 업데이트), 허기, 행복 표시. 골드와 클릭수는 상단 헤더 카운터에 상시 표시되므로 스텟창에서 제외
 - **폰트**: Galmuri9 (`pixel_font.ttf`) — 반드시 **9px 정수 크기**로만 렌더링해야 도트 깨짐 없음 (`-webkit-font-smoothing: none`)
 - **메뉴 라벨 커서**: 별도 커서 아이콘 없음 — Active 스프라이트 자체에 선택 표시 포함
 - **창 배경**: 메인 메뉴, 먹이, 상점, 스텟, 설정 등 모든 팝업창 배경은 `ui_modal_bg.png`를 공통으로 재활용
