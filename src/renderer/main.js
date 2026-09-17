@@ -97,6 +97,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     reload: {}
   };
 
+  const customStatusSprites = {
+    title: null,
+    labelsLayer: null,
+    levelIcon: null,
+    hunger: {},
+    happy: {}
+  };
+
   let assetFileCache = {};
 
   function scanAssetDirectory(dir) {
@@ -413,6 +421,27 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     if (reloadNormP) customDevSprites.reload.normal = `data:image/png;base64,${fs.readFileSync(reloadNormP).toString('base64')}`;
     const reloadActP = findSpriteFile(['dev_label_reload_active.png', 'dev_reload_active.png']);
     if (reloadActP) customDevSprites.reload.active = `data:image/png;base64,${fs.readFileSync(reloadActP).toString('base64')}`;
+
+    // 11) 📊 스텟(STATUS) 전용 256x256 스프라이트 로드
+    // 11-1. 스텟 고정 라벨 틀 레이어
+    const statusLabelsP = findSpriteFile(['status_labels_layer.png', 'status_labels.png']);
+    if (statusLabelsP) customStatusSprites.labelsLayer = `data:image/png;base64,${fs.readFileSync(statusLabelsP).toString('base64')}`;
+
+    // 11-2. 허기 26단계 (0 ~ 25)
+    for (let step = 0; step <= 25; step++) {
+      const p = findSpriteFile([`status_hunger_${step}.png`, `hunger_${step}.png`]);
+      if (p) {
+        customStatusSprites.hunger[String(step)] = `data:image/png;base64,${fs.readFileSync(p).toString('base64')}`;
+      }
+    }
+
+    // 11-3. 행복 26단계 (0 ~ 25)
+    for (let step = 0; step <= 25; step++) {
+      const p = findSpriteFile([`status_happy_${step}.png`, `happy_${step}.png`]);
+      if (p) {
+        customStatusSprites.happy[String(step)] = `data:image/png;base64,${fs.readFileSync(p).toString('base64')}`;
+      }
+    }
   }
 
   // 앱 시작 즉시 배경/스프라이트/폰트 로드
@@ -638,6 +667,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   petStats.onStatChange = (snapshot) => {
     updateHUD(snapshot);
+    if (currentMenuMode === 'STATUS') {
+      renderStatusMenuLayers();
+    }
     if (snapshot.fullness <= 20 && stateMachine.currentState === PetState.IDLE) {
       stateMachine.changeState(PetState.HUNGRY);
     }
@@ -921,12 +953,69 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     }
   }
 
+  function renderStatusMenuLayers() {
+    if (currentMenuMode !== 'STATUS') return;
+
+    const snap = petStats.getSnapshot();
+    const fullness = snap.fullness !== undefined ? snap.fullness : 0;
+    const happiness = snap.happiness !== undefined ? snap.happiness : 0;
+
+    // 0~100% 수치를 0~25 (총 26단계)로 계산
+    const hungerStep = Math.max(0, Math.min(25, Math.round((fullness / 100) * 25)));
+    const happyStep = Math.max(0, Math.min(25, Math.round((happiness / 100) * 25)));
+
+    const hungerSprite = customStatusSprites.hunger[String(hungerStep)];
+    const happySprite = customStatusSprites.happy[String(happyStep)];
+    const labelsSprite = customStatusSprites.labelsLayer;
+
+    // layerMenuItems[0]: 허기 게이지 256x256 스프라이트
+    const rowHunger = document.getElementById('row-stat-hunger');
+    if (layerMenuItems[0]) {
+      if (hungerSprite) {
+        layerMenuItems[0].style.backgroundImage = `url("${hungerSprite}")`;
+        layerMenuItems[0].classList.remove('hidden');
+        if (rowHunger) rowHunger.style.opacity = '0';
+      } else {
+        layerMenuItems[0].classList.add('hidden');
+        if (rowHunger) rowHunger.style.opacity = '1';
+      }
+    }
+
+    // layerMenuItems[1]: 행복 게이지 256x256 스프라이트
+    const rowHappy = document.getElementById('row-stat-happy');
+    if (layerMenuItems[1]) {
+      if (happySprite) {
+        layerMenuItems[1].style.backgroundImage = `url("${happySprite}")`;
+        layerMenuItems[1].classList.remove('hidden');
+        if (rowHappy) rowHappy.style.opacity = '0';
+      } else {
+        layerMenuItems[1].classList.add('hidden');
+        if (rowHappy) rowHappy.style.opacity = '1';
+      }
+    }
+
+    // layerMenuItems[2]: 스텟 고정 라벨 레이어 (옵션)
+    if (layerMenuItems[2]) {
+      if (labelsSprite) {
+        layerMenuItems[2].style.backgroundImage = `url("${labelsSprite}")`;
+        layerMenuItems[2].classList.remove('hidden');
+      } else {
+        layerMenuItems[2].classList.add('hidden');
+      }
+    }
+
+    // 나머지 미사용 레이어 숨김
+    if (layerMenuItems[3]) layerMenuItems[3].classList.add('hidden');
+    if (layerMenuItems[4]) layerMenuItems[4].classList.add('hidden');
+  }
+
   function openStatusMenu() {
     lastMainMenuCursor = menuCursorIndex;
     closeAllMenus();
     currentMenuMode = 'STATUS';
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     updateMenuHeaderAndHint(statusModalEl, 'status');
+    renderStatusMenuLayers();
     statusModalEl.classList.remove('hidden');
   }
 
