@@ -20,15 +20,18 @@ class FoodItem extends PIXI.Container {
   findFileRecursively(dir, targetName) {
     if (!fs.existsSync(dir)) return null;
     try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      const entries = fs.readdirSync(dir);
       for (const entry of entries) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          const res = this.findFileRecursively(full, targetName);
-          if (res) return res;
-        } else if (entry.isFile() && entry.name.toLowerCase() === targetName.toLowerCase()) {
-          return full;
-        }
+        const full = path.join(dir, entry);
+        try {
+          const stat = fs.statSync(full);
+          if (stat.isDirectory()) {
+            const res = this.findFileRecursively(full, targetName);
+            if (res) return res;
+          } else if (entry.toLowerCase() === targetName.toLowerCase()) {
+            return full;
+          }
+        } catch (e) {}
       }
     } catch (e) {}
     return null;

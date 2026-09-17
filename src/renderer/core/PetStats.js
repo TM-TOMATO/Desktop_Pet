@@ -10,6 +10,7 @@ class PetStats {
     this.gold = initialData.gold !== undefined ? initialData.gold : 0;
     this.clicks = initialData.clicks || 0;
     this.scaleFactor = initialData.scaleFactor || 1.5;
+    this.consoleScale = initialData.consoleScale !== undefined ? initialData.consoleScale : 2.0;
     this.inventory = initialData.inventory || {
       apple: 2,
       meat: 1,
@@ -128,6 +129,7 @@ class PetStats {
       gold: this.gold,
       clicks: this.clicks,
       scaleFactor: this.scaleFactor,
+      consoleScale: this.consoleScale,
       inventory: { ...this.inventory }
     };
   }

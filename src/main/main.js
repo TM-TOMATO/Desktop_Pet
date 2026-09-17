@@ -7,8 +7,11 @@ let tray = null;
 let uIOhookInstance = null;
 let isAlwaysOnTop = true;
 
-const DEFAULT_WIN_W = 384;
-const DEFAULT_WIN_H = 384;
+// 기본 256x256의 2.0배 = 512x512 px (세이브 데이터의 consoleScale 반영)
+const savedData = store.loadData();
+const savedScale = (savedData && savedData.petInfo && savedData.petInfo.consoleScale) ? savedData.petInfo.consoleScale : 2.0;
+const DEFAULT_WIN_W = Math.round(256 * savedScale);
+const DEFAULT_WIN_H = Math.round(256 * savedScale);
 const MINI_WIN_W = 150;
 const MINI_WIN_H = 170;
 

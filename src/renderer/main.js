@@ -102,14 +102,17 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   function scanAssetDirectory(dir) {
     if (!fs.existsSync(dir)) return;
     try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      const entries = fs.readdirSync(dir);
       for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          scanAssetDirectory(fullPath);
-        } else if (entry.isFile()) {
-          assetFileCache[entry.name.toLowerCase()] = fullPath;
-        }
+        const fullPath = path.join(dir, entry);
+        try {
+          const stat = fs.statSync(fullPath);
+          if (stat.isDirectory()) {
+            scanAssetDirectory(fullPath);
+          } else {
+            assetFileCache[entry.toLowerCase()] = fullPath;
+          }
+        } catch (e) {}
       }
     } catch (e) {}
   }
