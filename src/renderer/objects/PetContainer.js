@@ -491,6 +491,10 @@ class PetContainer extends PIXI.Container {
     this.updateHitbox();
   }
 
+  toggleHitbox(visible) {
+    this.setHitboxVisible(visible !== undefined ? visible : !this.showHitbox);
+  }
+
   onStateChange(newState) {
     this.setPetState(newState);
   }
