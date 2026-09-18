@@ -1067,7 +1067,15 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
   }
 
   function getVisibleConfigRows() {
-    return Array.from(settingsModalEl.querySelectorAll('.osd-setting-row'));
+    const devRow = document.getElementById('row-open-dev');
+    if (devRow) {
+      if (isDevMode) {
+        devRow.classList.remove('hidden');
+      } else {
+        devRow.classList.add('hidden');
+      }
+    }
+    return Array.from(settingsModalEl.querySelectorAll('.osd-setting-row:not(.hidden)'));
   }
 
   function openConfigMenu() {
@@ -1124,20 +1132,26 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       }
     }
 
-    // 3번 행: 개발자 모드 진입 라벨 (Normal & Active)
-    const isDevSel = configCursorIndex === 2;
-    const devActImg = customConfigSprites.dev.active;
-    const devNormImg = customConfigSprites.dev.normal;
-    const targetDevImg = isDevSel ? (devActImg || devNormImg) : devNormImg;
+    // 3번 행: 개발자 모드 진입 라벨 (Normal & Active) - isDevMode가 켜져 있을 때만 표시
+    if (isDevMode) {
+      const isDevSel = configCursorIndex === 2;
+      const devActImg = customConfigSprites.dev.active;
+      const devNormImg = customConfigSprites.dev.normal;
+      const targetDevImg = isDevSel ? (devActImg || devNormImg) : devNormImg;
 
-    if (layerMenuItems[2]) {
-      if (targetDevImg) {
-        layerMenuItems[2].style.backgroundImage = `url("${targetDevImg}")`;
-        layerMenuItems[2].classList.remove('hidden');
-        if (rows[2]) rows[2].style.opacity = '0';
-      } else {
+      if (layerMenuItems[2]) {
+        if (targetDevImg) {
+          layerMenuItems[2].style.backgroundImage = `url("${targetDevImg}")`;
+          layerMenuItems[2].classList.remove('hidden');
+          if (rows[2]) rows[2].style.opacity = '0';
+        } else {
+          layerMenuItems[2].classList.add('hidden');
+          if (rows[2]) rows[2].style.opacity = '1';
+        }
+      }
+    } else {
+      if (layerMenuItems[2]) {
         layerMenuItems[2].classList.add('hidden');
-        if (rows[2]) rows[2].style.opacity = '1';
       }
     }
 
@@ -1230,7 +1244,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       const activeRow = rows[configCursorIndex];
       if (activeRow) {
         if (activeRow.id === 'row-open-dev' || activeRow.dataset.row === 'dev-menu') {
-          openDevMenu();
+          if (isDevMode) openDevMenu();
         } else {
           const toggle = activeRow.querySelector('input[type="checkbox"]');
           if (toggle) {
