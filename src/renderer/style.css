@@ -47,6 +47,7 @@ html, body {
   cursor: grab;
   /* 기본 폴백 케이스 스타일 */
   background: transparent;
+  -webkit-app-region: drag;
 }
 
 .console-casing:active {
@@ -84,6 +85,7 @@ html, body {
   overflow: hidden;
   cursor: default;
   background: transparent !important;
+  -webkit-app-region: no-drag;
 }
 
 .layer-counter-bg {
@@ -236,6 +238,7 @@ canvas {
   z-index: 95;
   cursor: default;
   border-radius: 2px;
+  -webkit-app-region: no-drag;
 }
 
 .osd-menu.hidden, .osd-modal.hidden {
