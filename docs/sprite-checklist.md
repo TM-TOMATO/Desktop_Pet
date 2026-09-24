@@ -7,15 +7,24 @@
 ## 📌 파일 배치 경로 (폴더별 구조화)
 모든 이미지 에셋(PNG)은 아래와 같이 **카테고리별 하위 폴더**에 지정된 파일명으로 넣어주시면 프로그램이 **자동 감지하여 즉시 반영**합니다:
 - 📂 `Desktop_Pet/assets/sprites/pet/` — 펫 모션 시트 (`pet_idle_sheet.png`, `pet_walk_sheet.png` 등)
-- 📂 `Desktop_Pet/assets/sprites/console/` — 게임기 본체/스크린/카운터/버튼 (`console_case_bg.png`, `screen_bg.png`, `counter_bg.png`, `btn_*.png`)
-- 📂 `Desktop_Pet/assets/sprites/menu_main/` — 메인 메뉴 및 팝업창 (`ui_modal_bg.png`, `ui_title_main.png`, `menu_label_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/console/case/` — 게임기 본체/스크린/카운터 배경 (`console_case_bg.png`, `screen_bg.png`, `counter_bg.png`)
+- 📂 `Desktop_Pet/assets/sprites/console/buttons/` — 조작 버튼류 (`btn_dpad*.png`, `btn_action_*.png`, `btn_power*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_main/` — 메인 메뉴 및 공통 팝업창 (`ui_modal_bg.png`, `ui_title_main.png`, `menu_label_*.png`)
 - 📂 `Desktop_Pet/assets/sprites/menu_feed/` — 먹이 선택창 및 아이템 (`item_*.png`, `ui_title_feed.png`)
 - 📂 `Desktop_Pet/assets/sprites/menu_play/` — 놀이 화면 및 이펙트 (`pet_happy_sheet.png`, `effect_*.png`)
 - 📂 `Desktop_Pet/assets/sprites/menu_shop/` — 상점 품목 및 골드 패널 (`shop_item_*.png`, `ui_title_shop.png`)
-- 📂 `Desktop_Pet/assets/sprites/menu_status/` — 상태창 및 스텟 아이콘 (`status_*.png`, `ui_title_status.png`)
-- 📂 `Desktop_Pet/assets/sprites/menu_config/` — 설정창 (각 수치별 크기 라벨, 항상 위 고정 4종, 개발자 진입 라벨)
-- 📂 `Desktop_Pet/assets/sprites/menu_dev/` — 개발자 도구 (히트박스/새로고침 라벨, 타이틀)
+- 📂 `Desktop_Pet/assets/sprites/menu_status/` — 상태창 헤더 타이틀 및 고정 라벨 (`ui_title_status.png`, `status_labels_layer.png`, `status_icon_level.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_status/hunger/` — 허기 26단계 게이지 (`status_hunger_0.png` ~ `status_hunger_25.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_status/happy/` — 행복 26단계 게이지 (`status_happy_0.png` ~ `status_happy_25.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_config/` — 설정창 타이틀 (`ui_title_config.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_config/scale/` — 본체 크기 조절 라벨 21단계 (`config_scale_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_config/top/` — 항상 위에 고정 4종 라벨 (`config_top_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_config/dev_entry/` — 개발자 모드 진입 라벨 (`config_label_dev*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_dev/` — 개발자 도구 타이틀 (`ui_title_dev.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_dev/hitbox/` — 히트박스 표시 4종 라벨 (`dev_hitbox_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_dev/reload/` — 에셋 새로고침 라벨 (`dev_label_reload*.png`)
 - 📂 `Desktop_Pet/assets/fonts/` — 폰트 전용 (`pixel_font.ttf`)
+- 📂 `Desktop_Pet/assets/ui/` — 시스템 UI (`tray_icon.png`)
 
 ---
 
@@ -73,7 +82,7 @@
 | 제작 상태 | 요소명 | 권장 파일명 | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- |
 | [x] | **먹이창 배경** | `ui_modal_bg.png` (공통 재활용) | 256x256 px | 먹이 선택창 팝업 배경 프레임 (공통 모달 배경 재사용) |
-| [ ] | **먹이창 헤더 타이틀** | `ui_title_feed.png` | 256x256 px | 상단 '=== SELECT FOOD ===' 도트 타이틀 |
+| [x] | **먹이창 헤더 타이틀** | `ui_title_feed.png` | 256x256 px | 상단 '=== SELECT FOOD ===' 도트 타이틀 |
 | [ ] | **🍎 사과 아이콘 & 낙하**| `item_apple.png` | 16x16 / 24x24 px | 사과 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
 | [ ] | **🍗 고기 아이콘 & 낙하**| `item_meat.png` | 16x16 / 24x24 px | 고기 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
 | [ ] | **🐟 생선 아이콘 & 낙하**| `item_fish.png` | 16x16 / 24x24 px | 생선 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
@@ -97,7 +106,7 @@
 | 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | [x] | **상점창 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 사이버 샵 팝업 배경 프레임 (공통 모달 배경 재사용) |
-| [ ] | **상점창 헤더 타이틀** | `ui_title_shop.png` | - | 256x256 px | 상단 '=== CYBER SHOP ===' 도트 타이틀 |
+| [x] | **상점창 헤더 타이틀** | `ui_title_shop.png` | - | 256x256 px | 상단 '=== CYBER SHOP ===' 도트 타이틀 |
 | [ ] | **상점 1번 (사과 10G)**| `shop_item_apple.png` | `shop_item_apple_active.png` | 256x256 px | 🍎 사과 품목 행 레이어 (이름, 아이콘, 10G 포함) |
 | [ ] | **상점 2번 (고기 25G)**| `shop_item_meat.png` | `shop_item_meat_active.png` | 256x256 px | 🍗 고기 품목 행 레이어 (이름, 아이콘, 25G 포함) |
 | [ ] | **상점 3번 (생선 20G)**| `shop_item_fish.png` | `shop_item_fish_active.png` | 256x256 px | 🐟 생선 품목 행 레이어 (이름, 아이콘, 20G 포함) |
@@ -112,61 +121,61 @@
 | 제작 상태 | 요소명 | 권장 파일명 | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- |
 | [x] | **상태창 배경** | `ui_modal_bg.png` (공통 재활용) | 256x256 px | 펫 상태창 팝업 배경 프레임 (공통 모달 배경 재사용) |
-| [ ] | **상태창 헤더 타이틀** | `ui_title_status.png` | 256x256 px | 상단 '=== PET STATUS ===' 도트 타이틀 |
-| [ ] | **스텟 고정 라벨 레이어** | `status_labels_layer.png` | 256x256 px | '레벨', '시간', '허기', '행복' 고정 텍스트/도트 틀 레이어 |
+| [x] | **상태창 헤더 타이틀** | `ui_title_status.png` | 256x256 px | 상단 '=== PET STATUS ===' 도트 타이틀 |
+| [x] | **스텟 고정 라벨 레이어** | `status_labels_layer.png` | 256x256 px | '레벨', '시간', '허기', '행복' 고정 텍스트/도트 틀 레이어 |
 | [ ] | **Lv 레벨 도트 아이콘** | `status_icon_level.png` | 12x12 px | 레벨 수치 옆에 붙는 도트 뱃지/아이콘 |
-| [ ] | **허기 0 단계 (0%)** | `status_hunger_0.png` | 256x256 px | 허기 수치 0% 상태 게이지 스프라이트 |
-| [ ] | **허기 1 단계 (4%)** | `status_hunger_1.png` | 256x256 px | 허기 수치 4% 상태 게이지 스프라이트 |
-| [ ] | **허기 2 단계 (8%)** | `status_hunger_2.png` | 256x256 px | 허기 수치 8% 상태 게이지 스프라이트 |
-| [ ] | **허기 3 단계 (12%)** | `status_hunger_3.png` | 256x256 px | 허기 수치 12% 상태 게이지 스프라이트 |
-| [ ] | **허기 4 단계 (16%)** | `status_hunger_4.png` | 256x256 px | 허기 수치 16% 상태 게이지 스프라이트 |
-| [ ] | **허기 5 단계 (20%)** | `status_hunger_5.png` | 256x256 px | 허기 수치 20% 상태 게이지 스프라이트 |
-| [ ] | **허기 6 단계 (24%)** | `status_hunger_6.png` | 256x256 px | 허기 수치 24% 상태 게이지 스프라이트 |
-| [ ] | **허기 7 단계 (28%)** | `status_hunger_7.png` | 256x256 px | 허기 수치 28% 상태 게이지 스프라이트 |
-| [ ] | **허기 8 단계 (32%)** | `status_hunger_8.png` | 256x256 px | 허기 수치 32% 상태 게이지 스프라이트 |
-| [ ] | **허기 9 단계 (36%)** | `status_hunger_9.png` | 256x256 px | 허기 수치 36% 상태 게이지 스프라이트 |
-| [ ] | **허기 10 단계 (40%)** | `status_hunger_10.png` | 256x256 px | 허기 수치 40% 상태 게이지 스프라이트 |
-| [ ] | **허기 11 단계 (44%)** | `status_hunger_11.png` | 256x256 px | 허기 수치 44% 상태 게이지 스프라이트 |
-| [ ] | **허기 12 단계 (48%)** | `status_hunger_12.png` | 256x256 px | 허기 수치 48% 상태 게이지 스프라이트 |
-| [ ] | **허기 13 단계 (52%)** | `status_hunger_13.png` | 256x256 px | 허기 수치 52% 상태 게이지 스프라이트 |
-| [ ] | **허기 14 단계 (56%)** | `status_hunger_14.png` | 256x256 px | 허기 수치 56% 상태 게이지 스프라이트 |
-| [ ] | **허기 15 단계 (60%)** | `status_hunger_15.png` | 256x256 px | 허기 수치 60% 상태 게이지 스프라이트 |
-| [ ] | **허기 16 단계 (64%)** | `status_hunger_16.png` | 256x256 px | 허기 수치 64% 상태 게이지 스프라이트 |
-| [ ] | **허기 17 단계 (68%)** | `status_hunger_17.png` | 256x256 px | 허기 수치 68% 상태 게이지 스프라이트 |
-| [ ] | **허기 18 단계 (72%)** | `status_hunger_18.png` | 256x256 px | 허기 수치 72% 상태 게이지 스프라이트 |
-| [ ] | **허기 19 단계 (76%)** | `status_hunger_19.png` | 256x256 px | 허기 수치 76% 상태 게이지 스프라이트 |
-| [ ] | **허기 20 단계 (80%)** | `status_hunger_20.png` | 256x256 px | 허기 수치 80% 상태 게이지 스프라이트 |
-| [ ] | **허기 21 단계 (84%)** | `status_hunger_21.png` | 256x256 px | 허기 수치 84% 상태 게이지 스프라이트 |
-| [ ] | **허기 22 단계 (88%)** | `status_hunger_22.png` | 256x256 px | 허기 수치 88% 상태 게이지 스프라이트 |
-| [ ] | **허기 23 단계 (92%)** | `status_hunger_23.png` | 256x256 px | 허기 수치 92% 상태 게이지 스프라이트 |
-| [ ] | **허기 24 단계 (96%)** | `status_hunger_24.png` | 256x256 px | 허기 수치 96% 상태 게이지 스프라이트 |
-| [ ] | **허기 25 단계 (100%)** | `status_hunger_25.png` | 256x256 px | 허기 수치 100% 만복 상태 게이지 스프라이트 |
-| [ ] | **행복 0 단계 (0%)** | `status_happy_0.png` | 256x256 px | 행복 수치 0% 상태 게이지 스프라이트 |
-| [ ] | **행복 1 단계 (4%)** | `status_happy_1.png` | 256x256 px | 행복 수치 4% 상태 게이지 스프라이트 |
-| [ ] | **행복 2 단계 (8%)** | `status_happy_2.png` | 256x256 px | 행복 수치 8% 상태 게이지 스프라이트 |
-| [ ] | **행복 3 단계 (12%)** | `status_happy_3.png` | 256x256 px | 행복 수치 12% 상태 게이지 스프라이트 |
-| [ ] | **행복 4 단계 (16%)** | `status_happy_4.png` | 256x256 px | 행복 수치 16% 상태 게이지 스프라이트 |
-| [ ] | **행복 5 단계 (20%)** | `status_happy_5.png` | 256x256 px | 행복 수치 20% 상태 게이지 스프라이트 |
-| [ ] | **행복 6 단계 (24%)** | `status_happy_6.png` | 256x256 px | 행복 수치 24% 상태 게이지 스프라이트 |
-| [ ] | **행복 7 단계 (28%)** | `status_happy_7.png` | 256x256 px | 행복 수치 28% 상태 게이지 스프라이트 |
-| [ ] | **행복 8 단계 (32%)** | `status_happy_8.png` | 256x256 px | 행복 수치 32% 상태 게이지 스프라이트 |
-| [ ] | **행복 9 단계 (36%)** | `status_happy_9.png` | 256x256 px | 행복 수치 36% 상태 게이지 스프라이트 |
-| [ ] | **행복 10 단계 (40%)** | `status_happy_10.png` | 256x256 px | 행복 수치 40% 상태 게이지 스프라이트 |
-| [ ] | **행복 11 단계 (44%)** | `status_happy_11.png` | 256x256 px | 행복 수치 44% 상태 게이지 스프라이트 |
-| [ ] | **행복 12 단계 (48%)** | `status_happy_12.png` | 256x256 px | 행복 수치 48% 상태 게이지 스프라이트 |
-| [ ] | **행복 13 단계 (52%)** | `status_happy_13.png` | 256x256 px | 행복 수치 52% 상태 게이지 스프라이트 |
-| [ ] | **행복 14 단계 (56%)** | `status_happy_14.png` | 256x256 px | 행복 수치 56% 상태 게이지 스프라이트 |
-| [ ] | **행복 15 단계 (60%)** | `status_happy_15.png` | 256x256 px | 행복 수치 60% 상태 게이지 스프라이트 |
-| [ ] | **행복 16 단계 (64%)** | `status_happy_16.png` | 256x256 px | 행복 수치 64% 상태 게이지 스프라이트 |
-| [ ] | **행복 17 단계 (68%)** | `status_happy_17.png` | 256x256 px | 행복 수치 68% 상태 게이지 스프라이트 |
-| [ ] | **행복 18 단계 (72%)** | `status_happy_18.png` | 256x256 px | 행복 수치 72% 상태 게이지 스프라이트 |
-| [ ] | **행복 19 단계 (76%)** | `status_happy_19.png` | 256x256 px | 행복 수치 76% 상태 게이지 스프라이트 |
-| [ ] | **행복 20 단계 (80%)** | `status_happy_20.png` | 256x256 px | 행복 수치 80% 상태 게이지 스프라이트 |
-| [ ] | **행복 21 단계 (84%)** | `status_happy_21.png` | 256x256 px | 행복 수치 84% 상태 게이지 스프라이트 |
-| [ ] | **행복 22 단계 (88%)** | `status_happy_22.png` | 256x256 px | 행복 수치 88% 상태 게이지 스프라이트 |
-| [ ] | **행복 23 단계 (92%)** | `status_happy_23.png` | 256x256 px | 행복 수치 92% 상태 게이지 스프라이트 |
-| [ ] | **행복 24 단계 (96%)** | `status_happy_24.png` | 256x256 px | 행복 수치 96% 상태 게이지 스프라이트 |
-| [ ] | **행복 25 단계 (100%)** | `status_happy_25.png` | 256x256 px | 행복 수치 100% 최고 상태 게이지 스프라이트 |
+| [x] | **허기 0 단계 (0%)** | `status_hunger_0.png` | 256x256 px | 허기 수치 0% 상태 게이지 스프라이트 |
+| [x] | **허기 1 단계 (4%)** | `status_hunger_1.png` | 256x256 px | 허기 수치 4% 상태 게이지 스프라이트 |
+| [x] | **허기 2 단계 (8%)** | `status_hunger_2.png` | 256x256 px | 허기 수치 8% 상태 게이지 스프라이트 |
+| [x] | **허기 3 단계 (12%)** | `status_hunger_3.png` | 256x256 px | 허기 수치 12% 상태 게이지 스프라이트 |
+| [x] | **허기 4 단계 (16%)** | `status_hunger_4.png` | 256x256 px | 허기 수치 16% 상태 게이지 스프라이트 |
+| [x] | **허기 5 단계 (20%)** | `status_hunger_5.png` | 256x256 px | 허기 수치 20% 상태 게이지 스프라이트 |
+| [x] | **허기 6 단계 (24%)** | `status_hunger_6.png` | 256x256 px | 허기 수치 24% 상태 게이지 스프라이트 |
+| [x] | **허기 7 단계 (28%)** | `status_hunger_7.png` | 256x256 px | 허기 수치 28% 상태 게이지 스프라이트 |
+| [x] | **허기 8 단계 (32%)** | `status_hunger_8.png` | 256x256 px | 허기 수치 32% 상태 게이지 스프라이트 |
+| [x] | **허기 9 단계 (36%)** | `status_hunger_9.png` | 256x256 px | 허기 수치 36% 상태 게이지 스프라이트 |
+| [x] | **허기 10 단계 (40%)** | `status_hunger_10.png` | 256x256 px | 허기 수치 40% 상태 게이지 스프라이트 |
+| [x] | **허기 11 단계 (44%)** | `status_hunger_11.png` | 256x256 px | 허기 수치 44% 상태 게이지 스프라이트 |
+| [x] | **허기 12 단계 (48%)** | `status_hunger_12.png` | 256x256 px | 허기 수치 48% 상태 게이지 스프라이트 |
+| [x] | **허기 13 단계 (52%)** | `status_hunger_13.png` | 256x256 px | 허기 수치 52% 상태 게이지 스프라이트 |
+| [x] | **허기 14 단계 (56%)** | `status_hunger_14.png` | 256x256 px | 허기 수치 56% 상태 게이지 스프라이트 |
+| [x] | **허기 15 단계 (60%)** | `status_hunger_15.png` | 256x256 px | 허기 수치 60% 상태 게이지 스프라이트 |
+| [x] | **허기 16 단계 (64%)** | `status_hunger_16.png` | 256x256 px | 허기 수치 64% 상태 게이지 스프라이트 |
+| [x] | **허기 17 단계 (68%)** | `status_hunger_17.png` | 256x256 px | 허기 수치 68% 상태 게이지 스프라이트 |
+| [x] | **허기 18 단계 (72%)** | `status_hunger_18.png` | 256x256 px | 허기 수치 72% 상태 게이지 스프라이트 |
+| [x] | **허기 19 단계 (76%)** | `status_hunger_19.png` | 256x256 px | 허기 수치 76% 상태 게이지 스프라이트 |
+| [x] | **허기 20 단계 (80%)** | `status_hunger_20.png` | 256x256 px | 허기 수치 80% 상태 게이지 스프라이트 |
+| [x] | **허기 21 단계 (84%)** | `status_hunger_21.png` | 256x256 px | 허기 수치 84% 상태 게이지 스프라이트 |
+| [x] | **허기 22 단계 (88%)** | `status_hunger_22.png` | 256x256 px | 허기 수치 88% 상태 게이지 스프라이트 |
+| [x] | **허기 23 단계 (92%)** | `status_hunger_23.png` | 256x256 px | 허기 수치 92% 상태 게이지 스프라이트 |
+| [x] | **허기 24 단계 (96%)** | `status_hunger_24.png` | 256x256 px | 허기 수치 96% 상태 게이지 스프라이트 |
+| [x] | **허기 25 단계 (100%)** | `status_hunger_25.png` | 256x256 px | 허기 수치 100% 만복 상태 게이지 스프라이트 |
+| [x] | **행복 0 단계 (0%)** | `status_happy_0.png` | 256x256 px | 행복 수치 0% 상태 게이지 스프라이트 |
+| [x] | **행복 1 단계 (4%)** | `status_happy_1.png` | 256x256 px | 행복 수치 4% 상태 게이지 스프라이트 |
+| [x] | **행복 2 단계 (8%)** | `status_happy_2.png` | 256x256 px | 행복 수치 8% 상태 게이지 스프라이트 |
+| [x] | **행복 3 단계 (12%)** | `status_happy_3.png` | 256x256 px | 행복 수치 12% 상태 게이지 스프라이트 |
+| [x] | **행복 4 단계 (16%)** | `status_happy_4.png` | 256x256 px | 행복 수치 16% 상태 게이지 스프라이트 |
+| [x] | **행복 5 단계 (20%)** | `status_happy_5.png` | 256x256 px | 행복 수치 20% 상태 게이지 스프라이트 |
+| [x] | **행복 6 단계 (24%)** | `status_happy_6.png` | 256x256 px | 행복 수치 24% 상태 게이지 스프라이트 |
+| [x] | **행복 7 단계 (28%)** | `status_happy_7.png` | 256x256 px | 행복 수치 28% 상태 게이지 스프라이트 |
+| [x] | **행복 8 단계 (32%)** | `status_happy_8.png` | 256x256 px | 행복 수치 32% 상태 게이지 스프라이트 |
+| [x] | **행복 9 단계 (36%)** | `status_happy_9.png` | 256x256 px | 행복 수치 36% 상태 게이지 스프라이트 |
+| [x] | **행복 10 단계 (40%)** | `status_happy_10.png` | 256x256 px | 행복 수치 40% 상태 게이지 스프라이트 |
+| [x] | **행복 11 단계 (44%)** | `status_happy_11.png` | 256x256 px | 행복 수치 44% 상태 게이지 스프라이트 |
+| [x] | **행복 12 단계 (48%)** | `status_happy_12.png` | 256x256 px | 행복 수치 48% 상태 게이지 스프라이트 |
+| [x] | **행복 13 단계 (52%)** | `status_happy_13.png` | 256x256 px | 행복 수치 52% 상태 게이지 스프라이트 |
+| [x] | **행복 14 단계 (56%)** | `status_happy_14.png` | 256x256 px | 행복 수치 56% 상태 게이지 스프라이트 |
+| [x] | **행복 15 단계 (60%)** | `status_happy_15.png` | 256x256 px | 행복 수치 60% 상태 게이지 스프라이트 |
+| [x] | **행복 16 단계 (64%)** | `status_happy_16.png` | 256x256 px | 행복 수치 64% 상태 게이지 스프라이트 |
+| [x] | **행복 17 단계 (68%)** | `status_happy_17.png` | 256x256 px | 행복 수치 68% 상태 게이지 스프라이트 |
+| [x] | **행복 18 단계 (72%)** | `status_happy_18.png` | 256x256 px | 행복 수치 72% 상태 게이지 스프라이트 |
+| [x] | **행복 19 단계 (76%)** | `status_happy_19.png` | 256x256 px | 행복 수치 76% 상태 게이지 스프라이트 |
+| [x] | **행복 20 단계 (80%)** | `status_happy_20.png` | 256x256 px | 행복 수치 80% 상태 게이지 스프라이트 |
+| [x] | **행복 21 단계 (84%)** | `status_happy_21.png` | 256x256 px | 행복 수치 84% 상태 게이지 스프라이트 |
+| [x] | **행복 22 단계 (88%)** | `status_happy_22.png` | 256x256 px | 행복 수치 88% 상태 게이지 스프라이트 |
+| [x] | **행복 23 단계 (92%)** | `status_happy_23.png` | 256x256 px | 행복 수치 92% 상태 게이지 스프라이트 |
+| [x] | **행복 24 단계 (96%)** | `status_happy_24.png` | 256x256 px | 행복 수치 96% 상태 게이지 스프라이트 |
+| [x] | **행복 25 단계 (100%)** | `status_happy_25.png` | 256x256 px | 행복 수치 100% 최고 상태 게이지 스프라이트 |
 
 ---
 
@@ -176,33 +185,33 @@
 | 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | [x] | **설정창 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 설정창 팝업 배경 프레임 (`menu_main` 공통 배경 재사용) |
-| [ ] | **설정창 헤더 타이틀** | `ui_title_config.png` | - | 256x256 px | 상단 '=== CONFIG ===' 도트 타이틀 |
-| [ ] | **크기 100% 라벨** | `config_scale_100.png` | `config_scale_100_active.png` | 256x256 px | 100% 크기 라벨 (게이지/수치 도트 포함) |
-| [ ] | **크기 110% 라벨** | `config_scale_110.png` | `config_scale_110_active.png` | 256x256 px | 110% 크기 라벨 |
-| [ ] | **크기 120% 라벨** | `config_scale_120.png` | `config_scale_120_active.png` | 256x256 px | 120% 크기 라벨 |
-| [ ] | **크기 130% 라벨** | `config_scale_130.png` | `config_scale_130_active.png` | 256x256 px | 130% 크기 라벨 |
-| [ ] | **크기 140% 라벨** | `config_scale_140.png` | `config_scale_140_active.png` | 256x256 px | 140% 크기 라벨 |
-| [ ] | **크기 150% 라벨** | `config_scale_150.png` | `config_scale_150_active.png` | 256x256 px | 150% 크기 라벨 |
-| [ ] | **크기 160% 라벨** | `config_scale_160.png` | `config_scale_160_active.png` | 256x256 px | 160% 크기 라벨 |
-| [ ] | **크기 170% 라벨** | `config_scale_170.png` | `config_scale_170_active.png` | 256x256 px | 170% 크기 라벨 |
-| [ ] | **크기 180% 라벨** | `config_scale_180.png` | `config_scale_180_active.png` | 256x256 px | 180% 크기 라벨 |
-| [ ] | **크기 190% 라벨** | `config_scale_190.png` | `config_scale_190_active.png` | 256x256 px | 190% 크기 라벨 |
-| [ ] | **크기 200% 라벨** | `config_scale_200.png` | `config_scale_200_active.png` | 256x256 px | 200% 크기 라벨 |
-| [ ] | **크기 210% 라벨** | `config_scale_210.png` | `config_scale_210_active.png` | 256x256 px | 210% 크기 라벨 |
-| [ ] | **크기 220% 라벨** | `config_scale_220.png` | `config_scale_220_active.png` | 256x256 px | 220% 크기 라벨 |
-| [ ] | **크기 230% 라벨** | `config_scale_230.png` | `config_scale_230_active.png` | 256x256 px | 230% 크기 라벨 |
-| [ ] | **크기 240% 라벨** | `config_scale_240.png` | `config_scale_240_active.png` | 256x256 px | 240% 크기 라벨 |
-| [ ] | **크기 250% 라벨** | `config_scale_250.png` | `config_scale_250_active.png` | 256x256 px | 250% 크기 라벨 |
-| [ ] | **크기 260% 라벨** | `config_scale_260.png` | `config_scale_260_active.png` | 256x256 px | 260% 크기 라벨 |
-| [ ] | **크기 270% 라벨** | `config_scale_270.png` | `config_scale_270_active.png` | 256x256 px | 270% 크기 라벨 |
-| [ ] | **크기 280% 라벨** | `config_scale_280.png` | `config_scale_280_active.png` | 256x256 px | 280% 크기 라벨 |
-| [ ] | **크기 290% 라벨** | `config_scale_290.png` | `config_scale_290_active.png` | 256x256 px | 290% 크기 라벨 |
-| [ ] | **크기 300% 라벨** | `config_scale_300.png` | `config_scale_300_active.png` | 256x256 px | 300% 크기 라벨 |
-| [ ] | **항상 위 OFF (비선택)**| `config_top_off.png` | - | 256x256 px | 항상 위에 고정: 꺼짐 상태 (비선택) |
-| [ ] | **항상 위 OFF (선택)**  | - | `config_top_off_active.png` | 256x256 px | 항상 위에 고정: 꺼짐 상태 (선택 중) |
-| [ ] | **항상 위 ON (비선택)** | `config_top_on.png` | - | 256x256 px | 항상 위에 고정: 켜짐 상태 (비선택) |
-| [ ] | **항상 위 ON (선택)**   | - | `config_top_on_active.png` | 256x256 px | 항상 위에 고정: 켜짐 상태 (선택 중) |
-| [ ] | **개발자 모드 진입 라벨**| `config_label_dev.png` | `config_label_dev_active.png` | 256x256 px | '🛠️ 개발자 도구 >' 서브메뉴 진입 행 |
+| [x] | **설정창 헤더 타이틀** | `ui_title_config.png` | - | 256x256 px | 상단 '=== CONFIG ===' 도트 타이틀 |
+| [x] | **크기 100% 라벨** | `config_scale_100.png` | `config_scale_100_active.png` | 256x256 px | 100% 크기 라벨 (게이지/수치 도트 포함) |
+| [x] | **크기 110% 라벨** | `config_scale_110.png` | `config_scale_110_active.png` | 256x256 px | 110% 크기 라벨 |
+| [x] | **크기 120% 라벨** | `config_scale_120.png` | `config_scale_120_active.png` | 256x256 px | 120% 크기 라벨 |
+| [x] | **크기 130% 라벨** | `config_scale_130.png` | `config_scale_130_active.png` | 256x256 px | 130% 크기 라벨 |
+| [x] | **크기 140% 라벨** | `config_scale_140.png` | `config_scale_140_active.png` | 256x256 px | 140% 크기 라벨 |
+| [x] | **크기 150% 라벨** | `config_scale_150.png` | `config_scale_150_active.png` | 256x256 px | 150% 크기 라벨 |
+| [x] | **크기 160% 라벨** | `config_scale_160.png` | `config_scale_160_active.png` | 256x256 px | 160% 크기 라벨 |
+| [x] | **크기 170% 라벨** | `config_scale_170.png` | `config_scale_170_active.png` | 256x256 px | 170% 크기 라벨 |
+| [x] | **크기 180% 라벨** | `config_scale_180.png` | `config_scale_180_active.png` | 256x256 px | 180% 크기 라벨 |
+| [x] | **크기 190% 라벨** | `config_scale_190.png` | `config_scale_190_active.png` | 256x256 px | 190% 크기 라벨 |
+| [x] | **크기 200% 라벨** | `config_scale_200.png` | `config_scale_200_active.png` | 256x256 px | 200% 크기 라벨 |
+| [x] | **크기 210% 라벨** | `config_scale_210.png` | `config_scale_210_active.png` | 256x256 px | 210% 크기 라벨 |
+| [x] | **크기 220% 라벨** | `config_scale_220.png` | `config_scale_220_active.png` | 256x256 px | 220% 크기 라벨 |
+| [x] | **크기 230% 라벨** | `config_scale_230.png` | `config_scale_230_active.png` | 256x256 px | 230% 크기 라벨 |
+| [x] | **크기 240% 라벨** | `config_scale_240.png` | `config_scale_240_active.png` | 256x256 px | 240% 크기 라벨 |
+| [x] | **크기 250% 라벨** | `config_scale_250.png` | `config_scale_250_active.png` | 256x256 px | 250% 크기 라벨 |
+| [x] | **크기 260% 라벨** | `config_scale_260.png` | `config_scale_260_active.png` | 256x256 px | 260% 크기 라벨 |
+| [x] | **크기 270% 라벨** | `config_scale_270.png` | `config_scale_270_active.png` | 256x256 px | 270% 크기 라벨 |
+| [x] | **크기 280% 라벨** | `config_scale_280.png` | `config_scale_280_active.png` | 256x256 px | 280% 크기 라벨 |
+| [x] | **크기 290% 라벨** | `config_scale_290.png` | `config_scale_290_active.png` | 256x256 px | 290% 크기 라벨 |
+| [x] | **크기 300% 라벨** | `config_scale_300.png` | `config_scale_300_active.png` | 256x256 px | 300% 크기 라벨 |
+| [x] | **항상 위 OFF (비선택)**| `config_top_off.png` | - | 256x256 px | 항상 위에 고정: 꺼짐 상태 (비선택) |
+| [x] | **항상 위 OFF (선택)**  | - | `config_top_off_active.png` | 256x256 px | 항상 위에 고정: 꺼짐 상태 (선택 중) |
+| [x] | **항상 위 ON (비선택)** | `config_top_on.png` | - | 256x256 px | 항상 위에 고정: 켜짐 상태 (비선택) |
+| [x] | **항상 위 ON (선택)**   | - | `config_top_on_active.png` | 256x256 px | 항상 위에 고정: 켜짐 상태 (선택 중) |
+| [x] | **개발자 모드 진입 라벨**| `config_label_dev.png` | `config_label_dev_active.png` | 256x256 px | '🛠️ 개발자 도구 >' 서브메뉴 진입 행 |
 
 ---
 
@@ -212,12 +221,12 @@
 | 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | [x] | **개발자 도구 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 개발자창 팝업 배경 프레임 (공통 모달 배경 재사용) |
-| [ ] | **개발자 도구 헤더 타이틀**| `ui_title_dev.png` | - | 256x256 px | 상단 '=== DEV TOOLS ===' 도트 타이틀 |
-| [ ] | **히트박스 OFF (비선택)** | `dev_hitbox_off.png` | - | 256x256 px | 히트박스 표시: 꺼짐 상태 (비선택) |
-| [ ] | **히트박스 OFF (선택)**   | - | `dev_hitbox_off_active.png` | 256x256 px | 히트박스 표시: 꺼짐 상태 (선택 중) |
-| [ ] | **히트박스 ON (비선택)**  | `dev_hitbox_on.png` | - | 256x256 px | 히트박스 표시: 켜짐 상태 (비선택) |
-| [ ] | **히트박스 ON (선택)**    | - | `dev_hitbox_on_active.png` | 256x256 px | 히트박스 표시: 켜짐 상태 (선택 중) |
-| [ ] | **2번 에셋 새로고침 라벨** | `dev_label_reload.png` | `dev_label_reload_active.png` | 256x256 px | '에셋 새로고침' 실행 행 (선택 후 [A]로 실행) |
+| [x] | **개발자 도구 헤더 타이틀**| `ui_title_dev.png` | - | 256x256 px | 상단 '=== DEV TOOLS ===' 도트 타이틀 |
+| [x] | **히트박스 OFF (비선택)** | `dev_hitbox_off.png` | - | 256x256 px | 히트박스 표시: 꺼짐 상태 (비선택) |
+| [x] | **히트박스 OFF (선택)**   | - | `dev_hitbox_off_active.png` | 256x256 px | 히트박스 표시: 꺼짐 상태 (선택 중) |
+| [x] | **히트박스 ON (비선택)**  | `dev_hitbox_on.png` | - | 256x256 px | 히트박스 표시: 켜짐 상태 (비선택) |
+| [x] | **히트박스 ON (선택)**    | - | `dev_hitbox_on_active.png` | 256x256 px | 히트박스 표시: 켜짐 상태 (선택 중) |
+| [x] | **2번 에셋 새로고침 라벨** | `dev_label_reload.png` | `dev_label_reload_active.png` | 256x256 px | '에셋 새로고침' 실행 행 (선택 후 [A]로 실행) |
 
 ---
 
@@ -226,4 +235,4 @@
 | 제작 상태 | 요소명 | 권장 파일명 | 지원 확장자 | 설명 |
 | :---: | :--- | :--- | :--- | :--- |
 | [x] | **커스텀 픽셀 폰트 파일** | `pixel_font.ttf` | `.ttf` (Galmuri9) | 9px 정수 그리드로 선명하게 렌더링 |
-| [ ] | **트레이 아이콘** | `assets/ui/tray_icon.png` | 16x16 / 32x32 px | Windows 시스템 트레이 메뉴 아이콘 |
+| [x] | **트레이 아이콘** | `assets/ui/tray_icon.png` | 16x16 / 32x32 px | Windows 시스템 트레이 메뉴 아이콘 |
