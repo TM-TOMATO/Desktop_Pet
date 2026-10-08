@@ -106,6 +106,11 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     happy: {}
   };
 
+  const customInvenSprites = {
+    title: null,
+    labels: {} // [itemKey]: { normal: url, active: url }
+  };
+
   let assetFileCache = {};
 
   function scanAssetDirectory(dir) {
@@ -343,7 +348,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     // 8) 🎯 각 메뉴별 256x256 헤더 타이틀 스프라이트 로드 (상단 타이틀 + 하단 A/B 키 조작 설명 일체형)
     const titleCandidates = {
       main: ['ui_title_main.png', 'menu_title.png', 'title_main.png'],
-      feed: ['ui_title_feed.png', 'feed_title.png', 'title_feed.png'],
+      feed: ['ui_title_item.png', 'ui_title_inven.png', 'ui_title_feed.png', 'feed_title.png', 'title_feed.png'],
       shop: ['ui_title_shop.png', 'shop_title.png', 'title_shop.png'],
       status: ['ui_title_status.png', 'status_title.png', 'title_status.png'],
       config: ['ui_title_config.png', 'config_title.png', 'title_config.png'],
@@ -368,13 +373,34 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
     const labelKeys = ['feed', 'play', 'shop', 'status', 'config'];
     for (const key of labelKeys) {
-      const normP = findSpriteFile([`menu_label_${key}.png`, `label_${key}.png`]);
+      const normCandidates = key === 'feed'
+        ? ['menu_label_item.png', 'menu_label_inven.png', `menu_label_${key}.png`, `label_${key}.png`]
+        : [`menu_label_${key}.png`, `label_${key}.png`];
+      const actCandidates = key === 'feed'
+        ? ['menu_label_item_active.png', 'menu_label_inven_active.png', `menu_label_${key}_active.png`, `label_${key}_active.png`]
+        : [`menu_label_${key}_active.png`, `label_${key}_active.png`];
+
+      const normP = findSpriteFile(normCandidates);
       if (normP) {
         customMenuSprites.labels[key] = `data:image/png;base64,${fs.readFileSync(normP).toString('base64')}`;
       }
-      const actP = findSpriteFile([`menu_label_${key}_active.png`, `label_${key}_active.png`]);
+      const actP = findSpriteFile(actCandidates);
       if (actP) {
         customMenuSprites.labels[key + '_active'] = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
+      }
+    }
+
+    // 8-1) 🎒 인벤토리 아이템별 256x256 라벨 스프라이트 로드
+    const allItemKeys = ['apple', 'berry', 'meat', 'fish', 'candy'];
+    for (const itemKey of allItemKeys) {
+      customInvenSprites.labels[itemKey] = { normal: null, active: null };
+      const normP = findSpriteFile([`inven_label_${itemKey}.png`, `item_label_${itemKey}.png`]);
+      if (normP) {
+        customInvenSprites.labels[itemKey].normal = `data:image/png;base64,${fs.readFileSync(normP).toString('base64')}`;
+      }
+      const actP = findSpriteFile([`inven_label_${itemKey}_active.png`, `item_label_${itemKey}_active.png`]);
+      if (actP) {
+        customInvenSprites.labels[itemKey].active = `data:image/png;base64,${fs.readFileSync(actP).toString('base64')}`;
       }
     }
 
@@ -756,11 +782,20 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   // 7. 🎮 레트로 OSD 메뉴 컨트롤러
   const mainMenuItems = [
-    { label: 'FEED  (음식)', action: () => openFeedMenu() },
+    { label: 'ITEM  (아이템)', action: () => openFeedMenu() },
     { label: 'PLAY  (놀기)', action: () => doPlayAction() },
     { label: 'SHOP  (상점)', action: () => openShopMenu() },
     { label: 'STATUS(상태)', action: () => openStatusMenu() },
     { label: 'CONFIG(설정)', action: () => openConfigMenu() }
+  ];
+
+  // 인벤토리 아이템 마스터 데이터 (순서 및 스텟 정의)
+  const inventoryItemDefinitions = [
+    { key: 'apple', label: '🍎 사과', fullness: 20, happiness: 5 },
+    { key: 'berry', label: '🫐 베리', fullness: 15, happiness: 10 },
+    { key: 'meat', label: '🍗 고기', fullness: 50, happiness: 10 },
+    { key: 'fish', label: '🐟 생선', fullness: 35, happiness: 15 },
+    { key: 'candy', label: '🍬 캔디', fullness: 10, happiness: 40 }
   ];
 
   const shopItemsData = [
@@ -863,11 +898,14 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     });
   }
 
+  let invenScrollOffset = 0;
+
   function openFeedMenu() {
     lastMainMenuCursor = menuCursorIndex;
     closeAllMenus();
     currentMenuMode = 'FEED';
     menuCursorIndex = 0;
+    invenScrollOffset = 0;
     if (layerModalBg && hasModalSprite) layerModalBg.classList.remove('hidden');
     updateMenuHeaderAndHint(osdFeedMenuEl, 'feed');
     osdFeedMenuEl.classList.remove('hidden');
@@ -876,36 +914,61 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function renderFeedMenuItems() {
     const inv = petStats.inventory || {};
-    const availableFoods = [
-      { key: 'apple', label: '🍎 사과', count: inv.apple || 0 },
-      { key: 'meat', label: '🍗 고기', count: inv.meat || 0 },
-      { key: 'fish', label: '🐟 생선', count: inv.fish || 0 },
-      { key: 'candy', label: '🍬 캔디', count: inv.candy || 0 }
-    ];
+    const totalCount = inventoryItemDefinitions.length;
+
+    // 3개 뷰포트 내에 커서가 위치하도록 스크롤 오프셋 자동 계산
+    if (menuCursorIndex < invenScrollOffset) {
+      invenScrollOffset = menuCursorIndex;
+    } else if (menuCursorIndex >= invenScrollOffset + 3) {
+      invenScrollOffset = menuCursorIndex - 2;
+    }
+    invenScrollOffset = Math.max(0, Math.min(Math.max(0, totalCount - 3), invenScrollOffset));
 
     feedItemListEl.innerHTML = '';
-    availableFoods.forEach((food, idx) => {
+
+    // 화면에는 invenScrollOffset 부터 최대 3개 항목만 렌더링
+    const visibleItems = inventoryItemDefinitions.slice(invenScrollOffset, invenScrollOffset + 3);
+
+    visibleItems.forEach((food, localIdx) => {
+      const globalIdx = invenScrollOffset + localIdx;
+      const isSel = globalIdx === menuCursorIndex;
+      const count = inv[food.key] || 0;
+
       const row = document.createElement('div');
-      row.className = `osd-item ${idx === menuCursorIndex ? 'active' : ''}`;
-      row.innerHTML = `${idx === menuCursorIndex ? '▶' : '&nbsp;&nbsp;'} ${food.label} <b style="float:right;">${food.count}개</b>`;
+      row.className = `inven-item-row ${isSel ? 'active' : ''}`;
+      row.dataset.key = food.key;
+      row.innerHTML = `<span>${isSel ? '▶' : '&nbsp;&nbsp;'} ${food.label}</span> <b>${count}개</b>`;
       row.addEventListener('click', () => {
-        menuCursorIndex = idx;
+        menuCursorIndex = globalIdx;
         feedSelectedItem();
       });
       feedItemListEl.appendChild(row);
+
+      // 256x256 오버레이 라벨 처리 (layerMenuItems[localIdx] 3개 슬롯 매핑)
+      const layerEl = layerMenuItems[localIdx];
+      if (layerEl) {
+        const spriteObj = customInvenSprites.labels[food.key];
+        const targetImg = spriteObj ? (isSel ? (spriteObj.active || spriteObj.normal) : spriteObj.normal) : null;
+        if (targetImg) {
+          layerEl.style.backgroundImage = `url("${targetImg}")`;
+          layerEl.classList.remove('hidden');
+          row.style.opacity = '0'; // 스프라이트 있을 시 텍스트 투명화
+        } else {
+          layerEl.classList.add('hidden');
+          row.style.opacity = '1';
+        }
+      }
     });
+
+    // 남은 상위 레이어들(3, 4번) 숨김
+    for (let i = visibleItems.length; i < layerMenuItems.length; i++) {
+      if (layerMenuItems[i]) layerMenuItems[i].classList.add('hidden');
+    }
   }
 
   function feedSelectedItem() {
     const inv = petStats.inventory || {};
-    const availableFoods = [
-      { key: 'apple', fullness: 20, happiness: 5 },
-      { key: 'meat', fullness: 50, happiness: 10 },
-      { key: 'fish', fullness: 35, happiness: 15 },
-      { key: 'candy', fullness: 10, happiness: 40 }
-    ];
-
-    const targetFood = availableFoods[menuCursorIndex];
+    const targetFood = inventoryItemDefinitions[menuCursorIndex];
     if (targetFood && inv[targetFood.key] > 0) {
       petStats.useItem(targetFood.key);
       petStats.feed(targetFood.fullness, targetFood.happiness);
@@ -918,7 +981,7 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       createCoinPopup(undefined, undefined, '냠냠!');
       renderFeedMenuItems();
     } else {
-      createCoinPopup(undefined, undefined, '음식 없음');
+      createCoinPopup(undefined, undefined, '아이템 없음');
     }
   }
 
@@ -1298,8 +1361,9 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
       lastMainMenuCursor = menuCursorIndex;
       renderMainMenuCursor();
     } else if (currentMenuMode === 'FEED') {
-      if (direction === 'UP') menuCursorIndex = (menuCursorIndex - 1 + 4) % 4;
-      if (direction === 'DOWN') menuCursorIndex = (menuCursorIndex + 1) % 4;
+      const totalCount = inventoryItemDefinitions.length;
+      if (direction === 'UP') menuCursorIndex = (menuCursorIndex - 1 + totalCount) % totalCount;
+      if (direction === 'DOWN') menuCursorIndex = (menuCursorIndex + 1) % totalCount;
       renderFeedMenuItems();
     } else if (currentMenuMode === 'SHOP') {
       if (direction === 'UP') menuCursorIndex = (menuCursorIndex - 1 + shopItemsData.length) % shopItemsData.length;

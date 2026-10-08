@@ -325,6 +325,35 @@ body.has-modal-sprite .osd-modal-box {
   -webkit-font-smoothing: none;
 }
 
+/* 인벤토리 3개 고정 노출 컨테이너 (세로 스크롤) */
+.inven-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 3px 0;
+  overflow: hidden;
+  height: 63px; /* 3개 항목이 정확히 맞게 표시되는 높이 */
+}
+
+.inven-item-row {
+  height: 19px;
+  min-height: 19px;
+  line-height: 19px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 1px;
+  box-sizing: border-box;
+}
+
+.inven-item-row.active {
+  background: #0f380f;
+  color: #9bbc0f;
+}
+
 .osd-item.active, .osd-shop-row.active {
   background: #0f380f;
   color: #9bbc0f;

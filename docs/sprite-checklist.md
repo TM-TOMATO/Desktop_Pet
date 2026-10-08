@@ -10,7 +10,9 @@
 - 📂 `Desktop_Pet/assets/sprites/console/case/` — 게임기 본체/스크린/카운터 배경 (`console_case_bg.png`, `screen_bg.png`, `counter_bg.png`)
 - 📂 `Desktop_Pet/assets/sprites/console/buttons/` — 조작 버튼류 (`btn_dpad*.png`, `btn_action_*.png`, `btn_power*.png`)
 - 📂 `Desktop_Pet/assets/sprites/menu_main/` — 메인 메뉴 및 공통 팝업창 (`ui_modal_bg.png`, `ui_title_main.png`, `menu_label_*.png`)
-- 📂 `Desktop_Pet/assets/sprites/menu_feed/` — 먹이 선택창 및 아이템 (`item_*.png`, `ui_title_feed.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_item/` — 인벤토리 창 타이틀 (`ui_title_item.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_item/items/` — 아이템 드롭/인벤토리 아이콘 (`item_*.png`)
+- 📂 `Desktop_Pet/assets/sprites/menu_item/labels/` — 각 아이템별 256x256 라벨 (`inven_label_[key].png`, `inven_label_[key]_active.png`)
 - 📂 `Desktop_Pet/assets/sprites/menu_play/` — 놀이 화면 및 이펙트 (`pet_happy_sheet.png`, `effect_*.png`)
 - 📂 `Desktop_Pet/assets/sprites/menu_shop/` — 상점 품목 및 골드 패널 (`shop_item_*.png`, `ui_title_shop.png`)
 - 📂 `Desktop_Pet/assets/sprites/menu_status/` — 상태창 헤더 타이틀 및 고정 라벨 (`ui_title_status.png`, `status_labels_layer.png`, `status_icon_level.png`)
@@ -68,7 +70,7 @@
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | [x] | **공통 모달/메뉴 팝업창** | `ui_modal_bg.png` | - | 256x256 px | 메뉴 및 팝업창 공통 배경 프레임 |
 | [x] | **메인 메뉴 헤더 타이틀** | `ui_title_main.png` | - | 256x256 px | 상단 타이틀 + 하단 [A][B] 키 설명 일체형 스프라이트 |
-| [x] | **FEED (음식) 라벨** | `menu_label_feed.png` | `menu_label_feed_active.png` | 256x256 px | 메인 메뉴 1번 'FEED' 라벨 레이어 |
+| [x] | **ITEM (아이템) 라벨** | `menu_label_item.png` (또는 `menu_label_feed.png`) | `menu_label_item_active.png` | 256x256 px | 메인 메뉴 1번 'ITEM' 라벨 레이어 |
 | [x] | **PLAY (놀기) 라벨** | `menu_label_play.png` | `menu_label_play_active.png` | 256x256 px | 메인 메뉴 2번 'PLAY' 라벨 레이어 |
 | [x] | **SHOP (상점) 라벨** | `menu_label_shop.png` | `menu_label_shop_active.png` | 256x256 px | 메인 메뉴 3번 'SHOP' 라벨 레이어 |
 | [x] | **STATUS (상태) 라벨**| `menu_label_status.png` | `menu_label_status_active.png`| 256x256 px | 메인 메뉴 4번 'STATUS' 라벨 레이어 |
@@ -76,17 +78,23 @@
 
 ---
 
-## 🍎 4. 먹이 (Feed) 화면 & 음식 아이템 구성
-*💡 낙하 음식 애니메이션은 인벤토리 아이콘(`item_*.png`)을 그대로 재사용합니다.*
+## 🎒 4. 아이템 / 인벤토리 (Item) 화면 & 아이템 구성
+*💡 인벤토리 창은 세로로 3개씩 표시되며 방향키 조작 시 1칸씩 위/아래로 스크롤됩니다. 각 아이템 행별 256x256 전용 라벨 스프라이트(`inven_label_[key].png`)를 지원합니다.*
 
-| 제작 상태 | 요소명 | 권장 파일명 | 추천 규격 | 설명 |
-| :---: | :--- | :--- | :--- | :--- |
-| [x] | **먹이창 배경** | `ui_modal_bg.png` (공통 재활용) | 256x256 px | 먹이 선택창 팝업 배경 프레임 (공통 모달 배경 재사용) |
-| [x] | **먹이창 헤더 타이틀** | `ui_title_feed.png` | 256x256 px | 상단 '=== SELECT FOOD ===' 도트 타이틀 |
-| [ ] | **🍎 사과 아이콘 & 낙하**| `item_apple.png` | 16x16 / 24x24 px | 사과 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
-| [ ] | **🍗 고기 아이콘 & 낙하**| `item_meat.png` | 16x16 / 24x24 px | 고기 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
-| [ ] | **🐟 생선 아이콘 & 낙하**| `item_fish.png` | 16x16 / 24x24 px | 생선 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
-| [ ] | **🍬 캔디 아이콘 & 낙하**| `item_candy.png` | 16x16 / 24x24 px | 캔디 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| [x] | **인벤토리 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 인벤토리 팝업 배경 프레임 (공통 모달 배경 재사용) |
+| [x] | **인벤토리 헤더 타이틀**| `ui_title_item.png` (또는 `ui_title_feed.png`) | - | 256x256 px | 상단 '=== ITEM LIST ===' 도트 타이틀 |
+| [x] | **🍎 사과 아이콘 & 낙하**| `item_apple.png` | - | 16x16 / 24x24 px | 사과 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [x] | **🫐 베리 아이콘 & 낙하**| `item_berry.png` | - | 16x16 / 24x24 px | 베리 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [x] | **🍗 고기 아이콘 & 낙하**| `item_meat.png` | - | 16x16 / 24x24 px | 고기 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [x] | **🐟 생선 아이콘 & 낙하**| `item_fish.png` | - | 16x16 / 24x24 px | 생선 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [x] | **🍬 캔디 아이콘 & 낙하**| `item_candy.png` | - | 16x16 / 24x24 px | 캔디 인벤토리 아이콘 및 펫 먹이 낙하 시 재사용 |
+| [ ] | **사과 256 라벨** | `inven_label_apple.png` | `inven_label_apple_active.png` | 256x256 px | 인벤토리 사과 선택/비선택 256x256 라벨 오버레이 |
+| [ ] | **베리 256 라벨** | `inven_label_berry.png` | `inven_label_berry_active.png` | 256x256 px | 인벤토리 베리 선택/비선택 256x256 라벨 오버레이 |
+| [ ] | **고기 256 라벨** | `inven_label_meat.png` | `inven_label_meat_active.png` | 256x256 px | 인벤토리 고기 선택/비선택 256x256 라벨 오버레이 |
+| [ ] | **생선 256 라벨** | `inven_label_fish.png` | `inven_label_fish_active.png` | 256x256 px | 인벤토리 생선 선택/비선택 256x256 라벨 오버레이 |
+| [ ] | **캔디 256 라벨** | `inven_label_candy.png` | `inven_label_candy_active.png` | 256x256 px | 인벤토리 캔디 선택/비선택 256x256 라벨 오버레이 |
 
 ---
 

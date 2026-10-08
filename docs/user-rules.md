@@ -18,7 +18,7 @@
 
 - **스프라이트는 사용자가 직접 제작**, 파일명은 개발자가 지정 후 사용자가 그 이름으로 저장
 - **제작할 스프라이트 목록은 `docs/sprite-checklist.md`에 최신 상태 유지**
-- **폴더별 분할 관리**: `assets/sprites/` 하위에 카테고리 및 세부 폴더(`pet`, `console/case`, `console/buttons`, `menu_main`, `menu_feed`, `menu_play`, `menu_shop`, `menu_status/hunger`, `menu_status/happy`, `menu_config/scale`, `menu_config/top`, `menu_config/dev_entry`, `menu_dev/hitbox`, `menu_dev/reload`)로 체계적으로 세분화하여 파일 관리
+- **폴더별 분할 관리**: `assets/sprites/` 하위에 카테고리 및 세부 폴더(`pet`, `console/case`, `console/buttons`, `menu_main`, `menu_item`, `menu_feed`, `menu_play`, `menu_shop`, `menu_status/hunger`, `menu_status/happy`, `menu_config/scale`, `menu_config/top`, `menu_config/dev_entry`, `menu_dev/hitbox`, `menu_dev/reload`)로 체계적으로 세분화하여 파일 관리
 - **모든 스프라이트는 256x256 PNG** (레이어 오버레이 방식, 투명 배경)
 - **크기 조절 스프라이트**: 100%~300% (10% 단위) 수치별로 Normal / Active 분할 제작 지원 (`config_scale_*.png`)
 - **항상 위에 고정 스프라이트**: 4종(비선택_꺼짐 `config_top_off`, 선택_꺼짐 `config_top_off_active`, 비선택_켜짐 `config_top_on`, 선택_켜짐 `config_top_on_active`) 분할 제작 지원
@@ -51,8 +51,10 @@
 
 ---
 
-## 🛒 상점 & 먹이 규칙
+## 🎒 아이템 (인벤토리) & 상점 규칙
 
+- **인벤토리 창**: 메인 메뉴 1번 'ITEM (아이템)'으로 진입. 한 화면에 세로로 3개 라벨이 노출되며, 위/아래 방향키 이동 시 1칸씩 스크롤되어 표시됨
+- **아이템별 256x256 라벨**: 각 아이템별 Normal / Active 라벨 스프라이트(`inven_label_[itemKey].png` & `inven_label_[itemKey]_active.png`)를 지원하여 스프라이트가 존재할 경우 화면에 오버레이 렌더링됨
 - **상점 아이템 행**: 메인 메뉴 라벨처럼 선택(Active) / 비선택(Normal) 256x256 레이어 2장으로 구분
 - **크기 조절**: 마우스 조작은 불가하며, 레트로 도트 게이지 바로 표시됨. CONFIG 메뉴에서 크기 항목 선택 후 **[◀/▶] 방향키 및 십자키 버튼**으로만 100%~300% 조절 가능
 
