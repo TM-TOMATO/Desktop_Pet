@@ -188,33 +188,15 @@
 ---
 
 ## ⚙️ 8. 설정 (Config) 화면 구성 (`assets/sprites/menu_config/`)
-*💡 크기 조절은 100%~300% (10% 단위) 각 수치마다 Normal/Active 2장씩 제작하며, 항상 위에 고정도 4상태로 분할 제작합니다.*
+*💡 크기 조절은 픽셀 깨짐 및 블러 방지를 위해 100%, 200%, 300% (정수 배율 3단계) 각 수치마다 Normal/Active 2장씩 제작하며, 항상 위에 고정도 4상태로 분할 제작합니다.*
 
 | 제작 상태 | 요소명 | 비선택 파일명 (Normal) | 선택 파일명 (Active) | 추천 규격 | 설명 |
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | [x] | **설정창 배경** | `ui_modal_bg.png` (공통 재활용) | - | 256x256 px | 설정창 팝업 배경 프레임 (`menu_main` 공통 배경 재사용) |
 | [x] | **설정창 헤더 타이틀** | `ui_title_config.png` | - | 256x256 px | 상단 '=== CONFIG ===' 도트 타이틀 |
-| [x] | **크기 100% 라벨** | `config_scale_100.png` | `config_scale_100_active.png` | 256x256 px | 100% 크기 라벨 (게이지/수치 도트 포함) |
-| [x] | **크기 110% 라벨** | `config_scale_110.png` | `config_scale_110_active.png` | 256x256 px | 110% 크기 라벨 |
-| [x] | **크기 120% 라벨** | `config_scale_120.png` | `config_scale_120_active.png` | 256x256 px | 120% 크기 라벨 |
-| [x] | **크기 130% 라벨** | `config_scale_130.png` | `config_scale_130_active.png` | 256x256 px | 130% 크기 라벨 |
-| [x] | **크기 140% 라벨** | `config_scale_140.png` | `config_scale_140_active.png` | 256x256 px | 140% 크기 라벨 |
-| [x] | **크기 150% 라벨** | `config_scale_150.png` | `config_scale_150_active.png` | 256x256 px | 150% 크기 라벨 |
-| [x] | **크기 160% 라벨** | `config_scale_160.png` | `config_scale_160_active.png` | 256x256 px | 160% 크기 라벨 |
-| [x] | **크기 170% 라벨** | `config_scale_170.png` | `config_scale_170_active.png` | 256x256 px | 170% 크기 라벨 |
-| [x] | **크기 180% 라벨** | `config_scale_180.png` | `config_scale_180_active.png` | 256x256 px | 180% 크기 라벨 |
-| [x] | **크기 190% 라벨** | `config_scale_190.png` | `config_scale_190_active.png` | 256x256 px | 190% 크기 라벨 |
-| [x] | **크기 200% 라벨** | `config_scale_200.png` | `config_scale_200_active.png` | 256x256 px | 200% 크기 라벨 |
-| [x] | **크기 210% 라벨** | `config_scale_210.png` | `config_scale_210_active.png` | 256x256 px | 210% 크기 라벨 |
-| [x] | **크기 220% 라벨** | `config_scale_220.png` | `config_scale_220_active.png` | 256x256 px | 220% 크기 라벨 |
-| [x] | **크기 230% 라벨** | `config_scale_230.png` | `config_scale_230_active.png` | 256x256 px | 230% 크기 라벨 |
-| [x] | **크기 240% 라벨** | `config_scale_240.png` | `config_scale_240_active.png` | 256x256 px | 240% 크기 라벨 |
-| [x] | **크기 250% 라벨** | `config_scale_250.png` | `config_scale_250_active.png` | 256x256 px | 250% 크기 라벨 |
-| [x] | **크기 260% 라벨** | `config_scale_260.png` | `config_scale_260_active.png` | 256x256 px | 260% 크기 라벨 |
-| [x] | **크기 270% 라벨** | `config_scale_270.png` | `config_scale_270_active.png` | 256x256 px | 270% 크기 라벨 |
-| [x] | **크기 280% 라벨** | `config_scale_280.png` | `config_scale_280_active.png` | 256x256 px | 280% 크기 라벨 |
-| [x] | **크기 290% 라벨** | `config_scale_290.png` | `config_scale_290_active.png` | 256x256 px | 290% 크기 라벨 |
-| [x] | **크기 300% 라벨** | `config_scale_300.png` | `config_scale_300_active.png` | 256x256 px | 300% 크기 라벨 |
+| [x] | **크기 100% 라벨** | `config_scale_100.png` | `config_scale_100_active.png` | 256x256 px | 100% 크기 라벨 (1.0x 1:1 정수 배율) |
+| [x] | **크기 200% 라벨** | `config_scale_200.png` | `config_scale_200_active.png` | 256x256 px | 200% 크기 라벨 (2.0x 2:1 정수 배율, 기본값) |
+| [x] | **크기 300% 라벨** | `config_scale_300.png` | `config_scale_300_active.png` | 256x256 px | 300% 크기 라벨 (3.0x 3:1 정수 배율) |
 | [x] | **항상 위 OFF (비선택)**| `config_top_off.png` | - | 256x256 px | 항상 위에 고정: 꺼짐 상태 (비선택) |
 | [x] | **항상 위 OFF (선택)**  | - | `config_top_off_active.png` | 256x256 px | 항상 위에 고정: 꺼짐 상태 (선택 중) |
 | [x] | **항상 위 ON (비선택)** | `config_top_on.png` | - | 256x256 px | 항상 위에 고정: 켜짐 상태 (비선택) |

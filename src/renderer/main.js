@@ -550,10 +550,23 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
     petStats.consoleScale = scaleVal;
   }
 
+  const ALLOWED_SCALES = [100, 200, 300];
   let currentConsoleScalePercent = Math.round((petStats.consoleScale || 2.0) * 100);
+  if (!ALLOWED_SCALES.includes(currentConsoleScalePercent)) {
+    // 가장 가까운 배율로 스냅
+    if (currentConsoleScalePercent <= 150) currentConsoleScalePercent = 100;
+    else if (currentConsoleScalePercent <= 250) currentConsoleScalePercent = 200;
+    else currentConsoleScalePercent = 300;
+  }
 
   function updateScaleDisplay(percent) {
-    currentConsoleScalePercent = Math.max(100, Math.min(300, percent));
+    if (ALLOWED_SCALES.includes(percent)) {
+      currentConsoleScalePercent = percent;
+    } else {
+      if (percent <= 150) currentConsoleScalePercent = 100;
+      else if (percent <= 250) currentConsoleScalePercent = 200;
+      else currentConsoleScalePercent = 300;
+    }
     if (scaleValueLabel) scaleValueLabel.innerText = `${currentConsoleScalePercent}%`;
     if (barScaleFill) {
       const fillPct = Math.max(0, Math.min(100, ((currentConsoleScalePercent - 100) / 200) * 100));
@@ -1379,9 +1392,16 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
         renderConfigMenuCursor();
       } else if (direction === 'LEFT' || direction === 'RIGHT') {
         if (configCursorIndex === 0) {
-          // 크기 조절 (◀ -10%, ▶ +10%)
-          const step = direction === 'LEFT' ? -10 : 10;
-          updateScaleDisplay(currentConsoleScalePercent + step);
+          // 크기 조절: 100%, 200%, 300% 정수 배율 3단계 (◀ 축소, ▶ 확대)
+          const scales = ALLOWED_SCALES;
+          let idx = scales.indexOf(currentConsoleScalePercent);
+          if (idx === -1) idx = 1; // 기본 200%
+          if (direction === 'LEFT' && idx > 0) {
+            idx--;
+          } else if (direction === 'RIGHT' && idx < scales.length - 1) {
+            idx++;
+          }
+          updateScaleDisplay(scales[idx]);
         } else if (configCursorIndex === 1) {
           // 항상 위에 고정 토글 (◀ OFF, ▶ ON)
           if (alwaysOnTopToggle) {
