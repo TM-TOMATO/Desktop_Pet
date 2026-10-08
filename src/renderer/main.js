@@ -511,11 +511,13 @@ if (PIXI.TextureSource && PIXI.TextureSource.defaultOptions) {
 
   function setConsoleScale(scaleVal) {
     scaleVal = Math.max(1.0, Math.min(3.0, scaleVal));
-    if (appScalerEl) {
-      appScalerEl.style.transform = `scale(${scaleVal})`;
-    }
     const newW = Math.round(BASE_CONSOLE_W * scaleVal);
     const newH = Math.round(BASE_CONSOLE_H * scaleVal);
+    // 윈도우 실제 정수 픽셀 크기에 정확히 매칭되도록 실제 배율 산출
+    const effectiveScale = newW / BASE_CONSOLE_W;
+    if (appScalerEl) {
+      appScalerEl.style.transform = `scale(${effectiveScale})`;
+    }
     if (window.electronAPI && window.electronAPI.setWindowSize) {
       window.electronAPI.setWindowSize(newW, newH);
     }

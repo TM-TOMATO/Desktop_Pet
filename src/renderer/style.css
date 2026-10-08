@@ -23,10 +23,13 @@ html, body {
   overflow: hidden;
   background: transparent !important;
   font-family: 'CustomRetroFont', 'Consolas', 'Courier New', monospace;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 
 /* ========================================================
-   0. App Scaler (기본 1.5배 384x384 px)
+   0. App Scaler (256x256 기준 스케일러)
    ======================================================== */
 #app-scaler {
   width: 256px;
@@ -34,6 +37,11 @@ html, body {
   transform-origin: top left;
   display: flex;
   position: relative;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* ========================================================
@@ -48,6 +56,9 @@ html, body {
   /* 기본 폴백 케이스 스타일 */
   background: transparent;
   -webkit-app-region: drag;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
 }
 
 .console-casing:active {
@@ -66,7 +77,10 @@ html, body {
   background-position: top left;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
   pointer-events: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .layer-screen-bg {
@@ -166,6 +180,7 @@ canvas {
   height: 100%;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
 }
 
 /* 플로팅 코인 이펙트 */
